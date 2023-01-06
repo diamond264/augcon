@@ -26,6 +26,7 @@ import torchvision.models as models
 import core.utils
 import core.loader
 import core.builder
+import core.transforms
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -34,7 +35,8 @@ model_names = sorted(name for name in models.__dict__
 parser = argparse.ArgumentParser(description='AugContrast Pre-Training')
 
 ### DATA PARAMETERS ###
-parser.add_argument('data', metavar='DIR',
+parser.add_argument('--data', metavar='DIR',
+                    default='/mnt/sting/hjyoon/projects/cross/ImageNet_ILSVRC2012_mini',
                     help='path to dataset')
 
 ### MULTIPROCESSING PARAMETERS ###
@@ -196,7 +198,8 @@ def main_worker(gpu, ngpus_per_node, args):
 
     # define loss function (criterion) and optimizer
     # TODO: Define new criterion for AugCon
-    criterion = nn.CosineSimilarity(dim=1).cuda(args.gpu)
+    # criterion = nn.CosineSimilarity(dim=1).cuda(args.gpu)
+    criterion = nn.CrossEntropyLoss().cuda(args.gpu)
 
     if args.fix_pred_lr:
         optim_params = [{'params': model.module.encoder.parameters(), 'fix_lr': False},
@@ -204,6 +207,7 @@ def main_worker(gpu, ngpus_per_node, args):
     else:
         optim_params = model.parameters()
 
+    # TODO: Define new option for configurable optimizer
     optimizer = torch.optim.SGD(optim_params, init_lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
@@ -233,22 +237,29 @@ def main_worker(gpu, ngpus_per_node, args):
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
-    # MoCo v2's aug: similar to SimCLR https://arxiv.org/abs/2002.05709
-    augmentation = [
-        transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
-        transforms.RandomApply([
-            transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
-        ], p=0.8),
-        transforms.RandomGrayscale(p=0.2),
-        transforms.RandomApply([simsiam.loader.GaussianBlur([.1, 2.])], p=0.5),
-        transforms.RandomHorizontalFlip(),
+    pre_process = [
+        transforms.Resize((224, 224))
+    ]
+
+    post_process = [
         transforms.ToTensor(),
         normalize
     ]
 
-    train_dataset = datasets.ImageFolder(
+    # EXAMPLE TRANSFORMATIONS
+    # TODO: Change the transformations configurable
+    base_transforms = [
+        (core.transforms.ShearX, [-0.3, 0.3]),
+        (core.transforms.ShearX, [-0.3, 0.3]),
+        (core.transforms.ShearX, [-0.3, 0.3])
+    ]
+
+    train_dataset = core.loader.AugConDatasetFolder(
         traindir,
-        simsiam.loader.TwoCropsTransform(transforms.Compose(augmentation)))
+        core.loader.AugConTransform(
+            pre_process=transforms.Compose(pre_process),
+            post_process=transforms.Compose(post_process),
+            base_transforms=base_transforms))
 
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
@@ -290,17 +301,19 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
     model.train()
 
     end = time.time()
-    for i, (images, _) in enumerate(train_loader):
+    for i, (x1, x2, _, _, _, _) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
 
         if args.gpu is not None:
-            images[0] = images[0].cuda(args.gpu, non_blocking=True)
-            images[1] = images[1].cuda(args.gpu, non_blocking=True)
+            x1[0] = x1[0].cuda(args.gpu, non_blocking=True)
+            x1[1] = x1[1].cuda(args.gpu, non_blocking=True)
+            x2[0] = x2[0].cuda(args.gpu, non_blocking=True)
+            x2[1] = x2[1].cuda(args.gpu, non_blocking=True)
 
         # compute output and loss
-        p1, p2, z1, z2 = model(x1=images[0], x2=images[1])
-        loss = -(criterion(p1, z2).mean() + criterion(p2, z1).mean()) * 0.5
+        out, target = model(x1_a1=x1[0], x1_a2=x1[1], x2_a1=x2[0], x2_a2=x2[1])
+        loss = criterion(out, target)
 
         losses.update(loss.item(), images[0].size(0))
 
