@@ -1,9 +1,32 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 import torch
 import torch.nn as nn
+import resnet
 
+
+class encoder_res18(nn.Module):
+    def __init__(self,avgpool=False):
+        super(encoder_res18, self).__init__()
+        model=resnet.resnet18()
+        del(model.fc)
+        if not avgpool:
+            del(model.avgpool)
+        print(model)
+        self.model=model
+    def forward(self, x):
+        return model(x)
+encoder_res18()
+
+class discriminator_res(nn.Module):
+    def __init__(self, channel=[1024, 512, 512]):
+        self.decode= nn.Sequential(*[resnet.BasicBlock(channel[i],channel[i+1]) for i in range(len(channel)-1)])
+        self.avgpool= nn.AdaptiveAvgPool2d((1, 1))
+    def forward(self, x):
+        x=self.decode(x)
+        x=self.avgpool(x)
+        return x
 class AugCon(nn.Module):
-    def __init__(self, base_encoder, base_discriminator, dim=128, K=65536, m=0.999, T=0.07, mlp=False):
+    def __init__(self, encoder, discriminator, dim=128, K=65536, m=0.999, T=0.07, mlp=False):
         """
         dim: feature dimension (default: 128)
         K: queue size; number of negative keys (default: 65536)
@@ -20,9 +43,9 @@ class AugCon(nn.Module):
         # num_classes is the output fc dimension
 
         # Data Encoder
-        self.encoder = sfunctionA()
+        self.encoder = encoder
         # Data Relationship Discriminator
-        self.discriminator = fB()
+        self.discriminator = discriminator
 
         # HJ: Please check whether the later code is needed
         # I didn't read them yet

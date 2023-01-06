@@ -26,8 +26,9 @@ import torchvision.models as models
 import core.utils
 import core.loader
 import core.builder
+for core.builder import encoder_res18, discriminator_res, AugCon
 import core.transforms
-
+import core.resnet.resnet18
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
@@ -158,8 +159,10 @@ def main_worker(gpu, ngpus_per_node, args):
     # create model
     # TODO: Need to implement AugCon class
     print("=> creating model '{}'".format(args.arch))
-    model = core.builder.AugCon(
-        models.__dict__[args.arch],
+    encoder= encoder_res18()
+    discriminator= discriminator_res() 
+    model = AugCon(
+        encoder, discriminator
         args.dim, args.pred_dim)
 
     # infer learning rate before changing batch size
