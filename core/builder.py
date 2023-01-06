@@ -18,9 +18,14 @@ class AugCon(nn.Module):
 
         # create the encoders
         # num_classes is the output fc dimension
-        self.encoder = base_encoder(num_classes=dim)
-        self.discriminator = base_discriminator()
 
+        # Data Encoder
+        self.encoder = sfunctionA()
+        # Data Relationship Discriminator
+        self.discriminator = fB()
+
+        # HJ: Please check whether the later code is needed
+        # I didn't read them yet
         if mlp:  # hack: brute-force replacement
             dim_mlp = self.encoder_q.fc.weight.shape[1]
             self.encoder_q.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), self.encoder_q.fc)
@@ -30,6 +35,9 @@ class AugCon(nn.Module):
             param_k.data.copy_(param_q.data)  # initialize
             param_k.requires_grad = False  # not update by gradient
 
+    # HJ: These codes(batch_*_ddp) are for the batch normalization for key encoder
+    # I guess that since key encoder stops gradient, they used special batch normalizing logic
+    # Please check if we need them in our code
     @torch.no_grad()
     def _batch_shuffle_ddp(self, x):
         """
@@ -77,6 +85,9 @@ class AugCon(nn.Module):
 
         return x_gather[idx_this]
 
+    # HJ: From this part, I will implement the part of calculating the loss value
+    # INPUTS: img1, augmented_img1, img2, augmented_img2
+    # the augmentations are the same
     def forward(self, im_x1_a1, im_x1_a2, im_x2_a1, im_x2_a2):
         """
         Input:
@@ -95,6 +106,7 @@ class AugCon(nn.Module):
         x2_a2 = self.encoder(im_x2_a2)
         x2_rel = self.discriminator(x2_a1, x2_a2)
 
+        # HJ: After this part, I'm currently implementing the code
         l_pos = torch.einsum('nc,nc->n', [x1_rel, x2_rel]).unsqueeze(-1)
         l_neg = torch.einsum('nc,')
 

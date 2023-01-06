@@ -254,6 +254,9 @@ def main_worker(gpu, ngpus_per_node, args):
         (core.transforms.ShearX, [-0.3, 0.3])
     ]
 
+    # Custom dataset organizer
+    # Instead of loading single data batch at one iteration,
+    # Loads two data batches which would apply same data augmentation
     train_dataset = core.loader.AugConDatasetFolder(
         traindir,
         core.loader.AugConTransform(
@@ -301,18 +304,26 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
     model.train()
 
     end = time.time()
+    # x1 = (data_batch1, augmented_data_batch1)
+    # x2 = (data_batch2, augmented_data_batch2)
+    # The applied augmentations for batch1 and batch2 are the same
     for i, (x1, x2, _, _, _, _) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
 
         if args.gpu is not None:
+            # Parsing data from batch1 (original/augmented)
             x1[0] = x1[0].cuda(args.gpu, non_blocking=True)
             x1[1] = x1[1].cuda(args.gpu, non_blocking=True)
+            # Parsing data from batch2 (original/augmented)
             x2[0] = x2[0].cuda(args.gpu, non_blocking=True)
             x2[1] = x2[1].cuda(args.gpu, non_blocking=True)
 
         # compute output and loss
+        # out = [similarity between positive pair, similarities between negative pairs . . .]
+        # target = [1, 0, 0, 0, . . .]
         out, target = model(x1_a1=x1[0], x1_a2=x1[1], x2_a1=x2[0], x2_a2=x2[1])
+        # CrossEntropyLoss
         loss = criterion(out, target)
 
         losses.update(loss.item(), images[0].size(0))
