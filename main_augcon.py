@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # Code based on Facebook moco/simsiam implementation
 
+# ignoring warnings
+import warnings
+warnings.filterwarnings("ignore", message="torch.distributed._all_gather_base is a private function and will be deprecated")
+
 import argparse
 import builtins
 import math
@@ -26,9 +30,7 @@ import torchvision.models as models
 import core.utils
 import core.loader
 import core.builder
-for core.builder import encoder_res18, discriminator_res, AugCon
 import core.transforms
-import core.resnet.resnet18
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
@@ -121,6 +123,8 @@ def main():
     args.distributed = args.world_size > 1 or args.multiprocessing_distributed
 
     ngpus_per_node = torch.cuda.device_count()
+    print(f'cuda is_available: {torch.cuda.is_available()}')
+    print(f'ngpus_per_node: {ngpus_per_node}')
     if args.multiprocessing_distributed:
         # Since we have ngpus_per_node processes per node, the total world_size
         # needs to be adjusted accordingly
@@ -159,11 +163,16 @@ def main_worker(gpu, ngpus_per_node, args):
     # create model
     # TODO: Need to implement AugCon class
     print("=> creating model '{}'".format(args.arch))
-    encoder= encoder_res18()
-    discriminator= discriminator_res() 
-    model = AugCon(
-        encoder, discriminator
-        args.dim, args.pred_dim)
+    if args.arch == 'resnet18':
+        encoder = core.builder.Encoder_res18()
+        discriminator = core.builder.Discriminator_res() 
+        model = core.builder.AugCon(
+            encoder, discriminator,
+            args.dim, args.pred_dim)
+    else:
+        encoder = None
+        discriminator = None
+        model = None
 
     # infer learning rate before changing batch size
     init_lr = args.lr * args.batch_size / 256
@@ -325,7 +334,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         # compute output and loss
         # out = [similarity between positive pair, similarities between negative pairs . . .]
         # target = [1, 0, 0, 0, . . .]
-        out, target = model(x1_a1=x1[0], x1_a2=x1[1], x2_a1=x2[0], x2_a2=x2[1])
+        out, target = model(im_x1_a1=x1[0], im_x1_a2=x1[1], im_x2_a1=x2[0], im_x2_a2=x2[1])
         # CrossEntropyLoss
         loss = criterion(out, target)
 

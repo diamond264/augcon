@@ -1,125 +1,77 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 import torch
 import torch.nn as nn
-import resnet
+import core.resnet as resnet
 
 
-class encoder_res18(nn.Module):
-    def __init__(self,avgpool=False):
-        super(encoder_res18, self).__init__()
-        model=resnet.resnet18()
-        del(model.fc)
-        if not avgpool:
-            del(model.avgpool)
-        print(model)
-        self.model=model
+class Identity(nn.Module):
+    def __init__(self):
+        super().__init__()
+        
     def forward(self, x):
-        return model(x)
-encoder_res18()
-
-class discriminator_res(nn.Module):
-    def __init__(self, channel=[1024, 512, 512]):
-        self.decode= nn.Sequential(*[resnet.BasicBlock(channel[i],channel[i+1]) for i in range(len(channel)-1)])
-        self.avgpool= nn.AdaptiveAvgPool2d((1, 1))
-    def forward(self, x):
-        x=self.decode(x)
-        x=self.avgpool(x)
         return x
+
+
+class Encoder_res18(nn.Module):
+    def __init__(self,avgpool=False):
+        super(Encoder_res18, self).__init__()
+        model = resnet.resnet18()
+        # del(model.fc)
+        model.fc = Identity()
+
+        if not avgpool:
+            # del(model.avgpool)
+            model.avgpool = Identity()
+
+        # print(model)
+        self.model = model
+
+    def forward(self, x):
+        reqturn self.model(x)
+
+
+class Discriminator_res(nn.Module):
+    def __init__(self, channel=[1024, 512, 512]):
+        super(Discriminator_res, self).__init__()
+        self.decode = nn.Sequential(*[resnet.BasicBlock(channel[i],channel[i+1]) for i in range(len(channel)-1)])
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+
+    def forward(self, x1, x2):
+        x = torch.cat((x1, x2), 1)
+        x = self.decode(x)
+        x = self.avgpool(x)
+        return x
+
+
 class AugCon(nn.Module):
-    def __init__(self, encoder, discriminator, dim=128, K=65536, m=0.999, T=0.07, mlp=False):
+    def __init__(self, encoder, discriminator, T=0.07, mlp=False):
         """
-        dim: feature dimension (default: 128)
-        K: queue size; number of negative keys (default: 65536)
-        m: moco momentum of updating key encoder (default: 0.999)
         T: softmax temperature (default: 0.07)
         """
         super(AugCon, self).__init__()
 
-        self.K = K
-        self.m = m
         self.T = T
-
-        # create the encoders
-        # num_classes is the output fc dimension
-
-        # Data Encoder
+        # create data encoder
         self.encoder = encoder
-        # Data Relationship Discriminator
+        # create relationship vector encoder
         self.discriminator = discriminator
-
-        # HJ: Please check whether the later code is needed
-        # I didn't read them yet
-        if mlp:  # hack: brute-force replacement
-            dim_mlp = self.encoder_q.fc.weight.shape[1]
-            self.encoder_q.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), self.encoder_q.fc)
-            self.encoder_k.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), self.encoder_k.fc)
-
-        for param_q, param_k in zip(self.encoder_q.parameters(), self.encoder_k.parameters()):
-            param_k.data.copy_(param_q.data)  # initialize
-            param_k.requires_grad = False  # not update by gradient
-
-    # HJ: These codes(batch_*_ddp) are for the batch normalization for key encoder
-    # I guess that since key encoder stops gradient, they used special batch normalizing logic
-    # Please check if we need them in our code
-    @torch.no_grad()
-    def _batch_shuffle_ddp(self, x):
-        """
-        Batch shuffle, for making use of BatchNorm.
-        *** Only support DistributedDataParallel (DDP) model. ***
-        """
-        # gather from all gpus
-        batch_size_this = x.shape[0]
-        x_gather = concat_all_gather(x)
-        batch_size_all = x_gather.shape[0]
-
-        num_gpus = batch_size_all // batch_size_this
-
-        # random shuffle index
-        idx_shuffle = torch.randperm(batch_size_all).cuda()
-
-        # broadcast to all gpus
-        torch.distributed.broadcast(idx_shuffle, src=0)
-
-        # index for restoring
-        idx_unshuffle = torch.argsort(idx_shuffle)
-
-        # shuffled index for this gpu
-        gpu_idx = torch.distributed.get_rank()
-        idx_this = idx_shuffle.view(num_gpus, -1)[gpu_idx]
-
-        return x_gather[idx_this], idx_unshuffle
-
-    @torch.no_grad()
-    def _batch_unshuffle_ddp(self, x, idx_unshuffle):
-        """
-        Undo batch shuffle.
-        *** Only support DistributedDataParallel (DDP) model. ***
-        """
-        # gather from all gpus
-        batch_size_this = x.shape[0]
-        x_gather = concat_all_gather(x)
-        batch_size_all = x_gather.shape[0]
-
-        num_gpus = batch_size_all // batch_size_this
-
-        # restored index for this gpu
-        gpu_idx = torch.distributed.get_rank()
-        idx_this = idx_unshuffle.view(num_gpus, -1)[gpu_idx]
-
-        return x_gather[idx_this]
-
-    # HJ: From this part, I will implement the part of calculating the loss value
-    # INPUTS: img1, augmented_img1, img2, augmented_img2
-    # the augmentations are the same
+        
+        # if mlp:  # hack: brute-force replacement
+        #     dim_mlp = self.encoder.fc.weight.shape[1]
+        #     self.encoder.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), self.encoder.fc)
+        #     self.encoder.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), self.encoder.fc)
+        
     def forward(self, im_x1_a1, im_x1_a2, im_x2_a1, im_x2_a2):
         """
         Input:
-            im_q: a batch of query images
-            im_k: a batch of key images
+            im_x1_a1: a batch of images
+            im_x1_a2: a batch of augmented images
+            im_x2_a1: another batch of images
+            im_x2_a2: another batch of augmented images
         Output:
             logits, targets
         """
-
+        LARGE_NUM = 1e9
         # compute query features
         x1_a1 = self.encoder(im_x1_a1)
         x1_a2 = self.encoder(im_x1_a2)
@@ -131,44 +83,16 @@ class AugCon(nn.Module):
 
         # HJ: After this part, I'm currently implementing the code
         l_pos = torch.einsum('nc,nc->n', [x1_rel, x2_rel]).unsqueeze(-1)
-        l_neg = torch.einsum('nc,')
-
-        # compute key features
-        with torch.no_grad():  # no gradient to keys
-            self._momentum_update_key_encoder()  # update the key encoder
-
-            # shuffle for making use of BN
-            im_k, idx_unshuffle = self._batch_shuffle_ddp(im_k)
-
-            k = self.encoder_k(im_k)  # keys: NxC
-            k = nn.functional.normalize(k, dim=1)
-
-            # undo shuffle
-            k = self._batch_unshuffle_ddp(k, idx_unshuffle)
-
-        # compute logits
-        # Einstein sum is more intuitive
-        # positive logits: Nx1
-        l_pos = torch.einsum('nc,nc->n', [q, k]).unsqueeze(-1)
-
-        ### HJ: Add self-negative-logits here
-        l_neg_self = torch.einsum('nc,nc->n', [q, n]).unsqueeze(-1)
-        l_neg_self *= self.alpha
-        ###
-
-        # negative logits: NxK
-        l_neg = torch.einsum('nc,ck->nk', [q, self.queue.clone().detach()])
-
-        # logits: Nx(1+K)
-        logits = torch.cat([l_pos, l_neg_self, l_neg], dim=1)
-
+        l_neg = torch.einsum('nc,ck->nk', [x1_rel, x1_rel])
+        mask = torch.nn.functional.one_hot(torch.arange(x1_rel.shape[0]))*LARGE_NUM
+        l_neg = l_neg - mask
+        
+        # concat calculated sample pairs
+        logits = torch.cat([l_pos, l_neg], dim=1)
         # apply temperature
         logits /= self.T
 
         # labels: positive key indicators
         labels = torch.zeros(logits.shape[0], dtype=torch.long).cuda()
-
-        # dequeue and enqueue
-        self._dequeue_and_enqueue(k)
 
         return logits, labels
