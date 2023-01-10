@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # Code based on Facebook moco/simsiam implementation
 
+# ignoring warnings
+import warnings
+warnings.filterwarnings("ignore", message="torch.distributed._all_gather_base is a private function and will be deprecated")
+
 import argparse
 import builtins
 import math
@@ -26,7 +30,7 @@ import torchvision.models as models
 import core.utils
 import core.loader
 import core.builder
-
+import core.transforms
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
@@ -34,7 +38,8 @@ model_names = sorted(name for name in models.__dict__
 parser = argparse.ArgumentParser(description='AugContrast Pre-Training')
 
 ### DATA PARAMETERS ###
-parser.add_argument('data', metavar='DIR',
+parser.add_argument('--data', metavar='DIR',
+                    default='/mnt/sting/hjyoon/projects/cross/ImageNet_ILSVRC2012_mini',
                     help='path to dataset')
 
 ### MULTIPROCESSING PARAMETERS ###
@@ -118,6 +123,8 @@ def main():
     args.distributed = args.world_size > 1 or args.multiprocessing_distributed
 
     ngpus_per_node = torch.cuda.device_count()
+    print(f'cuda is_available: {torch.cuda.is_available()}')
+    print(f'ngpus_per_node: {ngpus_per_node}')
     if args.multiprocessing_distributed:
         # Since we have ngpus_per_node processes per node, the total world_size
         # needs to be adjusted accordingly
@@ -156,9 +163,16 @@ def main_worker(gpu, ngpus_per_node, args):
     # create model
     # TODO: Need to implement AugCon class
     print("=> creating model '{}'".format(args.arch))
-    model = core.builder.AugCon(
-        models.__dict__[args.arch],
-        args.dim, args.pred_dim)
+    if args.arch == 'resnet18':
+        encoder = core.builder.Encoder_res18()
+        discriminator = core.builder.Discriminator_res() 
+        model = core.builder.AugCon(
+            encoder, discriminator,
+            args.dim, args.pred_dim)
+    else:
+        encoder = None
+        discriminator = None
+        model = None
 
     # infer learning rate before changing batch size
     init_lr = args.lr * args.batch_size / 256
@@ -196,7 +210,8 @@ def main_worker(gpu, ngpus_per_node, args):
 
     # define loss function (criterion) and optimizer
     # TODO: Define new criterion for AugCon
-    criterion = nn.CosineSimilarity(dim=1).cuda(args.gpu)
+    # criterion = nn.CosineSimilarity(dim=1).cuda(args.gpu)
+    criterion = nn.CrossEntropyLoss().cuda(args.gpu)
 
     if args.fix_pred_lr:
         optim_params = [{'params': model.module.encoder.parameters(), 'fix_lr': False},
@@ -204,6 +219,7 @@ def main_worker(gpu, ngpus_per_node, args):
     else:
         optim_params = model.parameters()
 
+    # TODO: Define new option for configurable optimizer
     optimizer = torch.optim.SGD(optim_params, init_lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
@@ -233,22 +249,32 @@ def main_worker(gpu, ngpus_per_node, args):
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
-    # MoCo v2's aug: similar to SimCLR https://arxiv.org/abs/2002.05709
-    augmentation = [
-        transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
-        transforms.RandomApply([
-            transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
-        ], p=0.8),
-        transforms.RandomGrayscale(p=0.2),
-        transforms.RandomApply([simsiam.loader.GaussianBlur([.1, 2.])], p=0.5),
-        transforms.RandomHorizontalFlip(),
+    pre_process = [
+        transforms.Resize((224, 224))
+    ]
+
+    post_process = [
         transforms.ToTensor(),
         normalize
     ]
 
-    train_dataset = datasets.ImageFolder(
+    # EXAMPLE TRANSFORMATIONS
+    # TODO: Change the transformations configurable
+    base_transforms = [
+        (core.transforms.ShearX, [-0.3, 0.3]),
+        (core.transforms.ShearX, [-0.3, 0.3]),
+        (core.transforms.ShearX, [-0.3, 0.3])
+    ]
+
+    # Custom dataset organizer
+    # Instead of loading single data batch at one iteration,
+    # Loads two data batches which would apply same data augmentation
+    train_dataset = core.loader.AugConDatasetFolder(
         traindir,
-        simsiam.loader.TwoCropsTransform(transforms.Compose(augmentation)))
+        core.loader.AugConTransform(
+            pre_process=transforms.Compose(pre_process),
+            post_process=transforms.Compose(post_process),
+            base_transforms=base_transforms))
 
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
@@ -290,19 +316,29 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
     model.train()
 
     end = time.time()
-    for i, (images, _) in enumerate(train_loader):
+    # x1 = (data_batch1, augmented_data_batch1)
+    # x2 = (data_batch2, augmented_data_batch2)
+    # The applied augmentations for batch1 and batch2 are the same
+    for i, (x1, x2, _, _, _, _) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
 
         if args.gpu is not None:
-            images[0] = images[0].cuda(args.gpu, non_blocking=True)
-            images[1] = images[1].cuda(args.gpu, non_blocking=True)
+            # Parsing data from batch1 (original/augmented)
+            x1[0] = x1[0].cuda(args.gpu, non_blocking=True)
+            x1[1] = x1[1].cuda(args.gpu, non_blocking=True)
+            # Parsing data from batch2 (original/augmented)
+            x2[0] = x2[0].cuda(args.gpu, non_blocking=True)
+            x2[1] = x2[1].cuda(args.gpu, non_blocking=True)
 
         # compute output and loss
-        p1, p2, z1, z2 = model(x1=images[0], x2=images[1])
-        loss = -(criterion(p1, z2).mean() + criterion(p2, z1).mean()) * 0.5
+        # out = [similarity between positive pair, similarities between negative pairs . . .]
+        # target = [1, 0, 0, 0, . . .]
+        out, target = model(im_x1_a1=x1[0], im_x1_a2=x1[1], im_x2_a1=x2[0], im_x2_a2=x2[1])
+        # CrossEntropyLoss
+        loss = criterion(out, target)
 
-        losses.update(loss.item(), images[0].size(0))
+        losses.update(loss.item(), x1[0].size(0))
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
