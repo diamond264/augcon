@@ -13,9 +13,9 @@ class Identity(nn.Module):
 
 
 class Encoder_res18(nn.Module):
-    def __init__(self,avgpool=False):
+    def __init__(self, avgpool=False, norm_layer=nn.BatchNorm2d):
         super(Encoder_res18, self).__init__()
-        model = resnet.resnet18()
+        model = resnet.resnet18(norm_layer=norm_layer)
         # del(model.fc)
         model.fc = Identity()
 
@@ -27,19 +27,27 @@ class Encoder_res18(nn.Module):
         self.model = model
 
     def forward(self, x):
-        reqturn self.model(x)
+        return self.model(x)
 
 
 class Discriminator_res(nn.Module):
-    def __init__(self, channel=[1024, 512, 512]):
+    def __init__(self, channel=[1024, 512, 512], norm_layer=nn.BatchNorm2d):
         super(Discriminator_res, self).__init__()
-        self.decode = nn.Sequential(*[resnet.BasicBlock(channel[i],channel[i+1]) for i in range(len(channel)-1)])
+        downsample=nn.Sequential(
+                resnet.conv1x1(channel[0], channel[1], 2),
+                norm_layer(channel[1]),
+            )
+
+        self.blk1 = resnet.BasicBlock(channel[0], channel[1],2, downsample)
+        self.blk2 = resnet.BasicBlock(channel[1], channel[2],1)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
     def forward(self, x1, x2):
         x = torch.cat((x1, x2), 1)
-        x = self.decode(x)
+        x = self.blk1(x)
+        x = self.blk2(x)
         x = self.avgpool(x)
+        x = torch.flatten(x, 1)
         return x
 
 
@@ -83,8 +91,9 @@ class AugCon(nn.Module):
 
         # HJ: After this part, I'm currently implementing the code
         l_pos = torch.einsum('nc,nc->n', [x1_rel, x2_rel]).unsqueeze(-1)
-        l_neg = torch.einsum('nc,ck->nk', [x1_rel, x1_rel])
+        l_neg = torch.einsum('nc,ck->nk', [x1_rel, x1_rel.T])
         mask = torch.nn.functional.one_hot(torch.arange(x1_rel.shape[0]))*LARGE_NUM
+        mask = mask.cuda()
         l_neg = l_neg - mask
         
         # concat calculated sample pairs

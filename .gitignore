@@ -1,0 +1,7 @@
+*.pth
+*.pt
+*.csv
+*.tsv
+*.pyc
+*.npy
+*.tar

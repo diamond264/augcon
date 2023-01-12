@@ -338,7 +338,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         # CrossEntropyLoss
         loss = criterion(out, target)
 
-        losses.update(loss.item(), images[0].size(0))
+        losses.update(loss.item(), x1[0].size(0))
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
