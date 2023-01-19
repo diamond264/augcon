@@ -5,3 +5,5 @@
 *.pyc
 *.npy
 *.tar
+*.png
+*.jpg

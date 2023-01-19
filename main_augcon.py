@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 # Code based on Facebook moco/simsiam implementation
 
+'''
+TODO:
+- implement functionality to log configurations
+- attach tensorboard
+- add function to automatically parse augmentations
+- replace BatchNorm to LayerNorm
+'''
+
 # ignoring warnings
 import warnings
 warnings.filterwarnings("ignore", message="torch.distributed._all_gather_base is a private function and will be deprecated")
@@ -80,7 +88,7 @@ parser.add_argument('-b', '--batch-size', default=512, type=int,
                     help='mini-batch size (default: 512), this is the total '
                          'batch size of all GPUs on the current node when '
                          'using Data Parallel or Distributed Data Parallel')
-parser.add_argument('--lr', '--learning-rate', default=0.05, type=float,
+parser.add_argument('--lr', '--learning-rate', default=0.00001, type=float,
                     metavar='LR', help='initial (base) learning rate', dest='lr')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                     help='momentum of SGD solver')
@@ -91,12 +99,12 @@ parser.add_argument('--wd', '--weight-decay', default=1e-4, type=float,
 ### TRAINING UTILITIES ###
 parser.add_argument('-p', '--print-freq', default=10, type=int,
                     metavar='N', help='print frequency (default: 10)')
+parser.add_argument('-s', '--save-dir', default='/mnt/sting/hjyoon/projects/augcontrast/models/temp',
+                    type=str, help='directory to save models (default: sting augcon model dir)')
 
 ### AUGCONTRAST$ SPECIFIC CONFIGS ###
-parser.add_argument('--dim', default=2048, type=int,
-                    help='feature dimension (default: 2048)')
-parser.add_argument('--pred-dim', default=512, type=int,
-                    help='hidden dimension of the predictor (default: 512)')
+parser.add_argument('--temp', default=0.07, type=float,
+                    help='softmax temperatqure parameter (default: 0.07)')
 parser.add_argument('--fix-pred-lr', action='store_true',
                     help='Fix learning rate for the predictor')
 
@@ -167,8 +175,7 @@ def main_worker(gpu, ngpus_per_node, args):
         encoder = core.builder.Encoder_res18()
         discriminator = core.builder.Discriminator_res() 
         model = core.builder.AugCon(
-            encoder, discriminator,
-            args.dim, args.pred_dim)
+            encoder, discriminator, args.temp)
     else:
         encoder = None
         discriminator = None
@@ -259,11 +266,24 @@ def main_worker(gpu, ngpus_per_node, args):
     ]
 
     # EXAMPLE TRANSFORMATIONS
-    # TODO: Change the transformations configurable
     base_transforms = [
-        (core.transforms.ShearX, [-0.3, 0.3]),
-        (core.transforms.ShearX, [-0.3, 0.3]),
-        (core.transforms.ShearX, [-0.3, 0.3])
+        (core.transforms.ShearX, [-0.5, 0.5], 0.2),
+        (core.transforms.ShearY, [-0.5, 0.5], 0.2),
+        (core.transforms.TranslateX, [-0.5, 0.5], 0.2),
+        (core.transforms.TranslateY, [-0.5, 0.5], 0.2),
+        (core.transforms.Rotate, [-90, 90], 0.2),
+        (core.transforms.AutoContrast, [0, 0], 0.2),
+        (core.transforms.Invert, [0, 0], 0.2),
+        (core.transforms.Equalize, [0, 0], 0.2),
+        (core.transforms.HorizontalFlip, [0, 0], 0.2),
+        (core.transforms.VerticalFlip, [0, 0], 0.2),
+        (core.transforms.Solarize, [0, 256], 0.2),
+        (core.transforms.Posterize, [0, 8], 0.2),
+        (core.transforms.Contrast, [0.1, 1.9], 0.2),
+        (core.transforms.Color, [0.1, 1.9], 0.2),
+        (core.transforms.Brightness, [0.1, 1.9], 0.2),
+        (core.transforms.Sharpness, [0.1, 1.9], 0.2),
+        (core.transforms.Cutout, [0, 0.2], 0.2)
     ]
 
     # Custom dataset organizer
@@ -288,14 +308,14 @@ def main_worker(gpu, ngpus_per_node, args):
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
-        adjust_learning_rate(optimizer, init_lr, epoch, args)
+        # adjust_learning_rate(optimizer, init_lr, epoch, args)
 
         # train for one epoch
         train(train_loader, model, criterion, optimizer, epoch, args)
 
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                 and args.rank % ngpus_per_node == 0):
-            save_checkpoint({
+            save_checkpoint(args.save_dir, {
                 'epoch': epoch + 1,
                 'arch': args.arch,
                 'state_dict': model.state_dict(),
@@ -324,6 +344,17 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         data_time.update(time.time() - end)
 
         if args.gpu is not None:
+            # Testing code for debugging data loader
+            # transforms.functional.to_pil_image(x1[0][0]).save('./test01-0.png')
+            # transforms.functional.to_pil_image(x1[1][0]).save('./test02-0.png')
+            # transforms.functional.to_pil_image(x2[0][0]).save('./test11-0.png')
+            # transforms.functional.to_pil_image(x2[1][0]).save('./test12-0.png')
+            # transforms.functional.to_pil_image(x1[0][2]).save('./test01-1.png')
+            # transforms.functional.to_pil_image(x1[1][2]).save('./test02-1.png')
+            # transforms.functional.to_pil_image(x2[0][2]).save('./test11-1.png')
+            # transforms.functional.to_pil_image(x2[1][2]).save('./test12-1.png')
+            # assert(0)
+
             # Parsing data from batch1 (original/augmented)
             x1[0] = x1[0].cuda(args.gpu, non_blocking=True)
             x1[1] = x1[1].cuda(args.gpu, non_blocking=True)
@@ -353,7 +384,8 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
             progress.display(i)
 
 
-def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
+def save_checkpoint(save_dir, state, is_best, filename='checkpoint.pth.tar'):
+    filename = os.path.join(save_dir, filename)
     torch.save(state, filename)
     if is_best:
         shutil.copyfile(filename, 'model_best.pth.tar')

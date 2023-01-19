@@ -21,12 +21,14 @@ class AugConTransform:
 
         k = self.pre_process(x)
         applied_params = []
-        for i, (transform, range_) in enumerate(self.base_transforms):
+        for i, (transform, range_, prob) in enumerate(self.base_transforms):
             if not params is None:
-                k, p = transform(k, params[i], range_)
+                if params[i][0] == True: apply = 1
+                else: apply = 0
+                k, new_params, applied = transform(k, range_, apply, params[i][1])
             else:
-                k, p = transform(k, None, range_)
-            applied_params.append(p)
+                k, new_params, applied = transform(k, range_, prob, None)
+            applied_params.append((applied, new_params))
         k = self.post_process(k)
         return ([q, k], applied_params)
 
@@ -81,6 +83,7 @@ class AugConDatasetFolder(datasets.vision.VisionDataset):
         if self.transform is not None:
             sample, params = self.transform(sample)
             sample2, params2 = self.transform(sample2, params)
+            # sample2, params2 = self.transform(sample2)
         if self.target_transform is not None:
             target = self.target_transform(target)
             target2 = self.target_transform(target2)

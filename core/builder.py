@@ -18,6 +18,10 @@ class Encoder_res18(nn.Module):
         model = resnet.resnet18(norm_layer=norm_layer)
         # del(model.fc)
         model.fc = Identity()
+        model.layer1 = Identity()
+        model.layer2 = Identity()
+        model.layer3 = Identity()
+        model.layer4 = Identity()
 
         if not avgpool:
             # del(model.avgpool)
@@ -29,18 +33,37 @@ class Encoder_res18(nn.Module):
     def forward(self, x):
         return self.model(x)
 
+# class Encoder_simpleblock(nn.Module):
+#     def __init__(self, channel=[1024, 512, 512], norm_layer=nn.BatchNorm2d):
+#         super(Encoder_simpleblock, self).__init__()
+#         self.blk1 = resnet.BasicBlock(channel[0], channel[1], 2, downsample)
+#         self.blk2 = resnet.BasicBlock(channel[1], channel[2], 1)
+#         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+
+#     def forward(self, x1, x2):
+#         x = torch.cat((x1, x2), 1)
+#         x = self.blk1(x)
+#         x = self.blk2(x)
+#         x = self.avgpool(x)
+#         x = torch.flatten(x, 1)
+#         return x
 
 class Discriminator_res(nn.Module):
-    def __init__(self, channel=[1024, 512, 512], norm_layer=nn.BatchNorm2d):
+    def __init__(self, channel=[128, 256, 512], norm_layer=nn.BatchNorm2d):
         super(Discriminator_res, self).__init__()
         downsample=nn.Sequential(
                 resnet.conv1x1(channel[0], channel[1], 2),
                 norm_layer(channel[1]),
             )
+        downsample2=nn.Sequential(
+                resnet.conv1x1(channel[1], channel[2], 2),
+                norm_layer(channel[2]),
+            )
 
-        self.blk1 = resnet.BasicBlock(channel[0], channel[1],2, downsample)
-        self.blk2 = resnet.BasicBlock(channel[1], channel[2],1)
+        self.blk1 = resnet.BasicBlock(channel[0], channel[1], 2, downsample)
+        self.blk2 = resnet.BasicBlock(channel[1], channel[2], 2, downsample2)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(512, 64)
 
     def forward(self, x1, x2):
         x = torch.cat((x1, x2), 1)
@@ -48,11 +71,12 @@ class Discriminator_res(nn.Module):
         x = self.blk2(x)
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
+        x = self.fc(x)
         return x
 
 
 class AugCon(nn.Module):
-    def __init__(self, encoder, discriminator, T=0.07, mlp=False):
+    def __init__(self, encoder, discriminator, T=0.07):#, mlp=False):
         """
         T: softmax temperature (default: 0.07)
         """
@@ -79,6 +103,9 @@ class AugCon(nn.Module):
         Output:
             logits, targets
         """
+        # TODO: Issue - memory limitation
+        # - Change SimCLR to MoCo
+        # - Or utilize the idea of SupCon
         LARGE_NUM = 1e9
         # compute query features
         x1_a1 = self.encoder(im_x1_a1)
