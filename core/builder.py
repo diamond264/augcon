@@ -132,3 +132,16 @@ class AugCon(nn.Module):
         labels = torch.zeros(logits.shape[0], dtype=torch.long).cuda()
 
         return logits, labels
+
+class AugCon_eval(nn.Module):
+    def __init__(self, encoder, discriminator):
+        super(AugCon_eval,self).__init__()
+
+        self.encoder=encoder
+        self.discriminator= discriminator
+        self.discriminator.fc= nn.Linear(512,2)
+    def forward(self, img1, img2):
+        out1= self.encoder(img1)
+        out2= self.encoder(img2)
+        out= self.discriminator(out1, out2)
+        return out

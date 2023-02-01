@@ -7,7 +7,7 @@
 from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
 import random
 import torchvision.datasets as datasets
-
+import numpy as np
 
 class AugConTransform:
     def __init__(self, pre_process, post_process, base_transforms):
@@ -46,6 +46,7 @@ class AugConDatasetFolder(datasets.vision.VisionDataset):
         extensions = datasets.folder.IMG_EXTENSIONS if is_valid_file is None else None
         super().__init__(root, transform=transform, target_transform=target_transform)
         classes, class_to_idx = self.find_classes(self.root)
+        print(classes,class_to_idx)
         samples = self.make_dataset(self.root, class_to_idx, extensions, is_valid_file)
         samples2 = samples.copy()
         random.shuffle(samples2)
@@ -89,6 +90,53 @@ class AugConDatasetFolder(datasets.vision.VisionDataset):
             target2 = self.target_transform(target2)
 
         return sample, sample2, target, target2, params, params2
+
+    def __len__(self) -> int:
+        return len(self.samples)
+class Train_cls_loader(datasets.vision.VisionDataset):
+    def __init__(
+        self,
+        root: str,
+        transform: Optional[Callable] = None,
+        loader: Callable[[str], Any] = datasets.folder.default_loader,
+        is_valid_file: Optional[Callable[[str], bool]] = None,
+    ) -> None:
+        extensions = datasets.folder.IMG_EXTENSIONS if is_valid_file is None else None
+        super().__init__(root, transform=transform)
+        classes, class_to_idx = self.find_classes(self.root)
+        samples = AugConDatasetFolder.make_dataset(self.root, class_to_idx, extensions, is_valid_file)
+        sample_idx=[[samples[i] for i in range(len(samples)) if samples[i][1]== idx]for idx in range(len(classes))]
+        self.loader = loader
+        self.extensions = extensions
+
+        self.classes = classes
+        self.class_to_idx = class_to_idx
+        self.samples = samples
+        self.sample_idx= sample_idx
+
+    def find_classes(self, directory: str) -> Tuple[List[str], Dict[str, int]]:
+        return datasets.folder.find_classes(directory)
+
+    def __getitem__(self, index: int) -> Tuple[Any, Any]:
+        path, target = self.samples[index]
+        sample = self.loader(path)
+        #print(target)
+        #print(self.class_to_idx[target])
+        foo = np.random.choice(len(self.sample_idx[target]),1, replace=True)[0]
+        positive= self.loader(self.sample_idx[target][foo][0])
+ 
+        negative_list= [i for i in range(len(self.classes)) if i!=target]
+        negative_idx=np.random.choice(negative_list,1,replace=True)[0]
+        negative= self.loader(self.sample_idx[negative_idx][np.random.choice(len(self.sample_idx[negative_idx]),1, replace=True)[0]][0])
+        negative_target= self.classes[negative_idx]
+        if self.transform is not None:
+            sample = self.transform(sample)
+            positive = self.transform(positive)
+            negative= self.transform(negative)
+        pos_lab=1
+        neg_lab=0
+        #print(sample)
+        return sample, positive, pos_lab, negative, neg_lab, target, negative_target
 
     def __len__(self) -> int:
         return len(self.samples)

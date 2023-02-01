@@ -27,14 +27,20 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 
+import core.utils
+import core.loader
+import core.builder
+import core.transforms
+
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 parser.add_argument('data', metavar='DIR',
+                    default='/mnt/sting/hjyoon/projects/cross/ImageNet_ILSVRC2012_mini',
                     help='path to dataset')
-parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet50',
+parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
                     choices=model_names,
                     help='model architecture: ' +
                         ' | '.join(model_names) +
@@ -86,6 +92,10 @@ parser.add_argument('--pretrained', default='', type=str,
                     help='path to simsiam pretrained checkpoint')
 parser.add_argument('--lars', action='store_true',
                     help='Use LARS')
+
+### AUGCONTRAST$ SPECIFIC CONFIGS ###
+parser.add_argument('--temp', default=0.07, type=float,
+                    help='softmax temperatqure parameter (default: 0.07)')
 
 best_acc1 = 0
 
@@ -150,15 +160,16 @@ def main_worker(gpu, ngpus_per_node, args):
         torch.distributed.barrier()
     # create model
     print("=> creating model '{}'".format(args.arch))
-    model = models.__dict__[args.arch]()
-
-    # freeze all layers but the last fc
+    if args.arch == 'resnet18':
+        encoder = core.builder.Encoder_res18()
+        discriminator = core.builder.Discriminator_res() 
+        model = core.builder.AugCon_eval(
+            encoder, discriminator)
+    print(model)
     for name, param in model.named_parameters():
-        if name not in ['fc.weight', 'fc.bias']:
+        print(name)
+        if name not in ['discriminator.fc.weight', 'discriminator.fc.bias']:
             param.requires_grad = False
-    # init the fc layer
-    model.fc.weight.data.normal_(mean=0.0, std=0.01)
-    model.fc.bias.data.zero_()
 
     # load from pre-trained, before DistributedDataParallel constructor
     if args.pretrained:
@@ -168,17 +179,8 @@ def main_worker(gpu, ngpus_per_node, args):
 
             # rename moco pre-trained keys
             state_dict = checkpoint['state_dict']
-            for k in list(state_dict.keys()):
-                # retain only encoder up to before the embedding layer
-                if k.startswith('module.encoder') and not k.startswith('module.encoder.fc'):
-                    # remove prefix
-                    state_dict[k[len("module.encoder."):]] = state_dict[k]
-                # delete renamed or unused k
-                del state_dict[k]
-
             args.start_epoch = 0
             msg = model.load_state_dict(state_dict, strict=False)
-            assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}
 
             print("=> loaded pre-trained model '{}'".format(args.pretrained))
         else:
@@ -221,6 +223,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     # optimize only the linear classifier
     parameters = list(filter(lambda p: p.requires_grad, model.parameters()))
+    #print(parameters)
     assert len(parameters) == 2  # fc.weight, fc.bias
 
     optimizer = torch.optim.SGD(parameters, init_lr,
@@ -254,21 +257,22 @@ def main_worker(gpu, ngpus_per_node, args):
             print("=> no checkpoint found at '{}'".format(args.resume))
 
     cudnn.benchmark = True
-
+    print(model)
     # Data loading code
     traindir = os.path.join(args.data, 'train')
     valdir = os.path.join(args.data, 'val')
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
-
-    train_dataset = datasets.ImageFolder(
-        traindir,
-        transforms.Compose([
-            transforms.RandomResizedCrop(224),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            normalize,
-        ]))
+    print(traindir)
+    print(args.data)
+    transform= transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+    ]
+    )
+    train_dataset = core.loader.Train_cls_loader(traindir, transform)
 
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
@@ -278,7 +282,7 @@ def main_worker(gpu, ngpus_per_node, args):
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
         num_workers=args.workers, pin_memory=True, sampler=train_sampler)
-
+    '''
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
             transforms.Resize(256),
@@ -292,7 +296,7 @@ def main_worker(gpu, ngpus_per_node, args):
     if args.evaluate:
         validate(val_loader, model, criterion, args)
         return
-
+    '''
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
@@ -302,9 +306,10 @@ def main_worker(gpu, ngpus_per_node, args):
         train(train_loader, model, criterion, optimizer, epoch, args)
 
         # evaluate on validation set
-        acc1 = validate(val_loader, model, criterion, args)
+        #acc1 = validate(val_loader, model, criterion, args)
 
         # remember best acc@1 and save checkpoint
+        '''
         is_best = acc1 > best_acc1
         best_acc1 = max(acc1, best_acc1)
 
@@ -319,17 +324,17 @@ def main_worker(gpu, ngpus_per_node, args):
             }, is_best)
             if epoch == args.start_epoch:
                 sanity_check(model.state_dict(), args.pretrained)
-
+        '''
 
 def train(train_loader, model, criterion, optimizer, epoch, args):
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
     losses = AverageMeter('Loss', ':.4e')
-    top1 = AverageMeter('Acc@1', ':6.2f')
-    top5 = AverageMeter('Acc@5', ':6.2f')
+    #top1 = AverageMeter('Acc@1', ':6.2f')
+    #top5 = AverageMeter('Acc@5', ':6.2f')
     progress = ProgressMeter(
         len(train_loader),
-        [batch_time, data_time, losses, top1, top5],
+        [batch_time, data_time, losses],
         prefix="Epoch: [{}]".format(epoch))
 
     """
@@ -342,23 +347,27 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
     model.eval()
 
     end = time.time()
-    for i, (images, target) in enumerate(train_loader):
+    for i, (sample, positive, pos_lab, negative, neg_lab, target, negative_target) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
 
         if args.gpu is not None:
-            images = images.cuda(args.gpu, non_blocking=True)
-        target = target.cuda(args.gpu, non_blocking=True)
+            sample = sample.cuda(args.gpu, non_blocking=True)
+            positive = positive.cuda(args.gpu, non_blocking=True)
+            pos_lab = pos_lab.cuda(args.gpu, non_blocking=True)
+            negative = negative.cuda(args.gpu, non_blocking=True)
+            neg_lab = neg_lab.cuda(args.gpu, non_blocking=True)
 
         # compute output
-        output = model(images)
-        loss = criterion(output, target)
+        #print(model(sample,positive).shape)
+        #print(pos_lab.shape)
+        loss = criterion(model(sample,positive), pos_lab)+ criterion(model(sample,negative), neg_lab)
 
         # measure accuracy and record loss
-        acc1, acc5 = accuracy(output, target, topk=(1, 5))
-        losses.update(loss.item(), images.size(0))
-        top1.update(acc1[0], images.size(0))
-        top5.update(acc5[0], images.size(0))
+        #acc1, acc5 = accuracy(output, target, topk=(1, 5))
+        losses.update(loss.item(), sample.size(0))
+        #top1.update(acc1[0], images.size(0))
+        #top5.update(acc5[0], images.size(0))
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
@@ -491,6 +500,7 @@ class ProgressMeter(object):
 def adjust_learning_rate(optimizer, init_lr, epoch, args):
     """Decay the learning rate based on schedule"""
     cur_lr = init_lr * 0.5 * (1. + math.cos(math.pi * epoch / args.epochs))
+    print(cur_lr)
     for param_group in optimizer.param_groups:
         param_group['lr'] = cur_lr
 
