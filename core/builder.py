@@ -139,7 +139,7 @@ class AugCon_eval(nn.Module):
 
         self.encoder=encoder
         self.discriminator= discriminator
-        self.discriminator.fc= nn.Linear(512,2)
+        self.discriminator.fc= nn.Linear(512,1)
     def forward(self, img1, img2):
         out1= self.encoder(img1)
         out2= self.encoder(img2)

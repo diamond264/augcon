@@ -8,6 +8,7 @@ from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
 import random
 import torchvision.datasets as datasets
 import numpy as np
+import torch
 
 class AugConTransform:
     def __init__(self, pre_process, post_process, base_transforms):
@@ -140,3 +141,62 @@ class Train_cls_loader(datasets.vision.VisionDataset):
 
     def __len__(self) -> int:
         return len(self.samples)
+    
+class Val_cls_loader(datasets.vision.VisionDataset):
+    def __init__(
+        self,
+        root: str,
+        transform: Optional[Callable] = None,
+        loader: Callable[[str], Any] = datasets.folder.default_loader,
+        is_valid_file: Optional[Callable[[str], bool]] = None,
+    ) -> None:
+        extensions = datasets.folder.IMG_EXTENSIONS if is_valid_file is None else None
+        super().__init__(root, transform=transform)
+        classes, class_to_idx = self.find_classes(self.root)
+        samples = AugConDatasetFolder.make_dataset(self.root, class_to_idx, extensions, is_valid_file)
+        sample_idx=[[samples[i] for i in range(len(samples)) if samples[i][1]== idx]for idx in range(len(classes))]
+        self.loader = loader
+        self.extensions = extensions
+
+        self.classes = classes
+        self.class_to_idx = class_to_idx
+        self.samples = samples
+        self.sample_idx= sample_idx
+
+    def find_classes(self, directory: str) -> Tuple[List[str], Dict[str, int]]:
+        return datasets.folder.find_classes(directory)
+
+    def __getitem__(self, index: int) -> Tuple[Any, Any]:
+        path, target = self.samples[index]
+        sample = self.loader(path)
+        #print(target)
+        #print(self.class_to_idx[target])
+        if self.transform is not None:
+            sample = self.transform(sample)
+
+        return sample, target
+
+    def __len__(self) -> int:
+        return len(self.samples)
+
+def support_set(       
+        root: str,
+        transform: Optional[Callable] = None,
+        loader: Callable[[str], Any] = datasets.folder.default_loader,
+        is_valid_file: Optional[Callable[[str], bool]] = None,
+        ):
+        extensions = datasets.folder.IMG_EXTENSIONS if is_valid_file is None else None
+        classes, class_to_idx = datasets.folder.find_classes(root)
+        samples = AugConDatasetFolder.make_dataset(root, class_to_idx, extensions, is_valid_file)
+        sample_idx=np.array([[samples[i] for i in range(len(samples)) if samples[i][1]== idx]for idx in range(len(classes))])
+        support_set= []
+        for sample in sample_idx[:,0]:
+            sample = transform(loader(sample[0]))
+            #print(sample)
+            support_set.append(sample)
+        
+        support_set= torch.cat(support_set)
+        c, h, w =support_set.shape
+        support_set =support_set.reshape(len(classes), 3, h, w)
+        return support_set
+        

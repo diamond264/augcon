@@ -47,11 +47,16 @@ parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
                         ' (default: resnet50)')
 parser.add_argument('-j', '--workers', default=32, type=int, metavar='N',
                     help='number of data loading workers (default: 32)')
-parser.add_argument('--epochs', default=90, type=int, metavar='N',
+parser.add_argument('--epochs', default=200, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
 parser.add_argument('-b', '--batch-size', default=4096, type=int,
+                    metavar='N',
+                    help='mini-batch size (default: 4096), this is the total '
+                         'batch size of all GPUs on the current node when '
+                         'using Data Parallel or Distributed Data Parallel')
+parser.add_argument('-bval', '--batch-size-val', default=1, type=int,
                     metavar='N',
                     help='mini-batch size (default: 4096), this is the total '
                          'batch size of all GPUs on the current node when '
@@ -63,7 +68,7 @@ parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
 parser.add_argument('--wd', '--weight-decay', default=0., type=float,
                     metavar='W', help='weight decay (default: 0.)',
                     dest='weight_decay')
-parser.add_argument('-p', '--print-freq', default=10, type=int,
+parser.add_argument('-p', '--print-freq', default=5, type=int,
                     metavar='N', help='print frequency (default: 10)')
 parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
@@ -92,6 +97,8 @@ parser.add_argument('--pretrained', default='', type=str,
                     help='path to simsiam pretrained checkpoint')
 parser.add_argument('--lars', action='store_true',
                     help='Use LARS')
+parser.add_argument('--checkpoint', default='', type=str,
+                    help='path to fineture checkpoint')
 
 ### AUGCONTRAST$ SPECIFIC CONFIGS ###
 parser.add_argument('--temp', default=0.07, type=float,
@@ -165,12 +172,12 @@ def main_worker(gpu, ngpus_per_node, args):
         discriminator = core.builder.Discriminator_res() 
         model = core.builder.AugCon_eval(
             encoder, discriminator)
-    print(model)
     for name, param in model.named_parameters():
-        print(name)
         if name not in ['discriminator.fc.weight', 'discriminator.fc.bias']:
             param.requires_grad = False
 
+    model.discriminator.fc.weight.data.normal_(mean=0.0, std=0.01)
+    model.discriminator.fc.bias.data.zero_()
     # load from pre-trained, before DistributedDataParallel constructor
     if args.pretrained:
         if os.path.isfile(args.pretrained):
@@ -188,7 +195,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     # infer learning rate before changing batch size
     init_lr = args.lr * args.batch_size / 256
-
+    init_lr = args.lr
     if args.distributed:
         # For multiprocessing distributed, DistributedDataParallel constructor
         # should always set the single device scope, otherwise,
@@ -266,14 +273,14 @@ def main_worker(gpu, ngpus_per_node, args):
     print(traindir)
     print(args.data)
     transform= transforms.Compose([
-        transforms.Resize((224, 224)),
+        transforms.Resize((32, 32)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
     ]
     )
     train_dataset = core.loader.Train_cls_loader(traindir, transform)
-
+    val_dataset = core.loader.Val_cls_loader(valdir,transform)
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
     else:
@@ -282,6 +289,12 @@ def main_worker(gpu, ngpus_per_node, args):
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
         num_workers=args.workers, pin_memory=True, sampler=train_sampler)
+    val_loader = torch.utils.data.DataLoader(
+        val_dataset, batch_size=1, shuffle= False,
+        num_workers=args.workers, pin_memory=True)
+
+    ref_sample= core.loader.support_set(traindir,transform)
+    print(ref_sample.shape)
     '''
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
@@ -306,10 +319,10 @@ def main_worker(gpu, ngpus_per_node, args):
         train(train_loader, model, criterion, optimizer, epoch, args)
 
         # evaluate on validation set
-        #acc1 = validate(val_loader, model, criterion, args)
+        acc1 = validate(val_loader, ref_sample, model, criterion, args)
 
         # remember best acc@1 and save checkpoint
-        '''
+        
         is_best = acc1 > best_acc1
         best_acc1 = max(acc1, best_acc1)
 
@@ -324,17 +337,15 @@ def main_worker(gpu, ngpus_per_node, args):
             }, is_best)
             if epoch == args.start_epoch:
                 sanity_check(model.state_dict(), args.pretrained)
-        '''
 
 def train(train_loader, model, criterion, optimizer, epoch, args):
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
     losses = AverageMeter('Loss', ':.4e')
     top1 = AverageMeter('Acc@1', ':6.2f')
-    top5 = AverageMeter('Acc@5', ':6.2f')
     progress = ProgressMeter(
         len(train_loader),
-        [batch_time, data_time, losses, top1, top5],
+        [batch_time, data_time, losses, top1],
         prefix="Epoch: [{}]".format(epoch))
 
     """
@@ -361,18 +372,27 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         # compute output
         #print(model(sample,positive).shape)
         #print(pos_lab.shape)
-        loss = criterion(model(sample,positive), pos_lab)+ criterion(model(sample,negative), neg_lab)
+        out_pos= model(sample,positive)
+        out_neg= model(sample,negative)
+        #print(out_pos.shape)
+        #print(pos_lab.shape)
+        out = torch.cat((out_pos,out_neg), 1)
+        #pred = torch.cat((pos_lab,neg_lab) ,1)
+        loss = criterion(out, neg_lab)
 
         # measure accuracy and record loss
-        acc1, acc5 = accuracy(output, target, topk=(1, 5))
+        acc1 = accuracy(out, neg_lab, topk=(1,))
         losses.update(loss.item(), sample.size(0))
-        top1.update(acc1[0], images.size(0))
-        top5.update(acc5[0], images.size(0))
-
+        top1.update(acc1[0].item(), sample.size(0))
+        #top5.update(acc5[0], images.size(0))
+        #print(top1)
         # compute gradient and do SGD step
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        
+        
+
 
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -382,14 +402,13 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
             progress.display(i)
 
 
-def validate(val_loader, model, criterion, args):
+def validate(val_loader, ref_sample, model, criterion, args):
     batch_time = AverageMeter('Time', ':6.3f')
     losses = AverageMeter('Loss', ':.4e')
     top1 = AverageMeter('Acc@1', ':6.2f')
-    top5 = AverageMeter('Acc@5', ':6.2f')
     progress = ProgressMeter(
         len(val_loader),
-        [batch_time, losses, top1, top5],
+        [batch_time, losses, top1],
         prefix='Test: ')
 
     # switch to evaluate mode
@@ -401,35 +420,38 @@ def validate(val_loader, model, criterion, args):
             if args.gpu is not None:
                 images = images.cuda(args.gpu, non_blocking=True)
             target = target.cuda(args.gpu, non_blocking=True)
-
+            ref_sample = ref_sample.cuda(args.gpu, non_blocking=True)
+            batch_size, c, h, w = images.shape
+            num_class, c1, h1, w1 = ref_sample.shape
+            images_ext = images.unsqueeze(0).repeat(num_class,1,1,1,1).transpose(0,1).reshape(-1,c,h,w)     
+            ref_sample_ext = ref_sample.unsqueeze(0).repeat(batch_size,1,1,1,1).reshape(-1,c1,h1,w1)
             # compute output
-            output = model(images)
+            output = model(images_ext, ref_sample_ext).reshape(batch_size, num_class)
             loss = criterion(output, target)
 
             # measure accuracy and record loss
-            acc1, acc5 = accuracy(output, target, topk=(1, 5))
+            acc1, = accuracy(output, target, topk=(1, ))
             losses.update(loss.item(), images.size(0))
             top1.update(acc1[0], images.size(0))
-            top5.update(acc5[0], images.size(0))
 
             # measure elapsed time
             batch_time.update(time.time() - end)
             end = time.time()
 
-            if i % args.print_freq == 0:
+            if i % (args.print_freq*10) == 0:
                 progress.display(i)
 
         # TODO: this should also be done with the ProgressMeter
-        print(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
-              .format(top1=top1, top5=top5))
+        print(' * Acc@1 {top1.avg:.3f} '
+              .format(top1=top1))
 
     return top1.avg
 
 
-def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
-    torch.save(state, filename)
+def save_checkpoint(state, is_best, args, filename='checkpoint.pth.tar'):
+    torch.save(state,args.checkpoint+filename)
     if is_best:
-        shutil.copyfile(filename, 'model_best.pth.tar')
+        shutil.copyfile(filename, args.checkpoint+'model_best.pth.tar')
 
 
 def sanity_check(state_dict, pretrained_weights):
