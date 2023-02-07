@@ -186,13 +186,21 @@ def main_worker(gpu, ngpus_per_node, args):
 
             # rename moco pre-trained keys
             state_dict = checkpoint['state_dict']
+            print(state_dict.keys())
+            for k in list(state_dict.keys()):
+                # retain only encoder up to before the embedding layer
+                if k.startswith('module.') and not k.startswith('module.discriminator.fc'):
+                    # remove prefix
+                    state_dict[k[len("module."):]] = state_dict[k]
+                # delete renamed or unused k
+                del state_dict[k]
             args.start_epoch = 0
             msg = model.load_state_dict(state_dict, strict=False)
 
             print("=> loaded pre-trained model '{}'".format(args.pretrained))
         else:
             print("=> no checkpoint found at '{}'".format(args.pretrained))
-
+    sanity_check(model.state_dict(), args.pretrained)
     # infer learning rate before changing batch size
     init_lr = args.lr * args.batch_size / 256
     init_lr = args.lr
@@ -290,7 +298,7 @@ def main_worker(gpu, ngpus_per_node, args):
         train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
         num_workers=args.workers, pin_memory=True, sampler=train_sampler)
     val_loader = torch.utils.data.DataLoader(
-        val_dataset, batch_size=1, shuffle= False,
+        val_dataset, batch_size=4096, shuffle= False,
         num_workers=args.workers, pin_memory=True)
 
     ref_sample= core.loader.support_set(traindir,transform)
@@ -334,7 +342,7 @@ def main_worker(gpu, ngpus_per_node, args):
                 'state_dict': model.state_dict(),
                 'best_acc1': best_acc1,
                 'optimizer' : optimizer.state_dict(),
-            }, is_best)
+            }, is_best, args)
             if epoch == args.start_epoch:
                 sanity_check(model.state_dict(), args.pretrained)
 
@@ -438,7 +446,7 @@ def validate(val_loader, ref_sample, model, criterion, args):
             batch_time.update(time.time() - end)
             end = time.time()
 
-            if i % (args.print_freq*10) == 0:
+            if i % (args.print_freq*1000) == 0:
                 progress.display(i)
 
         # TODO: this should also be done with the ProgressMeter
@@ -451,7 +459,7 @@ def validate(val_loader, ref_sample, model, criterion, args):
 def save_checkpoint(state, is_best, args, filename='checkpoint.pth.tar'):
     torch.save(state,args.checkpoint+filename)
     if is_best:
-        shutil.copyfile(filename, args.checkpoint+'model_best.pth.tar')
+        shutil.copyfile(args.checkpoint+filename, args.checkpoint+'model_best.pth.tar')
 
 
 def sanity_check(state_dict, pretrained_weights):
@@ -465,13 +473,12 @@ def sanity_check(state_dict, pretrained_weights):
 
     for k in list(state_dict.keys()):
         # only ignore fc layer
-        if 'fc.weight' in k or 'fc.bias' in k:
+        if 'discriminator.fc.weight' in k or 'discriminator.fc.bias' in k:
             continue
 
         # name in pretrained model
-        k_pre = 'module.encoder.' + k[len('module.'):] \
-            if k.startswith('module.') else 'module.encoder.' + k
-
+        k_pre = k \
+            if k.startswith('module.') else 'module.' + k
         assert ((state_dict[k].cpu() == state_dict_pre[k_pre]).all()), \
             '{} is changed in linear classifier training.'.format(k)
 
