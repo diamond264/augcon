@@ -39,6 +39,7 @@ import core.utils
 import core.loader
 import core.builder
 import core.transforms
+import core.relnet
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
@@ -73,7 +74,6 @@ parser.add_argument('--multiprocessing-distributed', action='store_true',
 
 ### TRAINING & NETWORK HYPERPARAMETERS ###
 parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
-                    choices=model_names,
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet18)')
@@ -97,7 +97,7 @@ parser.add_argument('--wd', '--weight-decay', default=1e-4, type=float,
                     dest='weight_decay')
 
 ### TRAINING UTILITIES ###
-parser.add_argument('-p', '--print-freq', default=10, type=int,
+parser.add_argument('-p', '--print-freq', default=100, type=int,
                     metavar='N', help='print frequency (default: 10)')
 parser.add_argument('-s', '--save-dir', default='/mnt/sting/hjyoon/projects/augcontrast/models/temp',
                     type=str, help='directory to save models (default: sting augcon model dir)')
@@ -176,6 +176,10 @@ def main_worker(gpu, ngpus_per_node, args):
         discriminator = core.builder.Discriminator_res() 
         model = core.builder.AugCon(
             encoder, discriminator, args.temp)
+    elif args.arch == 'relnet':
+        encoder = core.relnet.CNNEncoder()
+        discriminator = core.relnet.RelationNetwork()
+        model = core.builder.AugCon(encoder, discriminator, args.temp)
     else:
         encoder = None
         discriminator = None

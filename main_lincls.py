@@ -31,6 +31,7 @@ import core.utils
 import core.loader
 import core.builder
 import core.transforms
+import core.relnet
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -41,7 +42,6 @@ parser.add_argument('data', metavar='DIR',
                     default='/mnt/sting/hjyoon/projects/cross/ImageNet_ILSVRC2012_mini',
                     help='path to dataset')
 parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
-                    choices=model_names,
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet50)')
@@ -172,6 +172,10 @@ def main_worker(gpu, ngpus_per_node, args):
         discriminator = core.builder.Discriminator_res() 
         model = core.builder.AugCon_eval(
             encoder, discriminator)
+    elif args.arch == 'relnet':
+        encoder = core.relnet.CNNEncoder()
+        discriminator = core.relnet.RelationNetwork()
+        model = core.builder.AugCon_eval(encoder, discriminator)
     for name, param in model.named_parameters():
         if name not in ['discriminator.fc.weight', 'discriminator.fc.bias']:
             param.requires_grad = False
@@ -281,7 +285,7 @@ def main_worker(gpu, ngpus_per_node, args):
     print(traindir)
     print(args.data)
     transform= transforms.Compose([
-        transforms.Resize((32, 32)),
+        transforms.Resize((48, 48)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
@@ -298,7 +302,7 @@ def main_worker(gpu, ngpus_per_node, args):
         train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
         num_workers=args.workers, pin_memory=True, sampler=train_sampler)
     val_loader = torch.utils.data.DataLoader(
-        val_dataset, batch_size=4096, shuffle= False,
+        val_dataset, batch_size=1024, shuffle= False,
         num_workers=args.workers, pin_memory=True)
 
     ref_sample= core.loader.support_set(traindir,transform)

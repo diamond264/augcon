@@ -188,15 +188,16 @@ def support_set(
         extensions = datasets.folder.IMG_EXTENSIONS if is_valid_file is None else None
         classes, class_to_idx = datasets.folder.find_classes(root)
         samples = AugConDatasetFolder.make_dataset(root, class_to_idx, extensions, is_valid_file)
+        print(len(samples))
         sample_idx=np.array([[samples[i] for i in range(len(samples)) if samples[i][1]== idx]for idx in range(len(classes))])
         support_set= []
+        print('sample',sample_idx.shape)
         for sample in sample_idx[:,0]:
+            print(sample.shape)
             sample = transform(loader(sample[0]))
             #print(sample)
             support_set.append(sample)
         
-        support_set= torch.cat(support_set)
-        c, h, w =support_set.shape
-        support_set =support_set.reshape(len(classes), 3, h, w)
+        support_set= torch.stack(support_set)
         return support_set
         
