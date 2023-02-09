@@ -261,7 +261,7 @@ def main_worker(gpu, ngpus_per_node, args):
                                      std=[0.229, 0.224, 0.225])
 
     pre_process = [
-        transforms.Resize((224, 224))
+        transforms.Resize((32, 32))
     ]
 
     post_process = [
@@ -369,9 +369,9 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         # compute output and loss
         # out = [similarity between positive pair, similarities between negative pairs . . .]
         # target = [1, 0, 0, 0, . . .]
-        out, target = model(im_x1_a1=x1[0], im_x1_a2=x1[1], im_x2_a1=x2[0], im_x2_a2=x2[1])
+        out1, target1, out2, target2 = model(im_x1_a1=x1[0], im_x1_a2=x1[1], im_x2_a1=x2[0], im_x2_a2=x2[1])
         # CrossEntropyLoss
-        loss = criterion(out, target)
+        loss = criterion(out1, target1) + criterion(out2, target2)
 
         losses.update(loss.item(), x1[0].size(0))
 

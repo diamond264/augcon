@@ -124,11 +124,14 @@ class Train_cls_loader(datasets.vision.VisionDataset):
         #print(target)
         #print(self.class_to_idx[target])
         foo = np.random.choice(len(self.sample_idx[target]),1, replace=True)[0]
+        foo =0
+        #print(self.sample_idx[target][foo])
         positive= self.loader(self.sample_idx[target][foo][0])
  
         negative_list= [i for i in range(len(self.classes)) if i!=target]
         negative_idx=np.random.choice(negative_list,1,replace=True)[0]
-        negative= self.loader(self.sample_idx[negative_idx][np.random.choice(len(self.sample_idx[negative_idx]),1, replace=True)[0]][0])
+        #negative= self.loader(self.sample_idx[negative_idx][np.random.choice(len(self.sample_idx[negative_idx]),1, replace=True)[0]][0])
+        negative= self.loader(self.sample_idx[negative_idx][0][0])
         negative_target= self.classes[negative_idx]
         if self.transform is not None:
             sample = self.transform(sample)
@@ -193,9 +196,8 @@ def support_set(
         support_set= []
         print('sample',sample_idx.shape)
         for sample in sample_idx[:,0]:
-            print(sample.shape)
+            print(sample)
             sample = transform(loader(sample[0]))
-            #print(sample)
             support_set.append(sample)
         
         support_set= torch.stack(support_set)

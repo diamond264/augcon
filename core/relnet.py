@@ -45,18 +45,18 @@ class RelationNetwork(nn.Module):
     def __init__(self,input_size = 64 ,hidden_size = 64):
         super(RelationNetwork, self).__init__()
         self.layer1 = nn.Sequential(
-                        nn.Conv2d(64*2,64,kernel_size=3,padding=0),
+                        nn.Conv2d(64*2,64,kernel_size=3,padding=1),
                         nn.BatchNorm2d(64, momentum=1, affine=True),
                         nn.ReLU(),
                         nn.MaxPool2d(2))
         self.layer2 = nn.Sequential(
-                        nn.Conv2d(64,64,kernel_size=3,padding=0),
+                        nn.Conv2d(64,64,kernel_size=3,padding=1),
                         nn.BatchNorm2d(64, momentum=1, affine=True),
                         nn.ReLU(),
                         nn.MaxPool2d(2))
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         #self.fc1 = nn.Linear(input_size*3*3,hidden_size)
-        self.fc = nn.Linear(hidden_size,64)
+        #self.fc = nn.Linear(hidden_size,64)
     def forward(self,x1, x2):
         x= torch.cat((x1,x2),dim=1)
         #print(x.shape)
@@ -64,5 +64,5 @@ class RelationNetwork(nn.Module):
         out = self.layer2(out)
         out = self.avgpool(out)
         out= torch.flatten(out, 1)
-        out = self.fc(out)
+        print(out.shape)
         return out

@@ -176,12 +176,14 @@ def main_worker(gpu, ngpus_per_node, args):
         encoder = core.relnet.CNNEncoder()
         discriminator = core.relnet.RelationNetwork()
         model = core.builder.AugCon_eval(encoder, discriminator)
-    for name, param in model.named_parameters():
-        if name not in ['discriminator.fc.weight', 'discriminator.fc.bias']:
-            param.requires_grad = False
 
-    model.discriminator.fc.weight.data.normal_(mean=0.0, std=0.01)
-    model.discriminator.fc.bias.data.zero_()
+    # for name, param in model.named_parameters():
+    #     print(name)
+    #     if name not in ['fc.weight', 'fc.bias']:
+    #          param.requires_grad = False
+
+    model.fc.weight.data.normal_(mean=0.0, std=0.01)
+    model.fc.bias.data.zero_()
     # load from pre-trained, before DistributedDataParallel constructor
     if args.pretrained:
         if os.path.isfile(args.pretrained):
@@ -193,7 +195,7 @@ def main_worker(gpu, ngpus_per_node, args):
             print(state_dict.keys())
             for k in list(state_dict.keys()):
                 # retain only encoder up to before the embedding layer
-                if k.startswith('module.') and not k.startswith('module.discriminator.fc'):
+                if k.startswith('module.') and not k.startswith('module.fc'):
                     # remove prefix
                     state_dict[k[len("module."):]] = state_dict[k]
                 # delete renamed or unused k
@@ -204,7 +206,7 @@ def main_worker(gpu, ngpus_per_node, args):
             print("=> loaded pre-trained model '{}'".format(args.pretrained))
         else:
             print("=> no checkpoint found at '{}'".format(args.pretrained))
-    sanity_check(model.state_dict(), args.pretrained)
+    #sanity_check(model.state_dict(), args.pretrained)
     # infer learning rate before changing batch size
     init_lr = args.lr * args.batch_size / 256
     init_lr = args.lr
@@ -242,8 +244,8 @@ def main_worker(gpu, ngpus_per_node, args):
 
     # optimize only the linear classifier
     parameters = list(filter(lambda p: p.requires_grad, model.parameters()))
-    #print(parameters)
-    assert len(parameters) == 2  # fc.weight, fc.bias
+    print(len(parameters))
+    #assert len(parameters) == 2  # fc.weight, fc.bias
 
     optimizer = torch.optim.SGD(parameters, init_lr,
                                 momentum=args.momentum,
@@ -285,7 +287,7 @@ def main_worker(gpu, ngpus_per_node, args):
     print(traindir)
     print(args.data)
     transform= transforms.Compose([
-        transforms.Resize((48, 48)),
+        transforms.Resize((32, 32)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
@@ -347,9 +349,10 @@ def main_worker(gpu, ngpus_per_node, args):
                 'best_acc1': best_acc1,
                 'optimizer' : optimizer.state_dict(),
             }, is_best, args)
+            '''
             if epoch == args.start_epoch:
                 sanity_check(model.state_dict(), args.pretrained)
-
+            '''
 def train(train_loader, model, criterion, optimizer, epoch, args):
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
@@ -370,12 +373,14 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
     model.eval()
 
     end = time.time()
+    torch.autograd.set_detect_anomaly(True)
     for i, (sample, positive, pos_lab, negative, neg_lab, target, negative_target) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
 
         if args.gpu is not None:
             sample = sample.cuda(args.gpu, non_blocking=True)
+            sample1 = sample.clone()
             positive = positive.cuda(args.gpu, non_blocking=True)
             pos_lab = pos_lab.cuda(args.gpu, non_blocking=True)
             negative = negative.cuda(args.gpu, non_blocking=True)
@@ -384,8 +389,11 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         # compute output
         #print(model(sample,positive).shape)
         #print(pos_lab.shape)
-        out_pos= model(sample,positive)
-        out_neg= model(sample,negative)
+        out_pos= model(sample,positive )
+        out_pos.register_hook(lambda grad: print('out_pos',grad.sum()))
+
+        out_neg= model(sample1,negative)
+        out_neg.register_hook(lambda grad: print('out_neg', grad.sum()))
         #print(out_pos.shape)
         #print(pos_lab.shape)
         out = torch.cat((out_pos,out_neg), 1)
@@ -399,7 +407,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         #top5.update(acc5[0], images.size(0))
         #print(top1)
         # compute gradient and do SGD step
-        optimizer.zero_grad()
+        #optimizer.zero_grad()
         loss.backward()
         optimizer.step()
         
@@ -411,6 +419,56 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         end = time.time()
 
         if i % args.print_freq == 0:
+            progress.display(i)
+
+
+def train2(train_loader, ref_sample, model, criterion, optimizer, epoch, args):
+    batch_time = AverageMeter('Time', ':6.3f')
+    data_time = AverageMeter('Data', ':6.3f')
+    losses = AverageMeter('Loss', ':.4e')
+    top1 = AverageMeter('Acc@1', ':6.2f')
+    progress = ProgressMeter(
+        len(train_loader),
+        [batch_time, data_time, losses, top1],
+        prefix="Epoch: [{}]".format(epoch))
+
+    """
+    Switch to eval mode:
+    Under the protocol of linear classification on frozen features/models,
+    it is not legitimate to change any part of the pre-trained model.
+    BatchNorm in train mode may revise running mean/std (even if it receives
+    no gradient), which are part of the model parameters too.
+    """
+    model.eval()
+
+    end = time.time()
+
+    for i, (images, target) in enumerate(train_loader):
+        if args.gpu is not None:
+            images = images.cuda(args.gpu, non_blocking=True)
+        target = target.cuda(args.gpu, non_blocking=True)
+        ref_sample = ref_sample.cuda(args.gpu, non_blocking=True)
+        batch_size, c, h, w = images.shape
+        num_class, c1, h1, w1 = ref_sample.shape
+        images_ext = images.unsqueeze(0).repeat(num_class,1,1,1,1).transpose(0,1).reshape(-1,c,h,w)     
+        ref_sample_ext = ref_sample.unsqueeze(0).repeat(batch_size,1,1,1,1).reshape(-1,c1,h1,w1)
+        # compute output
+        output = model(images_ext, ref_sample_ext).reshape(batch_size, num_class)
+        loss = criterion(output, target)
+
+        # measure accuracy and record loss
+        acc1, = accuracy(output, target, topk=(1, ))
+        losses.update(loss.item(), images.size(0))
+        top1.update(acc1[0], images.size(0))
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        # measure elapsed time
+        batch_time.update(time.time() - end)
+        end = time.time()
+
+        if i % (args.print_freq) == 0:
             progress.display(i)
 
 
@@ -477,7 +535,7 @@ def sanity_check(state_dict, pretrained_weights):
 
     for k in list(state_dict.keys()):
         # only ignore fc layer
-        if 'discriminator.fc.weight' in k or 'discriminator.fc.bias' in k:
+        if 'fc.weight' in k or 'fc.bias' in k:
             continue
 
         # name in pretrained model
