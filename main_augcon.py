@@ -271,23 +271,23 @@ def main_worker(gpu, ngpus_per_node, args):
 
     # EXAMPLE TRANSFORMATIONS
     base_transforms = [
-        (core.transforms.ShearX, [-0.5, 0.5], 0.2),
-        (core.transforms.ShearY, [-0.5, 0.5], 0.2),
-        (core.transforms.TranslateX, [-0.5, 0.5], 0.2),
-        (core.transforms.TranslateY, [-0.5, 0.5], 0.2),
-        (core.transforms.Rotate, [-90, 90], 0.2),
-        (core.transforms.AutoContrast, [0, 0], 0.2),
-        (core.transforms.Invert, [0, 0], 0.2),
-        (core.transforms.Equalize, [0, 0], 0.2),
-        (core.transforms.HorizontalFlip, [0, 0], 0.2),
-        (core.transforms.VerticalFlip, [0, 0], 0.2),
-        (core.transforms.Solarize, [0, 256], 0.2),
-        (core.transforms.Posterize, [0, 8], 0.2),
-        (core.transforms.Contrast, [0.1, 1.9], 0.2),
-        (core.transforms.Color, [0.1, 1.9], 0.2),
-        (core.transforms.Brightness, [0.1, 1.9], 0.2),
-        (core.transforms.Sharpness, [0.1, 1.9], 0.2),
-        (core.transforms.Cutout, [0, 0.2], 0.2)
+        (core.transforms.ShearX, [-0.5, 0.5], 0.8),
+        (core.transforms.ShearY, [-0.5, 0.5], 0.8),
+        (core.transforms.TranslateX, [-0.5, 0.5], 0.8),
+        (core.transforms.TranslateY, [-0.5, 0.5], 0.8),
+        (core.transforms.Rotate, [-90, 90], 0.8),
+        (core.transforms.AutoContrast, [0, 0], 0.8),
+        (core.transforms.Invert, [0, 0], 0.8),
+        (core.transforms.Equalize, [0, 0], 0.8),
+        (core.transforms.HorizontalFlip, [0, 0], 0.8),
+        (core.transforms.VerticalFlip, [0, 0], 0.8),
+        (core.transforms.Solarize, [0, 256], 0.8),
+        (core.transforms.Posterize, [0, 8], 0.8),
+        (core.transforms.Contrast, [0.1, 1.9], 0.8),
+        (core.transforms.Color, [0.1, 1.9], 0.8),
+        (core.transforms.Brightness, [0.1, 1.9], 0.8),
+        (core.transforms.Sharpness, [0.1, 1.9], 0.8),
+        (core.transforms.Cutout, [0, 0.2], 0.8)
     ]
 
     # Custom dataset organizer
@@ -331,9 +331,11 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
     losses = AverageMeter('Loss', ':.4f')
+    top1 = AverageMeter("Acc@1", ":6.2f")
+    top5 = AverageMeter("Acc@5", ":6.2f")
     progress = ProgressMeter(
         len(train_loader),
-        [batch_time, data_time, losses],
+        [batch_time, data_time, losses, top1, top5],
         prefix="Epoch: [{}]".format(epoch))
 
     # switch to train mode
@@ -371,9 +373,15 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         # target = [1, 0, 0, 0, . . .]
         out1, target1, out2, target2 = model(im_x1_a1=x1[0], im_x1_a2=x1[1], im_x2_a1=x2[0], im_x2_a2=x2[1])
         # CrossEntropyLoss
+        #print(out1.shape)
+        #print(target1.shape)
         loss = criterion(out1, target1) + criterion(out2, target2)
 
+        acc1, acc5 = accuracy(out1, target1, topk=(1, 5))
         losses.update(loss.item(), x1[0].size(0))
+        top1.update(acc1[0], x1[0].size(0))
+        top5.update(acc5[0], x1[0].size(0))
+        #losses.update(loss.item(), x1[0].size(0))
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
@@ -445,6 +453,20 @@ def adjust_learning_rate(optimizer, init_lr, epoch, args):
         else:
             param_group['lr'] = cur_lr
 
+def accuracy(output, target, topk=(1,)):
+    """Computes the accuracy over the k top predictions for the specified values of k"""
+    with torch.no_grad():
+        maxk = max(topk)
+        batch_size = target.size(0)
 
+        _, pred = output.topk(maxk, 1, True, True)
+        pred = pred.t()
+        correct = pred.eq(target.view(1, -1).expand_as(pred))
+
+        res = []
+        for k in topk:
+            correct_k = correct[:k].reshape(-1).float().sum(0, keepdim=True)
+            res.append(correct_k.mul_(100.0 / batch_size))
+        return res
 if __name__ == '__main__':
     main()

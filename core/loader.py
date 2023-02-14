@@ -182,24 +182,72 @@ class Val_cls_loader(datasets.vision.VisionDataset):
     def __len__(self) -> int:
         return len(self.samples)
 
-def support_set(       
+class Ref_loader(datasets.vision.VisionDataset):
+    def __init__(      
+        self,
         root: str,
         transform: Optional[Callable] = None,
         loader: Callable[[str], Any] = datasets.folder.default_loader,
         is_valid_file: Optional[Callable[[str], bool]] = None,
         ):
         extensions = datasets.folder.IMG_EXTENSIONS if is_valid_file is None else None
+        super().__init__(root, transform=transform)
         classes, class_to_idx = datasets.folder.find_classes(root)
         samples = AugConDatasetFolder.make_dataset(root, class_to_idx, extensions, is_valid_file)
         print(len(samples))
         sample_idx=np.array([[samples[i] for i in range(len(samples)) if samples[i][1]== idx]for idx in range(len(classes))])
+        
+        self.loader= loader
+        self.classes = classes
+        self.class_to_idx = class_to_idx
+        self.sample_idx = sample_idx
+        self.samples = samples
+    def __getitem__(self, index: int):
         support_set= []
-        print('sample',sample_idx.shape)
-        for sample in sample_idx[:,0]:
-            print(sample)
-            sample = transform(loader(sample[0]))
+        for i in range(self.sample_idx.shape[0]):
+            j = np.random.choice(len(self.sample_idx[i]),1, replace=True)[0]
+            j=0
+            sample = self.transform(self.loader(self.sample_idx[i,j][0]))
             support_set.append(sample)
         
         support_set= torch.stack(support_set)
         return support_set
-        
+    def __len__(self) -> int:
+        return(len(self.samples))    
+
+
+class Train_cls_loader2(datasets.vision.VisionDataset):
+    def __init__(
+        self,
+        root: str,
+        transform: Optional[Callable] = None,
+        loader: Callable[[str], Any] = datasets.folder.default_loader,
+        is_valid_file: Optional[Callable[[str], bool]] = None,
+    ) -> None:
+        extensions = datasets.folder.IMG_EXTENSIONS if is_valid_file is None else None
+        super().__init__(root, transform=transform)
+        classes, class_to_idx = self.find_classes(self.root)
+        samples = AugConDatasetFolder.make_dataset(self.root, class_to_idx, extensions, is_valid_file)
+        sample_idx=[[samples[i] for i in range(len(samples)) if samples[i][1]== idx]for idx in range(len(classes))]
+        self.loader = loader
+        self.extensions = extensions
+
+        self.classes = classes
+        self.class_to_idx = class_to_idx
+        self.samples = samples
+        self.sample_idx= sample_idx
+
+    def find_classes(self, directory: str) -> Tuple[List[str], Dict[str, int]]:
+        return datasets.folder.find_classes(directory)
+
+    def __getitem__(self, index: int) -> Tuple[Any, Any]:
+        path, target = self.samples[index]
+        sample = self.loader(path)
+
+        if self.transform is not None:
+            sample = self.transform(sample)
+
+        return sample, target
+
+    def __len__(self) -> int:
+        return len(self.samples)

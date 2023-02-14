@@ -162,18 +162,30 @@ class AugCon(nn.Module):
         return logits1, labels1, logits2, labels2
 
 class AugCon_eval(nn.Module):
-    def __init__(self, encoder, discriminator):
+    def __init__(self, encoder, discriminator, mode = 'ed'):
         super(AugCon_eval,self).__init__()
 
         self.encoder=encoder
         self.discriminator= discriminator
-        self.fc= nn.Linear(64,1)
+
+        if mode == 'e':
+            self.avgpool = nn.AdaptiveAvgPool2d((1,1))
+            self.fc= nn.Linear(64,10)
+        else:
+            self.fc = nn.Linear(64,1)
+        self.mode = mode
     def forward(self, img1, img2):
-        out1= self.encoder(img1)
-        out2= self.encoder(img2)
-        out2.register_hook(lambda grad: print('out2', grad.sum()))
-        out= self.discriminator(out1, out2)
-        out.register_hook(lambda grad: print('out', grad.sum()))
-        out= self.fc(out)
-        
-        return out
+        if self.mode == 'ed' or self.mode == 'edf':
+            out1= self.encoder(img1)
+            out2= self.encoder(img2)
+            #out2.register_hook(lambda grad: print('out2', grad.sum()))
+            out= self.discriminator(out1, out2)
+            #out.register_hook(lambda grad: print('out', grad.sum()))
+            out= self.fc(out)
+            return out
+        else: 
+            out =self.encoder(img1)
+            out= self.avgpool(out)
+            out= torch.flatten(out,1)
+            out = self.fc(out)
+            return out

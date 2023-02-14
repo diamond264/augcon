@@ -23,20 +23,20 @@ class CNNEncoder(nn.Module):
                         nn.BatchNorm2d(64, momentum=1, affine=True),
                         nn.ReLU(),
                         nn.MaxPool2d(2))
-        self.layer3 = nn.Sequential(
-                        nn.Conv2d(64,64,kernel_size=3,padding=1),
-                        nn.BatchNorm2d(64, momentum=1, affine=True),
-                        nn.ReLU())
-        self.layer4 = nn.Sequential(
-                        nn.Conv2d(64,64,kernel_size=3,padding=1),
-                        nn.BatchNorm2d(64, momentum=1, affine=True),
-                        nn.ReLU())
+        # self.layer3 = nn.Sequential(
+        #                 nn.Conv2d(64,64,kernel_size=3,padding=1),
+        #                 nn.BatchNorm2d(64, momentum=1, affine=True),
+        #                 nn.ReLU())
+        # self.layer4 = nn.Sequential(
+        #                 nn.Conv2d(64,64,kernel_size=3,padding=1),
+        #                 nn.BatchNorm2d(64, momentum=1, affine=True),
+        #                 nn.ReLU())
 
     def forward(self,x):
         out = self.layer1(x)
         out = self.layer2(out)
-        out = self.layer3(out)
-        out = self.layer4(out)
+        #out = self.layer3(out)
+        #out = self.layer4(out)
         #out = out.view(out.size(0),-1)
         return out # 64
 
@@ -62,7 +62,7 @@ class RelationNetwork(nn.Module):
         #print(x.shape)
         out = self.layer1(x)
         out = self.layer2(out)
+        #out.register_hook(lambda grad : print('layer2', grad.sum()))
         out = self.avgpool(out)
         out= torch.flatten(out, 1)
-        print(out.shape)
         return out

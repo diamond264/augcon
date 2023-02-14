@@ -99,7 +99,9 @@ parser.add_argument('--lars', action='store_true',
                     help='Use LARS')
 parser.add_argument('--checkpoint', default='', type=str,
                     help='path to fineture checkpoint')
-
+#additional config for fineturing option
+parser.add_argument('--tune', default='ed', type=str,
+                    help='finetune option')
 ### AUGCONTRAST$ SPECIFIC CONFIGS ###
 parser.add_argument('--temp', default=0.07, type=float,
                     help='softmax temperatqure parameter (default: 0.07)')
@@ -171,16 +173,21 @@ def main_worker(gpu, ngpus_per_node, args):
         encoder = core.builder.Encoder_res18()
         discriminator = core.builder.Discriminator_res() 
         model = core.builder.AugCon_eval(
-            encoder, discriminator)
+            encoder, discriminator, mode= args.tune)
     elif args.arch == 'relnet':
         encoder = core.relnet.CNNEncoder()
         discriminator = core.relnet.RelationNetwork()
-        model = core.builder.AugCon_eval(encoder, discriminator)
-
-    # for name, param in model.named_parameters():
-    #     print(name)
-    #     if name not in ['fc.weight', 'fc.bias']:
-    #          param.requires_grad = False
+        model = core.builder.AugCon_eval(encoder, discriminator, mode= args.tune)
+    if args.tune == 'ed' or args.tune == 'e':
+        for name, param in model.named_parameters():
+            print(name)
+            if name not in ['fc.weight', 'fc.bias', 'fc.avgpool']:
+                param.requires_grad = False
+    elif args.tune == 'edf' :
+        for name, param in model.named_parameters():
+            print(name)
+            if name.startswith('encoder'):
+                param.requires_grad = False
 
     model.fc.weight.data.normal_(mean=0.0, std=0.01)
     model.fc.bias.data.zero_()
@@ -222,12 +229,12 @@ def main_worker(gpu, ngpus_per_node, args):
             # ourselves based on the total number of GPUs we have
             args.batch_size = int(args.batch_size / ngpus_per_node)
             args.workers = int((args.workers + ngpus_per_node - 1) / ngpus_per_node)
-            model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
+            model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu],broadcast_buffers=False )
         else:
             model.cuda()
             # DistributedDataParallel will divide and allocate batch_size to all
             # available GPUs if device_ids are not set
-            model = torch.nn.parallel.DistributedDataParallel(model)
+            model = torch.nn.parallel.DistributedDataParallel(model,broadcast_buffers=False )
     elif args.gpu is not None:
         torch.cuda.set_device(args.gpu)
         model = model.cuda(args.gpu)
@@ -250,6 +257,7 @@ def main_worker(gpu, ngpus_per_node, args):
     optimizer = torch.optim.SGD(parameters, init_lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
+    optimizer = torch.optim.AdamW(parameters, init_lr,weight_decay=args.weight_decay)
     if args.lars:
         print("=> use LARS optimizer.")
         from apex.parallel.LARC import LARC
@@ -293,8 +301,17 @@ def main_worker(gpu, ngpus_per_node, args):
                                      std=[0.229, 0.224, 0.225])
     ]
     )
-    train_dataset = core.loader.Train_cls_loader(traindir, transform)
-    val_dataset = core.loader.Val_cls_loader(valdir,transform)
+    #train_dataset = core.loader.Train_cls_loader(traindir, transform) 
+    ref_sample = None
+    if args.tune == 'ed' or args.tune =='edf':
+        train_dataset = core.loader.Val_cls_loader(traindir, transform)
+        val_dataset = core.loader.Val_cls_loader(valdir,transform)
+        ref_dataset = core.loader.Ref_loader(traindir, transform)
+        ref_sample= torch.utils.data.DataLoader(
+            ref_dataset, 1, shuffle= False, pin_memory=True)
+    else:
+        train_dataset = core.loader.Train_cls_loader2(traindir, transform)
+        val_dataset = core.loader.Train_cls_loader2(valdir, transform)
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
     else:
@@ -307,8 +324,9 @@ def main_worker(gpu, ngpus_per_node, args):
         val_dataset, batch_size=1024, shuffle= False,
         num_workers=args.workers, pin_memory=True)
 
-    ref_sample= core.loader.support_set(traindir,transform)
-    print(ref_sample.shape)
+    
+
+    #print(ref_sample.shape)
     '''
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
@@ -330,8 +348,8 @@ def main_worker(gpu, ngpus_per_node, args):
         adjust_learning_rate(optimizer, init_lr, epoch, args)
 
         # train for one epoch
-        train(train_loader, model, criterion, optimizer, epoch, args)
-
+        #train(train_loader, model, criterion, optimizer, epoch, args)
+        train2(train_loader, ref_sample, model, criterion, optimizer, epoch, args)
         # evaluate on validation set
         acc1 = validate(val_loader, ref_sample, model, criterion, args)
 
@@ -349,10 +367,10 @@ def main_worker(gpu, ngpus_per_node, args):
                 'best_acc1': best_acc1,
                 'optimizer' : optimizer.state_dict(),
             }, is_best, args)
-            '''
-            if epoch == args.start_epoch:
-                sanity_check(model.state_dict(), args.pretrained)
-            '''
+            
+            # if epoch == args.start_epoch:
+            #     sanity_check(model.state_dict(), args.pretrained)
+            
 def train(train_loader, model, criterion, optimizer, epoch, args):
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
@@ -380,7 +398,6 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
 
         if args.gpu is not None:
             sample = sample.cuda(args.gpu, non_blocking=True)
-            sample1 = sample.clone()
             positive = positive.cuda(args.gpu, non_blocking=True)
             pos_lab = pos_lab.cuda(args.gpu, non_blocking=True)
             negative = negative.cuda(args.gpu, non_blocking=True)
@@ -390,10 +407,10 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         #print(model(sample,positive).shape)
         #print(pos_lab.shape)
         out_pos= model(sample,positive )
-        out_pos.register_hook(lambda grad: print('out_pos',grad.sum()))
+        #out_pos.register_hook(lambda grad: print('out_pos',grad.sum()))
 
-        out_neg= model(sample1,negative)
-        out_neg.register_hook(lambda grad: print('out_neg', grad.sum()))
+        out_neg= model(sample,negative)
+        #out_neg.register_hook(lambda grad: print('out_neg', grad.sum()))
         #print(out_pos.shape)
         #print(pos_lab.shape)
         out = torch.cat((out_pos,out_neg), 1)
@@ -444,16 +461,21 @@ def train2(train_loader, ref_sample, model, criterion, optimizer, epoch, args):
     end = time.time()
 
     for i, (images, target) in enumerate(train_loader):
+        if args.tune == 'ed' or args.tune == 'edf':
+            ref_samplei = ref_sample.__iter__().next()
         if args.gpu is not None:
             images = images.cuda(args.gpu, non_blocking=True)
         target = target.cuda(args.gpu, non_blocking=True)
-        ref_sample = ref_sample.cuda(args.gpu, non_blocking=True)
-        batch_size, c, h, w = images.shape
-        num_class, c1, h1, w1 = ref_sample.shape
-        images_ext = images.unsqueeze(0).repeat(num_class,1,1,1,1).transpose(0,1).reshape(-1,c,h,w)     
-        ref_sample_ext = ref_sample.unsqueeze(0).repeat(batch_size,1,1,1,1).reshape(-1,c1,h1,w1)
-        # compute output
-        output = model(images_ext, ref_sample_ext).reshape(batch_size, num_class)
+        if args.tune == 'ed' or args.tune == 'edf':
+            ref_samplei =ref_samplei.cuda(args.gpu, non_blocking=True)
+            batch_size, c, h, w = images.shape
+            _, num_class, c1, h1, w1 = ref_samplei.shape
+            images_ext = images.unsqueeze(0).repeat(num_class,1,1,1,1).transpose(0,1).reshape(-1,c,h,w)     
+            ref_sample_ext = ref_samplei.repeat(batch_size,1,1,1,1).reshape(-1,c1,h1,w1)
+            # compute output
+            output = model(images_ext, ref_sample_ext).reshape(batch_size, num_class)
+        else:
+            output= model(images, None)
         loss = criterion(output, target)
 
         # measure accuracy and record loss
@@ -487,16 +509,21 @@ def validate(val_loader, ref_sample, model, criterion, args):
     with torch.no_grad():
         end = time.time()
         for i, (images, target) in enumerate(val_loader):
+            if args.tune =='ed' or args.tune == 'edf':
+                ref_samplei = ref_sample.__iter__().next()
             if args.gpu is not None:
                 images = images.cuda(args.gpu, non_blocking=True)
             target = target.cuda(args.gpu, non_blocking=True)
-            ref_sample = ref_sample.cuda(args.gpu, non_blocking=True)
-            batch_size, c, h, w = images.shape
-            num_class, c1, h1, w1 = ref_sample.shape
-            images_ext = images.unsqueeze(0).repeat(num_class,1,1,1,1).transpose(0,1).reshape(-1,c,h,w)     
-            ref_sample_ext = ref_sample.unsqueeze(0).repeat(batch_size,1,1,1,1).reshape(-1,c1,h1,w1)
-            # compute output
-            output = model(images_ext, ref_sample_ext).reshape(batch_size, num_class)
+            if args.tune =='ed' or args.tune == 'edf':
+                ref_samplei = ref_samplei.cuda(args.gpu, non_blocking=True)
+                batch_size, c, h, w = images.shape
+                _, num_class, c1, h1, w1 = ref_samplei.shape
+                images_ext = images.unsqueeze(0).repeat(num_class,1,1,1,1).transpose(0,1).reshape(-1,c,h,w)     
+                ref_sample_ext = ref_samplei.repeat(batch_size,1,1,1,1).reshape(-1,c1,h1,w1)
+                # compute output
+                output = model(images_ext, ref_sample_ext).reshape(batch_size, num_class)
+            else:
+                output = model(images, None)
             loss = criterion(output, target)
 
             # measure accuracy and record loss
