@@ -40,6 +40,7 @@ import core.loader
 import core.builder
 import core.transforms
 import core.relnet
+import core.resnet
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
@@ -172,8 +173,8 @@ def main_worker(gpu, ngpus_per_node, args):
     # TODO: Need to implement AugCon class
     print("=> creating model '{}'".format(args.arch))
     if args.arch == 'resnet18':
-        encoder = core.builder.Encoder_res18()
-        discriminator = core.builder.Discriminator_res() 
+        encoder = core.resnet.Encoder_res18()
+        discriminator = core.resnet.Discriminator_res() 
         model = core.builder.AugCon(
             encoder, discriminator, args.temp)
     elif args.arch == 'relnet':
