@@ -32,7 +32,7 @@ import core.loader
 import core.builder
 import core.transforms
 import core.relnet
-
+import core.resnet
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
@@ -101,7 +101,7 @@ parser.add_argument('--checkpoint', default='', type=str,
                     help='path to fineture checkpoint')
 #additional config for fineturing option
 parser.add_argument('--tune', default='ed', type=str,
-                    help='finetune option')
+                    help='finetune option ed for freeze encoder and discriminator, edf for freeze only encoder and e for using encoder only')
 ### AUGCONTRAST$ SPECIFIC CONFIGS ###
 parser.add_argument('--temp', default=0.07, type=float,
                     help='softmax temperatqure parameter (default: 0.07)')
@@ -170,8 +170,8 @@ def main_worker(gpu, ngpus_per_node, args):
     # create model
     print("=> creating model '{}'".format(args.arch))
     if args.arch == 'resnet18':
-        encoder = core.builder.Encoder_res18()
-        discriminator = core.builder.Discriminator_res() 
+        encoder = core.resnet.Encoder_res18()
+        discriminator = core.resnet.Discriminator_res() 
         model = core.builder.AugCon_eval(
             encoder, discriminator, mode= args.tune)
     elif args.arch == 'relnet':
@@ -181,7 +181,7 @@ def main_worker(gpu, ngpus_per_node, args):
     if args.tune == 'ed' or args.tune == 'e':
         for name, param in model.named_parameters():
             print(name)
-            if name not in ['fc.weight', 'fc.bias', 'fc.avgpool']:
+            if name not in ['fc.weight', 'fc.bias', 'fc1', 'act']:
                 param.requires_grad = False
     elif args.tune == 'edf' :
         for name, param in model.named_parameters():

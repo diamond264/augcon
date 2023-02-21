@@ -8,6 +8,15 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
+
+class Identity(nn.Module):
+    def __init__(self):
+        super().__init__()
+        
+    def forward(self, x):
+        return x
+
+
 def conv3x3(in_planes: int, out_planes: int, stride: int = 1, groups: int = 1, dilation: int = 1) -> nn.Conv2d:
     """3x3 convolution with padding"""
     return nn.Conv2d(
@@ -280,3 +289,66 @@ def resnet18(*,  progress: bool = True, **kwargs: Any) -> ResNet:
         :members:
     """
     return _resnet(BasicBlock, [2, 2, 2, 2],  progress, **kwargs)
+
+
+
+class Encoder_res18(nn.Module):
+    def __init__(self, avgpool=False, norm_layer=nn.BatchNorm2d):
+        super(Encoder_res18, self).__init__()
+        model = resnet18(norm_layer=norm_layer)
+        # del(model.fc)
+        model.fc = Identity()
+        #model.layer1 = Identity()
+        #model.layer2 = Identity()
+        model.layer3 = Identity()
+        model.layer4 = Identity()
+
+        if not avgpool:
+            # del(model.avgpool)
+            model.avgpool = Identity()
+
+        # print(model)
+        self.model = model
+
+    def forward(self, x):
+        return self.model(x)
+
+# class Encoder_simpleblock(nn.Module):
+#     def __init__(self, channel=[1024, 512, 512], norm_layer=nn.BatchNorm2d):
+#         super(Encoder_simpleblock, self).__init__()
+#         self.blk1 = resnet.BasicBlock(channel[0], channel[1], 2, downsample)
+#         self.blk2 = resnet.BasicBlock(channel[1], channel[2], 1)
+#         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+
+#     def forward(self, x1, x2):
+#         x = torch.cat((x1, x2), 1)
+#         x = self.blk1(x)
+#         x = self.blk2(x)
+#         x = self.avgpool(x)
+#         x = torch.flatten(x, 1)
+#         return x
+
+class Discriminator_res(nn.Module):
+    def __init__(self, channel=[256, 128, 64], norm_layer=nn.BatchNorm2d):
+        super(Discriminator_res, self).__init__()
+        downsample=nn.Sequential(
+                conv1x1(channel[0], channel[1], 2),
+                norm_layer(channel[1]),
+            )
+        downsample2=nn.Sequential(
+                conv1x1(channel[1], channel[2], 2),
+                norm_layer(channel[2]),
+            )
+
+        self.blk1 = BasicBlock(channel[0], channel[1], 2, downsample)
+        self.blk2 = BasicBlock(channel[1], channel[2], 2, downsample2)
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        #self.fc = nn.Linear(512, 64)
+
+    def forward(self, x1, x2):
+        x = torch.cat((x1, x2), 1)
+        x = self.blk1(x)
+        x = self.blk2(x)
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+        return x

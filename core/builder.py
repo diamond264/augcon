@@ -1,78 +1,13 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 import torch
 import torch.nn as nn
-import core.resnet as resnet
 
 
-class Identity(nn.Module):
-    def __init__(self):
-        super().__init__()
-        
-    def forward(self, x):
-        return x
 
 
-class Encoder_res18(nn.Module):
-    def __init__(self, avgpool=False, norm_layer=nn.BatchNorm2d):
-        super(Encoder_res18, self).__init__()
-        model = resnet.resnet18(norm_layer=norm_layer)
-        # del(model.fc)
-        model.fc = Identity()
-        model.layer1 = Identity()
-        model.layer2 = Identity()
-        model.layer3 = Identity()
-        model.layer4 = Identity()
 
-        if not avgpool:
-            # del(model.avgpool)
-            model.avgpool = Identity()
 
-        # print(model)
-        self.model = model
 
-    def forward(self, x):
-        return self.model(x)
-
-# class Encoder_simpleblock(nn.Module):
-#     def __init__(self, channel=[1024, 512, 512], norm_layer=nn.BatchNorm2d):
-#         super(Encoder_simpleblock, self).__init__()
-#         self.blk1 = resnet.BasicBlock(channel[0], channel[1], 2, downsample)
-#         self.blk2 = resnet.BasicBlock(channel[1], channel[2], 1)
-#         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-
-#     def forward(self, x1, x2):
-#         x = torch.cat((x1, x2), 1)
-#         x = self.blk1(x)
-#         x = self.blk2(x)
-#         x = self.avgpool(x)
-#         x = torch.flatten(x, 1)
-#         return x
-
-class Discriminator_res(nn.Module):
-    def __init__(self, channel=[128, 256, 512], norm_layer=nn.BatchNorm2d):
-        super(Discriminator_res, self).__init__()
-        downsample=nn.Sequential(
-                resnet.conv1x1(channel[0], channel[1], 2),
-                norm_layer(channel[1]),
-            )
-        downsample2=nn.Sequential(
-                resnet.conv1x1(channel[1], channel[2], 2),
-                norm_layer(channel[2]),
-            )
-
-        self.blk1 = resnet.BasicBlock(channel[0], channel[1], 2, downsample)
-        self.blk2 = resnet.BasicBlock(channel[1], channel[2], 2, downsample2)
-        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(512, 64)
-
-    def forward(self, x1, x2):
-        x = torch.cat((x1, x2), 1)
-        x = self.blk1(x)
-        x = self.blk2(x)
-        x = self.avgpool(x)
-        x = torch.flatten(x, 1)
-        x = self.fc(x)
-        return x
 
 class Simclr_head(nn.Module):
     def __init__(self, input =64, hidden1 = 64, hidden2 = 64):
@@ -170,8 +105,11 @@ class AugCon_eval(nn.Module):
 
         if mode == 'e':
             self.avgpool = nn.AdaptiveAvgPool2d((1,1))
-            self.fc= nn.Linear(64,10)
+
+            self.fc= nn.Linear(128,10)
         else:
+            self.fc1 = nn.Linear(64,64)
+            self.act = nn.ReLU()
             self.fc = nn.Linear(64,1)
         self.mode = mode
     def forward(self, img1, img2):
@@ -181,11 +119,13 @@ class AugCon_eval(nn.Module):
             #out2.register_hook(lambda grad: print('out2', grad.sum()))
             out= self.discriminator(out1, out2)
             #out.register_hook(lambda grad: print('out', grad.sum()))
+            out = self.act(self.fc1(out))
             out= self.fc(out)
             return out
         else: 
             out =self.encoder(img1)
             out= self.avgpool(out)
             out= torch.flatten(out,1)
+            
             out = self.fc(out)
             return out
