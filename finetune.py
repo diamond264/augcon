@@ -35,86 +35,20 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 
-import core.utils
 import core.loader
 import core.builder
 import core.transforms
 import core.relnet
 import core.resnet
+
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
 
-parser = argparse.ArgumentParser(description='AugContrast Pre-Training')
-
-### DATA PARAMETERS ###
-parser.add_argument('--data', metavar='DIR',
-                    default='/mnt/sting/hjyoon/projects/cross/ImageNet_ILSVRC2012_mini',
-                    help='path to dataset')
-
-### MULTIPROCESSING PARAMETERS ###
-parser.add_argument('-j', '--workers', default=32, type=int, metavar='N',
-                    help='number of data loading workers (default: 32)')
-parser.add_argument('--world-size', default=-1, type=int,
-                    help='number of nodes for distributed training')
-parser.add_argument('--rank', default=-1, type=int,
-                    help='node rank for distributed training')
-parser.add_argument('--dist-url', default='tcp://224.66.41.62:23456', type=str,
-                    help='url used to set up distributed training')
-parser.add_argument('--dist-backend', default='nccl', type=str,
-                    help='distributed backend')
-parser.add_argument('--seed', default=None, type=int,
-                    help='seed for initializing training. ')
-parser.add_argument('--gpu', default=None, type=int,
-                    help='GPU id to use.')
-parser.add_argument('--multiprocessing-distributed', action='store_true',
-                    help='Use multi-processing distributed training to launch '
-                         'N processes per node, which has N GPUs. This is the '
-                         'fastest way to use PyTorch for either single node or '
-                         'multi node data parallel training')
-
-### TRAINING & NETWORK HYPERPARAMETERS ###
-parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
-                    help='model architecture: ' +
-                        ' | '.join(model_names) +
-                        ' (default: resnet18)')
-parser.add_argument('--resume', default='', type=str, metavar='PATH',
-                    help='path to latest checkpoint (default: none)')
-parser.add_argument('--epochs', default=100, type=int, metavar='N',
-                    help='number of total epochs to run')
-parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
-                    help='manual epoch number (useful on restarts)')
-parser.add_argument('-b', '--batch-size', default=512, type=int,
-                    metavar='N',
-                    help='mini-batch size (default: 512), this is the total '
-                         'batch size of all GPUs on the current node when '
-                         'using Data Parallel or Distributed Data Parallel')
-parser.add_argument('--lr', '--learning-rate', default=0.00001, type=float,
-                    metavar='LR', help='initial (base) learning rate', dest='lr')
-parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
-                    help='momentum of SGD solver')
-parser.add_argument('--wd', '--weight-decay', default=1e-4, type=float,
-                    metavar='W', help='weight decay (default: 1e-4)',
-                    dest='weight_decay')
-
-### TRAINING UTILITIES ###
-parser.add_argument('-p', '--print-freq', default=100, type=int,
-                    metavar='N', help='print frequency (default: 10)')
-parser.add_argument('-s', '--save-dir', default='/mnt/sting/hjyoon/projects/augcontrast/models/temp',
-                    type=str, help='directory to save models (default: sting augcon model dir)')
-
-### AUGCONTRAST$ SPECIFIC CONFIGS ###
-parser.add_argument('--temp', default=0.07, type=float,
-                    help='softmax temperatqure parameter (default: 0.07)')
-parser.add_argument('--fix-pred-lr', action='store_true',
-                    help='Fix learning rate for the predictor')
-
-def main():
-    args = parser.parse_args()
-
-    if args.seed is not None:
-        random.seed(args.seed)
-        torch.manual_seed(args.seed)
+def run(config):
+    if config.seed is not None:
+        random.seed(config.seed)
+        torch.manual_seed(config.seed)
         cudnn.deterministic = True
         warnings.warn('You have chosen to seed training. '
                       'This will turn on the CUDNN deterministic setting, '
@@ -122,33 +56,33 @@ def main():
                       'You may see unexpected behavior when restarting '
                       'from checkpoints.')
 
-    if args.gpu is not None:
+    if config.multiprocessing.gpu is not None:
         warnings.warn('You have chosen a specific GPU. This will completely '
                       'disable data parallelism.')
 
-    if args.dist_url == "env://" and args.world_size == -1:
-        args.world_size = int(os.environ["WORLD_SIZE"])
+    if config.multiprocessing.dist_url == "env://" and config.multiprocessing.world_size == -1:
+        config.multiprocessing.world_size = int(os.environ["WORLD_SIZE"])
 
-    args.distributed = args.world_size > 1 or args.multiprocessing_distributed
+    config.multiprocessing.distributed = config.multiprocessing.world_size > 1 \
+        or config.multiprocessing.multiprocessing_distributed
 
     ngpus_per_node = torch.cuda.device_count()
     print(f'cuda is_available: {torch.cuda.is_available()}')
     print(f'ngpus_per_node: {ngpus_per_node}')
-    if args.multiprocessing_distributed:
+    if config.multiprocessing.multiprocessing_distributed:
         # Since we have ngpus_per_node processes per node, the total world_size
         # needs to be adjusted accordingly
-        args.world_size = ngpus_per_node * args.world_size
+        config.multiprocessing.world_size = ngpus_per_node * aconfig.multiprocessing.world_size
         # Use torch.multiprocessing.spawn to launch distributed processes: the
         # main_worker process function
-        mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, args))
+        mp.spawn(main_worker, nprocs=ngpus_per_node, config=(ngpus_per_node, config))
     else:
         # Simply call main_worker function
-        main_worker(args.gpu, ngpus_per_node, args)
+        main_worker(config.multiprocessing.gpu, ngpus_per_node, config)
 
 
 def main_worker(gpu, ngpus_per_node, args):
     args.gpu = gpu
-
     # suppress printing if not master
     if args.multiprocessing_distributed and args.gpu != 0:
         def print_pass(*args):
@@ -471,5 +405,6 @@ def accuracy(output, target, topk=(1,)):
             correct_k = correct[:k].reshape(-1).float().sum(0, keepdim=True)
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
+
 if __name__ == '__main__':
     main()

@@ -194,24 +194,25 @@ class Ref_loader(datasets.vision.VisionDataset):
         super().__init__(root, transform=transform)
         classes, class_to_idx = datasets.folder.find_classes(root)
         samples = AugConDatasetFolder.make_dataset(root, class_to_idx, extensions, is_valid_file)
-        print(len(samples))
-        sample_idx=np.array([[samples[i] for i in range(len(samples)) if samples[i][1]== idx]for idx in range(len(classes))])
+        sample_idx=np.array([[samples[i] for i in range(len(samples)) if samples[i][1]== idx]for idx in range(len(classes))], dtype=object)
         
         self.loader= loader
         self.classes = classes
         self.class_to_idx = class_to_idx
         self.sample_idx = sample_idx
         self.samples = samples
+
     def __getitem__(self, index: int):
         support_set= []
         for i in range(self.sample_idx.shape[0]):
             j = np.random.choice(len(self.sample_idx[i]),1, replace=True)[0]
-            j=0
-            sample = self.transform(self.loader(self.sample_idx[i,j][0]))
+            j = 0
+            sample = self.transform(self.loader(self.sample_idx[i][j][0]))
             support_set.append(sample)
         
         support_set= torch.stack(support_set)
         return support_set
+
     def __len__(self) -> int:
         return(len(self.samples))    
 
