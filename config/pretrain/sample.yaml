@@ -5,9 +5,11 @@ data:
   name: hhar
   class_type: gt
   domain_type: user
-  save_cache: false
-  load_cache: true
-  cache_path: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/processed_hhar_minmax_scaling_all.pkl
+  save_cache: true
+  load_cache: false
+  split_ratio: 0.8
+  save_opposite: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/processed_hhar_finetune_except_userF.pkl
+  cache_path: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/processed_hhar_pretrain_except_userF.pkl
 multiprocessing:
   multiprocessing_distributed: true
   workers: 32
@@ -26,7 +28,9 @@ train:
   fix_pred_lr: false
   weight_decay: 0.0001
   print_freq: 100
-  save_dir: /mnt/sting/hjyoon/projects/augcontrast/models/temp
+  save_dir: /mnt/sting/hjyoon/projects/augcontrast/models/hhar_pretrained_230412
+  cos: false
+  schedule: []
 model:
   type: cpc
   input_channels: 3

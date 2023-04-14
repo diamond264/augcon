@@ -31,7 +31,7 @@ import core.builder
 import core.transforms
 import core.relnet
 import core.resnet
-import core.net
+import core.net.CPC
 
 from data_loader.HHARDataset import HHARDataset
 
@@ -122,13 +122,13 @@ def main_worker(gpu, ngpus_per_node, config):
         model = core.builder.AugCon(d_encoder, r_encoder, config.model.temp)
     
     elif config.model.type == 'cpc':
-        encoder = core.net.CPCEncoder(config.model.input_channels,
+        encoder = core.net.CPC.Encoder(config.model.input_channels,
                                       config.model.z_dim)
         encoder = encoder.cuda(config.gpu)
-        aggregator = core.net.CPCAggregator(config.model.num_blocks,
+        aggregator = core.net.CPC.Aggregator(config.model.num_blocks,
                                             config.model.num_filters)
         aggregator = aggregator.cuda(config.gpu)
-        model = core.net.CPCFuturePredictor(encoder, aggregator,
+        model = core.net.CPC.FuturePredictor(encoder, aggregator,
                                                 config.model.z_dim,
                                                 config.model.pred_steps,
                                                 config.model.n_negatives,
@@ -149,9 +149,6 @@ def main_worker(gpu, ngpus_per_node, config):
             d_encoder = core.net.ResNet()
         else:
             assert 0, f"Network not supported"
-
-    # infer learning rate before changing batch size
-    init_lr = config.train.lr * config.train.batch_size / 256
 
     if config.multiprocessing.distributed:
         # Apply SyncBN
@@ -203,11 +200,11 @@ def main_worker(gpu, ngpus_per_node, config):
 
     # TODO: Define new option for configurable optimizer
     if config.train.optimizer == 'sgd':
-        optimizer = torch.optim.SGD(optim_params, init_lr,
+        optimizer = torch.optim.SGD(optim_params, config.train.lr,
                                     momentum=config.train.momentum,
                                     weight_decay=config.train.weight_decay)
     elif config.train.optimizer == 'adam':
-        optimizer = torch.optim.Adam(optim_params, init_lr,
+        optimizer = torch.optim.Adam(optim_params, config.train.lr,
                                      weight_decay=config.train.weight_decay)
     else:
         assert 0, f"optimizer not supported"
@@ -237,7 +234,10 @@ def main_worker(gpu, ngpus_per_node, config):
             domain_type=config.data.domain_type,
             load_cache=config.data.load_cache,
             save_cache=config.data.save_cache,
-            cache_path=config.data.cache_path
+            cache_path=config.data.cache_path,
+            split_ratio=config.data.split_ratio,
+            save_opposite=config.data.save_opposite,
+            user='f', complementary=True
         )
     else:
         dataset = HHARDataset(
@@ -246,12 +246,15 @@ def main_worker(gpu, ngpus_per_node, config):
             domain_type=config.data.domain_type,
             load_cache=config.data.load_cache,
             save_cache=config.data.save_cache,
-            cache_path=config.data.cache_path
+            cache_path=config.data.cache_path,
+            split_ratio=config.data.split_ratio,
+            save_opposite=config.data.save_opposite,
+            user='f', complementary=True
         )
         
     train_size = int(0.8 * len(dataset))
     val_size = int(0.1 * len(dataset))
-    test_size = int(0.1 * len(dataset))
+    test_size = len(dataset)-val_size-train_size
     train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, val_size, test_size])
     
     if config.multiprocessing.distributed:
@@ -266,7 +269,7 @@ def main_worker(gpu, ngpus_per_node, config):
         train_dataset, batch_size=config.train.batch_size, shuffle=(train_sampler is None),
         num_workers=config.multiprocessing.workers, sampler=train_sampler, drop_last=True)
 
-    print("start training")
+    print("start training...")
     for epoch in range(config.train.start_epoch, config.train.epochs):
         if config.multiprocessing.distributed:
             train_sampler.set_epoch(epoch)
@@ -303,8 +306,8 @@ def train(train_loader, model, criterion, optimizer, epoch, config):
     end = time.time()
     for i, x in enumerate(train_loader):
         feature = x[0].cuda(config.gpu)
-        class_label = x[1]
-        domain_label = x[2]
+        class_label = x[1].cuda(config.gpu)
+        domain_label = x[2].cuda(config.gpu)
         
         logits, targets = model(feature)
         loss = criterion(logits, targets)
@@ -376,14 +379,16 @@ class ProgressMeter(object):
         return '[' + fmt + '/' + fmt.format(num_batches) + ']'
 
 
-def adjust_learning_rate(optimizer, init_lr, epoch, config):
+def adjust_learning_rate(optimizer, epoch, config):
     """Decay the learning rate based on schedule"""
-    cur_lr = init_lr * 0.5 * (1. + math.cos(math.pi * epoch / config.train.epochs))
+    lr = config.train.lr
+    if config.train.cos:  # cosine lr schedule
+        lr *= 0.5 * (1.0 + math.cos(math.pi * epoch / config.train.epochs))
+    else:  # stepwise lr schedule
+        for milestone in config.train.schedule:
+            lr *= 0.1 if epoch >= milestone else 1.0
     for param_group in optimizer.param_groups:
-        if 'fix_lr' in param_group and param_group['fix_lr']:
-            param_group['lr'] = init_lr
-        else:
-            param_group['lr'] = cur_lr
+        param_group["lr"] = lr
 
 def accuracy(output, target, topk=(1,)):
     """Computes the accuracy over the k top predictions for the specified values of k"""

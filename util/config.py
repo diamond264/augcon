@@ -2,8 +2,10 @@
 class Config:
     def __init__(self):
         self.seed = None
+        self.evaluate = False
         self.model = ModelConfig()
         self.train = TrainConfig()
+        self.test = TestConfig()
         self.data = DataConfig()
         self.multiprocessing = MultiprocessingConfig()
 
@@ -25,9 +27,17 @@ class TrainConfig:
         self.print_freq = None
         self.save_dir = None
 
+class TestConfig:
+    def __init__(self):
+        self.batch_size = None
+
 class DataConfig:
     def __init__(self):
         self.dir = None
+        self.user = None
+        self.model = None
+        self.device = None
+        self.gt = None
 
 class MultiprocessingConfig:
     def __init__(self):

@@ -3,15 +3,16 @@ import pandas as pd
 import time
 import pickle
 import numpy as np
+from collections import defaultdict
 # import itertools
 
 class HHARDataset(torch.utils.data.Dataset):
     # load static files
-
     def __init__(self, file, class_type, domain_type, transform=None,
                  model=None, device=None, user=None, gt=None,
                  complementary=False, seq_len=256,
-                 load_cache=False, save_cache=False, cache_path=None):
+                 load_cache=False, save_cache=False, cache_path=None,
+                 split_ratio=0.8, save_opposite=""):
         """
         Args:
             file_path (string): Path to the csv file with annotations.
@@ -46,11 +47,17 @@ class HHARDataset(torch.utils.data.Dataset):
         self.device = device
         self.gt = gt
         self.complementary = complementary
+        self.split_ratio = split_ratio
+        self.save_opposite = save_opposite
 
         if load_cache:
             # Load the Tensordataset from the .pkl file
             with open(cache_path, 'rb') as f:
-                self.dataset = pickle.load(f)
+                self.features, self.class_labels, self.domain_labels = pickle.load(f)
+                self.dataset = torch.utils.data.TensorDataset(
+                    torch.from_numpy(self.features).float(),
+                    torch.from_numpy(self.class_labels),
+                    torch.from_numpy(self.domain_labels))
         else:
             self.df = pd.read_csv(file)
             if complementary:  # for multi domain
@@ -75,7 +82,7 @@ class HHARDataset(torch.utils.data.Dataset):
         
         if save_cache:
             with open(cache_path, 'wb') as f:
-                pickle.dump(self.dataset, f)
+                pickle.dump((self.features, self.class_labels, self.domain_labels), f)
 
     def preprocessing(self):
         self.num_domains = 0
@@ -133,6 +140,7 @@ class HHARDataset(torch.utils.data.Dataset):
 
             if domain in valid_domains:
                 domain_label = valid_domains.index(domain)
+                domain_label = self.domain_to_number(domain)
             else:
                 continue
 
@@ -148,6 +156,13 @@ class HHARDataset(torch.utils.data.Dataset):
         self.class_labels = np.array(self.class_labels)
         self.domain_labels = np.array(self.domain_labels)
         
+        if self.split_ratio != 0:
+            splitted = self.split_pretrain_data(self.features, self.class_labels, self.domain_labels, self.split_ratio, self.save_opposite)
+            self.features = splitted[0]
+            self.class_labels = splitted[1]
+            self.domain_labels = splitted[2]
+        
+        # TODO: composing this should be out of this function
         self.dataset = torch.utils.data.TensorDataset(
             torch.from_numpy(self.features).float(),
             torch.from_numpy(self.class_labels),
@@ -169,6 +184,120 @@ class HHARDataset(torch.utils.data.Dataset):
         # self.dataset = torch.utils.data.ConcatDataset(self.datasets)
         print('Valid domains:' + str(valid_domains))
 
+    def split_pretrain_data(self, features, class_labels, domain_labels, split_ratio=0.8, save_opposite=""):
+        # Create a dictionary to store the indices of each domain
+        domain_indices = defaultdict(list)
+        for i, domain in enumerate(domain_labels):
+            domain_indices[domain].append(i)
+
+        # Split the data by domain
+        final_indices = []
+        final_opposite_indices = []
+        for domain, indices in domain_indices.items():
+            split_len = int(len(indices)*split_ratio)
+            sampled_indices = np.random.choice(len(indices), size=split_len, replace=False)
+            splitted_indices = np.array(indices)[sampled_indices]
+            final_indices.extend(splitted_indices)
+            
+            if save_opposite:
+                opposite_indices = np.setdiff1d(np.arange(len(indices)), sampled_indices)
+                splitted_opposite_indices = np.array(indices)[opposite_indices]
+                final_opposite_indices.extend(splitted_opposite_indices)
+
+        # Split the data into the training and validation sets
+        splitted_features = features[final_indices]
+        splitted_class_labels = class_labels[final_indices]
+        splitted_domain_labels = domain_labels[final_indices]
+        
+        if save_opposite:
+            splitted_opposite_features = features[final_opposite_indices]
+            splitted_opposite_class_labels = class_labels[final_opposite_indices]
+            splitted_opposite_domain_labels = domain_labels[final_opposite_indices]
+            
+            opposite_data = (splitted_opposite_features,
+                             splitted_opposite_class_labels,
+                             splitted_opposite_domain_labels)
+            with open(save_opposite, 'wb') as f:
+                pickle.dump(opposite_data, f)
+
+        return (splitted_features, splitted_class_labels, splitted_domain_labels)
+
+    def filter_domain(self, user=None, model=None, device=None, gt=None):
+        # Create a dictionary to store the indices of each domain
+        if self.domain_type == 'user':
+            filtered_domain = self.domain_to_number(user)
+        if self.domain_type == 'model':
+            filtered_domain = self.domain_to_number(model)
+        if self.domain_type == 'device':
+            filtered_domain = self.domain_to_number(device)
+        if self.domain_type == 'gt':
+            filtered_domain = self.domain_to_number(gt)
+        
+        indices = []
+        for i, domain in enumerate(self.domain_labels):
+            if domain == filtered_domain:
+                indices.append(i)
+
+        # Split the data into the training and validation sets
+        self.features = self.features[indices]
+        self.class_labels = self.class_labels[indices]
+        self.domain_labels = self.domain_labels[indices]
+        
+        self.dataset = torch.utils.data.TensorDataset(
+                    torch.from_numpy(self.features).float(),
+                    torch.from_numpy(self.class_labels),
+                    torch.from_numpy(self.domain_labels))
+    
+    def split_kshot_dataset(self, shot_num, test_size, val_size):
+        class_indices = defaultdict(list)
+        for i, classs_lab in enumerate(self.class_labels):
+            class_indices[classs_lab].append(i)
+        
+        train_indices = []
+        test_val_indices = []
+        for class_lab, indices in class_indices.items():
+            sampled_indices = np.random.choice(len(indices), size=shot_num, replace=False)
+            splitted_indices = np.array(indices)[sampled_indices]
+            train_indices.extend(splitted_indices)
+            
+            opposite_indices = np.setdiff1d(np.arange(len(indices)), sampled_indices)
+            splitted_opposite_indices = np.array(indices)[opposite_indices]
+            test_val_indices.extend(splitted_opposite_indices)
+
+        # Split the data into the training and validation sets
+        train_features = self.features[train_indices]
+        train_class_labels = self.class_labels[train_indices]
+        train_domain_labels = self.domain_labels[train_indices]
+        
+        sampled_indices = np.random.choice(len(test_val_indices), size=test_size, replace=False)
+        test_indices = np.array(test_val_indices)[sampled_indices]
+        opposite_indices = np.setdiff1d(np.arange(len(test_val_indices)), sampled_indices)
+        sampled_indices = np.random.choice(len(opposite_indices), size=val_size, replace=False)
+        val_indices = np.array(opposite_indices)[sampled_indices]
+        
+        test_features = self.features[test_indices]
+        test_class_labels = self.class_labels[test_indices]
+        test_domain_labels = self.domain_labels[test_indices]
+        
+        val_features = self.features[val_indices]
+        val_class_labels = self.class_labels[val_indices]
+        val_domain_labels = self.domain_labels[val_indices]
+        
+        train_dataset = torch.utils.data.TensorDataset(
+            torch.from_numpy(train_features).float(),
+            torch.from_numpy(train_class_labels),
+            torch.from_numpy(train_domain_labels))
+        test_dataset = torch.utils.data.TensorDataset(
+            torch.from_numpy(test_features).float(),
+            torch.from_numpy(test_class_labels),
+            torch.from_numpy(test_domain_labels))
+        val_dataset = torch.utils.data.TensorDataset(
+            torch.from_numpy(val_features).float(),
+            torch.from_numpy(val_class_labels),
+            torch.from_numpy(val_domain_labels))
+        
+        return train_dataset, test_dataset, val_dataset
+
     def __len__(self):
         return len(self.dataset)
 
@@ -179,6 +308,15 @@ class HHARDataset(torch.utils.data.Dataset):
     # TODO: TBI
     # def get_datasets_per_domain(self):
     #     return self.kshot_datasets
+    
+    def domain_to_number(self, label):
+        domains = self.metadata[f'{self.domain_type}s']
+        dic = {v: i for i, v in enumerate(domains)}
+        if label in dic.keys():
+            return dic[label]
+        else:
+            assert 0, f'no such label in class info'
+            return -1
 
     def class_to_number(self, label):
         classes = self.metadata[f'{self.class_type}s']

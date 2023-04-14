@@ -8,10 +8,10 @@ class CPCEncoder(nn.Module):
     def __init__(self, input_channels=3, z_dim=256):
         super().__init__()
         self.encoder = nn.Sequential(
-            nn.Conv1d(input_channels, 32, kernel_size=4, stride=2),#, padding_mode="reflect"),
+            nn.Conv1d(input_channels, 32, kernel_size=8, stride=4),#, padding_mode="reflect"),
             nn.ReLU(),
             nn.Dropout(p=0.2),
-            nn.Conv1d(32, 64, kernel_size=1, stride=1),
+            nn.Conv1d(32, 64, kernel_size=4, stride=2),
             nn.ReLU(),
             nn.Dropout(p=0.2),
             nn.Conv1d(64, 128, kernel_size=1, stride=1),
