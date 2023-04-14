@@ -4,13 +4,13 @@ data:
   path: /mnt/sting/hjyoon/projects/cross/HHAR/ActivityRecognitionExp/hhar_minmax_scaling_all.csv
   name: hhar
   class_type: gt
-  domain_type: user
+  domain_type: model
   save_cache: true
   load_cache: false
   split_ratio: 0.8
-  save_opposite: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/processed_hhar_finetune_except_userF.pkl
-  cache_path: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/processed_hhar_pretrain_except_userF.pkl
-  user: 'f'
+  save_opposite: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/processed_hhar_finetune_except_modelNexus4.pkl
+  cache_path: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/processed_hhar_pretrain_except_modelNexus4.pkl
+  model: 'nexus4'
 multiprocessing:
   multiprocessing_distributed: true
   workers: 32
@@ -29,7 +29,7 @@ train:
   fix_pred_lr: false
   weight_decay: 0.0001
   print_freq: 100
-  save_dir: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/230414_except_userf
+  save_dir: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/230414_except_modelnexus4
   cos: false
   schedule: []
 model:

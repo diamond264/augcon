@@ -37,7 +37,7 @@ train:
   fix_pred_lr: false
   weight_decay: 0
   print_freq: 2
-  save_dir: /mnt/sting/hjyoon/projects/augcontrast/models/temp
+  save_dir: /mnt/sting/hjyoon/projects/augcontrast/models/finetuned
   cos: false
   schedule: []
 test:

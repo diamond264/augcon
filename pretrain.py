@@ -237,7 +237,9 @@ def main_worker(gpu, ngpus_per_node, config):
             cache_path=config.data.cache_path,
             split_ratio=config.data.split_ratio,
             save_opposite=config.data.save_opposite,
-            user=config.data.user, complementary=True
+            user=config.data.user,
+            model=config.data.model,
+            complementary=True
         )
     else:
         dataset = HHARDataset(
@@ -249,7 +251,9 @@ def main_worker(gpu, ngpus_per_node, config):
             cache_path=config.data.cache_path,
             split_ratio=config.data.split_ratio,
             save_opposite=config.data.save_opposite,
-            user=config.data.user, complementary=True
+            user=config.data.user,
+            model=config.data.model,
+            complementary=True
         )
         
     train_size = int(0.8 * len(dataset))
