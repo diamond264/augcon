@@ -236,11 +236,11 @@ def main_worker(gpu, ngpus_per_node, config):
             split_ratio=config.data.split_ratio,
             save_opposite=config.data.save_opposite,
             user=config.data.user,
+            model=config.data.model,
+            fixed_data_path=config.data.fixed_data_path,
             complementary=False
         )
-        print(len(dataset))
-        dataset.filter_domain(config.data.user)
-        print(len(dataset))
+        dataset.filter_domain(user=config.data.user, model=config.data.model)
     else:
         dataset = HHARDataset(
             file=config.data.path,
@@ -251,12 +251,16 @@ def main_worker(gpu, ngpus_per_node, config):
             cache_path=config.data.cache_path,
             split_ratio=config.data.split_ratio,
             save_opposite=config.data.save_opposite,
-            user='f', complementary=False
+            user=config.data.user,
+            model=config.data.model,
+            fixed_data_path=config.data.fixed_data_path,
+            complementary=False
         )
-        
+        dataset.filter_domain(user=config.data.user, model=config.data.model)
+    
     train_size = config.data.shot_num*config.data.num_cls
-    test_size = int(len(dataset)*0.5)
-    val_size = len(dataset)-train_size-test_size
+    test_size = config.data.test_size
+    val_size = config.data.val_size
     print(f'train size: {train_size}, test size: {test_size}, val size: {val_size}')
     train_dataset, test_dataset, val_dataset = dataset.split_kshot_dataset(shot_num=config.data.shot_num, test_size=test_size, val_size=val_size)
     # train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, val_size, test_size])
@@ -296,7 +300,7 @@ def main_worker(gpu, ngpus_per_node, config):
     for epoch in range(config.train.start_epoch, config.train.epochs):
         if config.multiprocessing.distributed:
             train_sampler.set_epoch(epoch)
-        # adjust_learning_rate(optimizer, epoch, config)
+        adjust_learning_rate(optimizer, epoch, config)
 
         # train for one epoch
         train(train_loader, model, criterion, optimizer, epoch, config)
@@ -422,10 +426,14 @@ def validate(val_loader, model, criterion, config):
 
 
 def save_checkpoint(save_dir, state, is_best, filename="checkpoint.pth.tar"):
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+        
     filepath = os.path.join(save_dir, filename)
+    best_path = os.path.join(save_dir, "model_best.pth.tar")
     torch.save(state, filepath)
     if is_best:
-        shutil.copyfile(filepath, "model_best.pth.tar")
+        shutil.copyfile(filepath, best_path)
 
 
 def sanity_check(state_dict, pretrained_weights):

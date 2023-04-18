@@ -1,5 +1,6 @@
 import torch.utils.data
 import pandas as pd
+import os
 import time
 import pickle
 import numpy as np
@@ -12,7 +13,7 @@ class HHARDataset(torch.utils.data.Dataset):
                  model=None, device=None, user=None, gt=None,
                  complementary=False, seq_len=256,
                  load_cache=False, save_cache=False, cache_path=None,
-                 split_ratio=0.8, save_opposite=""):
+                 split_ratio=0.8, save_opposite="", fixed_data_path=""):
         """
         Args:
             file_path (string): Path to the csv file with annotations.
@@ -49,6 +50,16 @@ class HHARDataset(torch.utils.data.Dataset):
         self.complementary = complementary
         self.split_ratio = split_ratio
         self.save_opposite = save_opposite
+        self.fixed_data_path = fixed_data_path
+        
+        if os.path.exists(self.fixed_data_path): return
+        
+        self.df = pd.read_csv(file)
+        self.transform = transform
+        
+        ppt = time.time()
+        self.dataset = None
+        self.preprocess()
 
         if load_cache:
             # Load the Tensordataset from the .pkl file
@@ -139,7 +150,7 @@ class HHARDataset(torch.utils.data.Dataset):
                     break
 
             if domain in valid_domains:
-                domain_label = valid_domains.index(domain)
+                # domain_label = valid_domains.index(domain)
                 domain_label = self.domain_to_number(domain)
             else:
                 continue
@@ -223,15 +234,21 @@ class HHARDataset(torch.utils.data.Dataset):
         return (splitted_features, splitted_class_labels, splitted_domain_labels)
 
     def filter_domain(self, user=None, model=None, device=None, gt=None):
+        if os.path.exists(self.fixed_data_path): return
+        
         # Create a dictionary to store the indices of each domain
         if self.domain_type == 'user':
             filtered_domain = self.domain_to_number(user)
+            print(f'filtered domain: {user}')
         if self.domain_type == 'model':
             filtered_domain = self.domain_to_number(model)
+            print(f'filtered domain: {model}')
         if self.domain_type == 'device':
             filtered_domain = self.domain_to_number(device)
+            print(f'filtered domain: {device}')
         if self.domain_type == 'gt':
             filtered_domain = self.domain_to_number(gt)
+            print(f'filtered domain: {gt}')
         
         indices = []
         for i, domain in enumerate(self.domain_labels):
@@ -249,6 +266,9 @@ class HHARDataset(torch.utils.data.Dataset):
                     torch.from_numpy(self.domain_labels))
     
     def split_kshot_dataset(self, shot_num, test_size, val_size):
+        if os.path.exists(self.fixed_data_path):
+            return self.load_fixed_dataset_if_exists()
+        
         class_indices = defaultdict(list)
         for i, classs_lab in enumerate(self.class_labels):
             class_indices[classs_lab].append(i)
@@ -296,6 +316,9 @@ class HHARDataset(torch.utils.data.Dataset):
             torch.from_numpy(val_class_labels),
             torch.from_numpy(val_domain_labels))
         
+        if self.fixed_data_path and not os.path.exists(self.fixed_data_path):
+             with open(self.fixed_data_path, 'wb') as f:
+                pickle.dump((train_dataset, test_dataset, val_dataset), f)
         return train_dataset, test_dataset, val_dataset
 
     def __len__(self):
@@ -332,6 +355,13 @@ class HHARDataset(torch.utils.data.Dataset):
             idx = idx.item()
 
         return self.dataset[idx]
+    
+    def load_fixed_dataset_if_exists(self):
+        if os.path.exists(self.fixed_data_path):
+            print("Loading fixed dataset...")
+            with open(self.fixed_data_path, 'rb') as f:
+                train_dataset, test_dataset, val_dataset = pickle.load(f)
+                return train_dataset, test_dataset, val_dataset
 
 
 # TODO: TBI

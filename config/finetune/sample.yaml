@@ -1,52 +1,52 @@
 seed: null
 gpu: 0
 evaluate: false
-# evaluate: true
 data:
-  path: /mnt/sting/hjyoon/projects/cross/HHAR/ActivityRecognitionExp/hhar_minmax_scaling_all.csv
-  name: hhar
-  class_type: gt
-  num_cls: 6
-  shot_num: 10
-  domain_type: user
-  save_cache: false
-  load_cache: false
-  split_ratio: 0
-  save_opposite: ''
-  # cache_path: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/processed_hhar_finetune_userF.pkl
-  cache_path: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/processed_hhar_finetune_except_userF.pkl
-  user: 'f'
+    path: /mnt/sting/hjyoon/projects/cross/HHAR/ActivityRecognitionExp/hhar_minmax_scaling_all.csv
+    name: hhar
+    class_type: gt
+    num_cls: 6
+    shot_num: 1
+    test_size: 1000
+    val_size: 500
+    domain_type: user
+    save_cache: false
+    load_cache: false
+    split_ratio: 0
+    save_opposite: ''
+    user: a
+    cache_path: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/processed_hhar_finetune_except_userF.pkl
+    fixed_data_path: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/kshot_1_dataset_target_usera.pkl
 multiprocessing:
-  multiprocessing_distributed: false
-  workers: 32
-  world_size: 1
-  rank: 0
-  dist_url: tcp://localhost:10002
-  dist_backend: nccl
+    multiprocessing_distributed: false
+    workers: 32
+    world_size: 1
+    rank: 0
+    dist_url: tcp://localhost:10002
+    dist_backend: nccl
 train:
-  pretrained: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/hhar_pretrained_230412/checkpoint_0099.pth.tar2
-  optimizer: adam
-  criterion: crossentropy
-  # resume: /mnt/sting/hjyoon/projects/augcontrast/models/finetuned/finetuned_f_0414/checkpoint.pth.tar
-  # resume: ./model_best.pth.tar
-  resume: ''
-  epochs: 50
-  start_epoch: 0
-  batch_size: 16
-  lr: 0.0005
-  fix_pred_lr: false
-  weight_decay: 0
-  print_freq: 2
-  save_dir: /mnt/sting/hjyoon/projects/augcontrast/models/finetuned
-  cos: false
-  schedule: []
+    pretrained: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/230414_except_userf/checkpoint_0079.pth.tar
+    optimizer: adam
+    criterion: crossentropy
+    resume: ''
+    epochs: 50
+    start_epoch: 0
+    batch_size: 2
+    # lr: 0.001
+    lr: 0.0005
+    fix_pred_lr: false
+    weight_decay: 0
+    print_freq: 5
+    save_dir: /mnt/sting/hjyoon/projects/augcontrast/models/finetuned/pretrained_except_f_finetuned_d_shot_1
+    cos: false
+    schedule: [10, 30]
 test:
-  batch_size: 16
-  print_freq: 100
+    batch_size: 2
+    print_freq: 100
 model:
-  type: cpc
-  input_channels: 3
-  z_dim: 256
-  num_blocks: 5
-  num_filters: 256
-  seq_len: 30
+    type: cpc
+    input_channels: 3
+    z_dim: 256
+    num_blocks: 5
+    num_filters: 256
+    seq_len: 30

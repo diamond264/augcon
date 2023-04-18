@@ -12,6 +12,7 @@ import random
 import shutil
 import time
 import warnings
+import pickle
 
 import torch
 import torch.nn as nn
@@ -228,19 +229,12 @@ def main_worker(gpu, ngpus_per_node, config):
             print("=> no checkpoint found at '{}'".format(config.train.resume))
 
     if config.data.name == 'hhar':
-        dataset = HHARDataset(
-            file=config.data.path,
-            class_type=config.data.class_type,
-            domain_type=config.data.domain_type,
-            load_cache=config.data.load_cache,
-            save_cache=config.data.save_cache,
-            cache_path=config.data.cache_path,
-            split_ratio=config.data.split_ratio,
-            save_opposite=config.data.save_opposite,
-            user=config.data.user,
-            model=config.data.model,
-            complementary=True
-        )
+        with open(config.data.train_dataset_path, 'rb') as f:
+            train_dataset = pickle.load(f)
+        with open(config.data.test_dataset_path, 'rb') as f:
+            test_dataset = pickle.load(f)
+        with open(config.data.val_dataset_path, 'rb') as f:
+            val_dataset = pickle.load(f)
     else:
         dataset = HHARDataset(
             file=config.data.path,
@@ -256,10 +250,10 @@ def main_worker(gpu, ngpus_per_node, config):
             complementary=True
         )
         
-    train_size = int(0.8 * len(dataset))
-    val_size = int(0.1 * len(dataset))
-    test_size = len(dataset)-val_size-train_size
-    train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, val_size, test_size])
+    # train_size = int(0.8 * len(dataset))
+    # val_size = int(0.1 * len(dataset))
+    # test_size = len(dataset)-val_size-train_size
+    # train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, val_size, test_size])
     
     if config.multiprocessing.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
@@ -336,10 +330,14 @@ def train(train_loader, model, criterion, optimizer, epoch, config):
 
 
 def save_checkpoint(save_dir, state, is_best, filename='checkpoint.pth.tar'):
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    
     filename = os.path.join(save_dir, filename)
+    best_path = os.path.join(save_dir, 'model_best.pth.tar')
     torch.save(state, filename)
     if is_best:
-        shutil.copyfile(filename, 'model_best.pth.tar')
+        shutil.copyfile(filename, best_path)
 
 
 class AverageMeter(object):
