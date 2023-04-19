@@ -231,6 +231,8 @@ def main_worker(gpu, ngpus_per_node, config):
     if config.data.name == 'hhar':
         with open(config.data.train_dataset_path, 'rb') as f:
             train_dataset = pickle.load(f)
+            indices = random.sample(range(len(train_dataset)), 15000)
+            train_dataset = torch.utils.data.Subset(train_dataset, indices)
         with open(config.data.test_dataset_path, 'rb') as f:
             test_dataset = pickle.load(f)
         with open(config.data.val_dataset_path, 'rb') as f:
