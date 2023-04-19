@@ -11,6 +11,7 @@ import shutil
 import time
 import warnings
 import math
+import pickle
 
 import torch
 import torch.backends.cudnn as cudnn
@@ -226,21 +227,12 @@ def main_worker(gpu, ngpus_per_node, config):
             print("=> no checkpoint found at '{}'".format(config.train.resume))
 
     if config.data.name == 'hhar':
-        dataset = HHARDataset(
-            file=config.data.path,
-            class_type=config.data.class_type,
-            domain_type=config.data.domain_type,
-            load_cache=config.data.load_cache,
-            save_cache=config.data.save_cache,
-            cache_path=config.data.cache_path,
-            split_ratio=config.data.split_ratio,
-            save_opposite=config.data.save_opposite,
-            user=config.data.user,
-            model=config.data.model,
-            fixed_data_path=config.data.fixed_data_path,
-            complementary=False
-        )
-        dataset.filter_domain(user=config.data.user, model=config.data.model)
+        with open(config.data.train_dataset_path, 'rb') as f:
+            train_dataset = pickle.load(f)
+        with open(config.data.test_dataset_path, 'rb') as f:
+            test_dataset = pickle.load(f)
+        with open(config.data.val_dataset_path, 'rb') as f:
+            val_dataset = pickle.load(f)
     else:
         dataset = HHARDataset(
             file=config.data.path,
@@ -258,11 +250,11 @@ def main_worker(gpu, ngpus_per_node, config):
         )
         dataset.filter_domain(user=config.data.user, model=config.data.model)
     
-    train_size = config.data.shot_num*config.data.num_cls
-    test_size = config.data.test_size
-    val_size = config.data.val_size
-    print(f'train size: {train_size}, test size: {test_size}, val size: {val_size}')
-    train_dataset, test_dataset, val_dataset = dataset.split_kshot_dataset(shot_num=config.data.shot_num, test_size=test_size, val_size=val_size)
+    # train_size = config.data.shot_num*config.data.num_cls
+    # test_size = config.data.test_size
+    # val_size = config.data.val_size
+    # print(f'train size: {train_size}, test size: {test_size}, val size: {val_size}')
+    # train_dataset, test_dataset, val_dataset = dataset.split_kshot_dataset(shot_num=config.data.shot_num, test_size=test_size, val_size=val_size)
     # train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, val_size, test_size])
 
     if config.multiprocessing.distributed:

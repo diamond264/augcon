@@ -11,9 +11,7 @@ from collections import defaultdict
 class ProcessHHAR():
     def __init__(self, file, class_type, seq_len=256,
                  split_ratio=0.8, drop_size_threshold=500,
-                 model=None, user=None, gt=None,
                  shots=[10, 5, 2, 1],
-                 pretrain_dir='', finetune_dir='',
                  finetune_test_size=300, finetune_val_size=100):
         self.metadata = {
             'user': ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'],
@@ -24,8 +22,6 @@ class ProcessHHAR():
                         's3_1', 's3_2', 's3mini_1', 's3mini_2'], # *** Devices are not considered
             'gt': ['bike', 'sit', 'stand', 'walk', 'stairsup', 'stairsdown']
         }
-        self.pretrain_dir = pretrain_dir
-        self.finetune_dir = finetune_dir
         
         self.finetune_test_size = finetune_test_size
         self.finetune_val_size = finetune_val_size
@@ -37,10 +33,6 @@ class ProcessHHAR():
         self.domain_types = ['user', 'model', 'gt']
         self.class_type = class_type
         self.domain_types.remove(self.class_type)
-        
-        self.user = user
-        self.model = model
-        self.gt = gt
         
         self.split_ratio = split_ratio
         self.shots = shots
@@ -54,17 +46,28 @@ class ProcessHHAR():
         print(f'Valid domains (size {len(self.valid_domains)}):')
         print(self.valid_domains)
         
+        data = (self.features, self.class_labels, self.domain_labels)
+        self.pt_data, self.ft_data = self.split_pt_ft(data)
+    
+    def set_domain(self, user=None, model=None, gt=None):
+        self.user = user
+        self.model = model
+        self.gt = gt
+        
         domain_dic = {
             'user': self.class_to_number('user', self.user) if self.user else None,
             'model': self.class_to_number('model', self.model) if self.model else None,
             'gt': self.class_to_number('gt', self.gt) if self.gt else None
         }
         self.domain = tuple([domain_dic[dom] for dom in self.domain_types])
-        print(f'Target domain:')
-        print(self.domain)
+        print(f'Set target domain: {self.domain}')
         
         if not self.domain in self.valid_domains:
-            assert 0, 'not a valid domain'
+            self.user = None
+            self.model = None
+            self.gt = None
+            self.domain = None
+            print("[ERR] not a valid domain")
     
     def drop_minorities(self, drop_size_threshold):
         domains = []
@@ -119,31 +122,32 @@ class ProcessHHAR():
         
         return valid_domains
     
-    def split_source_target(self):
+    def split_source_target(self, data):
+        features, class_labels, domain_labels = data
         source_idxs = []
         target_idxs = []
         print('splitting source-domain data and target-domain data')
-        for idx, domain in tqdm(enumerate(self.domain_labels)):
+        for idx, domain in tqdm(enumerate(domain_labels)):
             if domain == self.domain:
                 target_idxs.append(idx)
             elif domain[0] != self.domain[0] and domain[1] != self.domain[1]:
                 source_idxs.append(idx)
         
-        source_data = ([self.features[i] for i in source_idxs],
-                   [self.class_labels[i] for i in source_idxs],
-                   [self.domain_labels[i] for i in source_idxs])
-        target_data = ([self.features[i] for i in target_idxs],
-                   [self.class_labels[i] for i in target_idxs],
-                   [self.domain_labels[i] for i in target_idxs])
+        source_data = ([features[i] for i in source_idxs],
+                   [class_labels[i] for i in source_idxs],
+                   [domain_labels[i] for i in source_idxs])
+        target_data = ([features[i] for i in target_idxs],
+                   [class_labels[i] for i in target_idxs],
+                   [domain_labels[i] for i in target_idxs])
         return source_data, target_data
     
-    def process(self):
-        self.source_data, self.target_data = self.split_source_target()
-        print(f'Loaded source domain data({len(self.source_data[0])}) and target domain data({len(self.target_data[0])})')
-        pt_data, source_ft_data = self.split_pt_ft(self.source_data)
-        print(f'Splitted source domain data into pre-training data({len(pt_data[0])}) and fine-tuning data({len(source_ft_data[0])})')
+    def process(self, pretrain_dir='', finetune_dir='',):
+        pt_source_data, pt_target_data = self.split_source_target(self.pt_data)
+        print(f'Loaded source domain pre-training data({len(pt_source_data[0])})')
+        ft_source_data, ft_target_dta = self.split_source_target(self.ft_data)
+        print(f'Loaded target domain fine-tuning data({len(ft_target_dta[0])})')
         
-        pt_features, pt_class_labels, pt_domain_labels = pt_data
+        pt_features, pt_class_labels, pt_domain_labels = pt_source_data
         pt_idxs = list(range(len(pt_features)))
         random.shuffle(pt_idxs)
         train_idxs = pt_idxs[:int(0.8*len(pt_idxs))]
@@ -153,60 +157,60 @@ class ProcessHHAR():
         features = [pt_features[i] for i in train_idxs]
         class_labels = [pt_class_labels[i] for i in train_idxs]
         domain_labels = [pt_domain_labels[i] for i in train_idxs]
-        pretrain_train_path = os.path.join(self.pretrain_dir, 'train.pkl')
+        pretrain_train_path = os.path.join(pretrain_dir, 'train.pkl')
         self.save(features, class_labels, domain_labels, pretrain_train_path)
         
         features = [pt_features[i] for i in test_idxs]
         class_labels = [pt_class_labels[i] for i in test_idxs]
         domain_labels = [pt_domain_labels[i] for i in test_idxs]
-        pretrain_test_path = os.path.join(self.pretrain_dir, 'test.pkl')
+        pretrain_test_path = os.path.join(pretrain_dir, 'test.pkl')
         self.save(features, class_labels, domain_labels, pretrain_test_path)
         
         features = [pt_features[i] for i in val_idxs]
         class_labels = [pt_class_labels[i] for i in val_idxs]
         domain_labels = [pt_domain_labels[i] for i in val_idxs]
-        pretrain_val_path = os.path.join(self.pretrain_dir, 'val.pkl')
+        pretrain_val_path = os.path.join(pretrain_dir, 'val.pkl')
         self.save(features, class_labels, domain_labels, pretrain_val_path)
         print(f'Saved pre-training data of source domain')
         
-        source_features, source_class_labels, source_domain_labels = source_ft_data
-        idx_per_source_classes = {}
-        for idx, class_label in enumerate(source_class_labels):
-            if class_label in idx_per_source_classes.keys():
-                idx_per_source_classes[class_label].append(idx)
-            else: idx_per_source_classes[class_label] = [idx]
+        # source_features, source_class_labels, source_domain_labels = source_ft_data
+        # idx_per_source_classes = {}
+        # for idx, class_label in enumerate(source_class_labels):
+        #     if class_label in idx_per_source_classes.keys():
+        #         idx_per_source_classes[class_label].append(idx)
+        #     else: idx_per_source_classes[class_label] = [idx]
         
-        for shot in self.shots:
-            train_idxs = []
-            remaining_idxs = []
-            for class_label, idxs in idx_per_source_classes.items():
-                random.shuffle(idxs)
-                train_idxs.extend(idxs[:shot])
-                remaining_idxs.extend(idxs[shot:])
-            random.shuffle(remaining_idxs)
-            test_idxs = remaining_idxs[:self.finetune_test_size]
-            val_idxs = remaining_idxs[self.finetune_test_size:self.finetune_test_size+self.finetune_val_size]
+        # for shot in self.shots:
+        #     train_idxs = []
+        #     remaining_idxs = []
+        #     for class_label, idxs in idx_per_source_classes.items():
+        #         random.shuffle(idxs)
+        #         train_idxs.extend(idxs[:shot])
+        #         remaining_idxs.extend(idxs[shot:])
+        #     random.shuffle(remaining_idxs)
+        #     test_idxs = remaining_idxs[:self.finetune_test_size]
+        #     val_idxs = remaining_idxs[self.finetune_test_size:self.finetune_test_size+self.finetune_val_size]
                 
-            features = [source_features[i] for i in train_idxs]
-            class_labels = [source_class_labels[i] for i in train_idxs]
-            domain_labels = [source_domain_labels[i] for i in train_idxs]
-            finetune_source_train_path = os.path.join(self.finetune_dir, f'{shot}shot', 'source', 'train.pkl')
-            self.save(features, class_labels, domain_labels, finetune_source_train_path)
+        #     features = [source_features[i] for i in train_idxs]
+        #     class_labels = [source_class_labels[i] for i in train_idxs]
+        #     domain_labels = [source_domain_labels[i] for i in train_idxs]
+        #     finetune_source_train_path = os.path.join(finetune_dir, f'{shot}shot', 'source', 'train.pkl')
+        #     self.save(features, class_labels, domain_labels, finetune_source_train_path)
             
-            features = [source_features[i] for i in test_idxs]
-            class_labels = [source_class_labels[i] for i in test_idxs]
-            domain_labels = [source_domain_labels[i] for i in test_idxs]
-            finetune_source_test_path = os.path.join(self.finetune_dir, f'{shot}shot', 'source', 'test.pkl')
-            self.save(features, class_labels, domain_labels, finetune_source_test_path)
+        #     features = [source_features[i] for i in test_idxs]
+        #     class_labels = [source_class_labels[i] for i in test_idxs]
+        #     domain_labels = [source_domain_labels[i] for i in test_idxs]
+        #     finetune_source_test_path = os.path.join(finetune_dir, f'{shot}shot', 'source', 'test.pkl')
+        #     self.save(features, class_labels, domain_labels, finetune_source_test_path)
             
-            features = [source_features[i] for i in val_idxs]
-            class_labels = [source_class_labels[i] for i in val_idxs]
-            domain_labels = [source_domain_labels[i] for i in val_idxs]
-            finetune_source_val_path = os.path.join(self.finetune_dir, f'{shot}shot', 'source', 'val.pkl')
-            self.save(features, class_labels, domain_labels, finetune_source_val_path)
-        print(f'Saved fine-tuning data of target domain')
+        #     features = [source_features[i] for i in val_idxs]
+        #     class_labels = [source_class_labels[i] for i in val_idxs]
+        #     domain_labels = [source_domain_labels[i] for i in val_idxs]
+        #     finetune_source_val_path = os.path.join(finetune_dir, f'{shot}shot', 'source', 'val.pkl')
+        #     self.save(features, class_labels, domain_labels, finetune_source_val_path)
+        # print(f'Saved fine-tuning data of target domain')
         
-        target_features, target_class_labels, target_domain_labels = self.target_data
+        target_features, target_class_labels, target_domain_labels = ft_target_dta
         idx_per_target_classes = {}
         for idx, class_label in enumerate(target_class_labels):
             if class_label in idx_per_target_classes.keys():
@@ -227,19 +231,19 @@ class ProcessHHAR():
             features = [target_features[i] for i in train_idxs]
             class_labels = [target_class_labels[i] for i in train_idxs]
             domain_labels = [target_domain_labels[i] for i in train_idxs]
-            finetune_target_train_path = os.path.join(self.finetune_dir, f'{shot}shot', 'target', 'train.pkl')
+            finetune_target_train_path = os.path.join(finetune_dir, f'{shot}shot', 'target', 'train.pkl')
             self.save(features, class_labels, domain_labels, finetune_target_train_path)
             
             features = [target_features[i] for i in test_idxs]
             class_labels = [target_class_labels[i] for i in test_idxs]
             domain_labels = [target_domain_labels[i] for i in test_idxs]
-            finetune_target_test_path = os.path.join(self.finetune_dir, f'{shot}shot', 'target', 'test.pkl')
+            finetune_target_test_path = os.path.join(finetune_dir, f'{shot}shot', 'target', 'test.pkl')
             self.save(features, class_labels, domain_labels, finetune_target_test_path)
             
             features = [target_features[i] for i in val_idxs]
             class_labels = [target_class_labels[i] for i in val_idxs]
             domain_labels = [target_domain_labels[i] for i in val_idxs]
-            finetune_target_val_path = os.path.join(self.finetune_dir, f'{shot}shot', 'target', 'val.pkl')
+            finetune_target_val_path = os.path.join(finetune_dir, f'{shot}shot', 'target', 'val.pkl')
             self.save(features, class_labels, domain_labels, finetune_target_val_path)
         print(f'Saved fine-tuning data of target domain')
     
@@ -349,9 +353,10 @@ if __name__ == '__main__':
     class_type = 'gt'
     users = ['a', 'b', 'c', 'd', 'f']
     models = ['nexus4', 's3', 's3mini', 'lgwatch']
+    dataset = ProcessHHAR(file_path, 'gt')
     for user in users:
         for model in models:
             pretrain_dir = os.path.join(base_out_dir, f'target_user_{user}_model_{model}', 'pretrain')
             finetune_dir = os.path.join(base_out_dir, f'target_user_{user}_model_{model}', 'finetune')
-            dataset = ProcessHHAR(file_path, 'gt', user=user, model=model, pretrain_dir=pretrain_dir, finetune_dir=finetune_dir)
-            dataset.process()
+            dataset.set_domain(user=user, model=model)
+            dataset.process(pretrain_dir=pretrain_dir, finetune_dir=finetune_dir)
