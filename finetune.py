@@ -107,24 +107,34 @@ def main_worker(gpu, ngpus_per_node, config):
     print("=> creating model '{}'".format(config.model.type))
     
     if config.model.type == 'cpc':
-        encoder = core.net.CPC.Encoder(config.model.input_channels,
+        if config.train.meta_training:
+            encoder = core.net.MetaCPC.Encoder(config.model.input_channels,
                                       config.model.z_dim)
-        encoder = encoder.cuda(config.gpu)
-        aggregator = core.net.CPC.Aggregator(config.model.num_blocks,
-                                            config.model.num_filters)
-        aggregator = aggregator.cuda(config.gpu)
-        model = core.net.CPC.Classifier(encoder, aggregator,
-                                        config.model.z_dim,
-                                        config.model.seq_len,
-                                        config.data.num_cls)
-
-    # freeze all layers but the last fc
-    for name, param in model.named_parameters():
-        if not 'fc' in name:
-            param.requires_grad = False
-    # # init the fc layer
-    # model.fc.weight.data.normal_(mean=0.0, std=0.01)
-    # model.fc.bias.data.zero_()
+            encoder = encoder.cuda(config.gpu)
+            aggregator = core.net.MetaCPC.Aggregator(config.model.num_blocks,
+                                                config.model.num_filters)
+            aggregator = aggregator.cuda(config.gpu)
+            model = core.net.MetaCPC.Classifier(encoder, aggregator,
+                                            config.model.z_dim,
+                                            config.model.seq_len,
+                                            config.data.num_cls)
+            if config.train.meta_training:
+                da_model = core.net.MetaCPC.FuturePredictor(encoder, aggregator,
+                                config.model.z_dim,
+                                config.model.pred_steps,
+                                config.model.n_negatives,
+                                config.model.offset).cuda(config.gpu)
+        else:
+            encoder = core.net.CPC.Encoder(config.model.input_channels,
+                                        config.model.z_dim)
+            encoder = encoder.cuda(config.gpu)
+            aggregator = core.net.CPC.Aggregator(config.model.num_blocks,
+                                                config.model.num_filters)
+            aggregator = aggregator.cuda(config.gpu)
+            model = core.net.CPC.Classifier(encoder, aggregator,
+                                            config.model.z_dim,
+                                            config.model.seq_len,
+                                            config.data.num_cls)
 
     # load from pre-trained, before DistributedDataParallel constructor
     if config.train.pretrained:
@@ -134,16 +144,56 @@ def main_worker(gpu, ngpus_per_node, config):
 
             # rename moco pre-trained keys
             state_dict = checkpoint["state_dict"]
+            enc_idx = 0
+            agg_idx = 0
+            pred_idx = 0
             for k in list(state_dict.keys()):
+                print(k)
                 # retain only encoder_q up to before the embedding layer
                 if config.model.type == 'cpc':
-                    if k.startswith("module.encoder") or k.startswith("module.aggregator"):
-                        state_dict[k[len("module.") :]] = state_dict[k]
-                # delete renamed or unused k
-                    del state_dict[k]
+                    idx = 0
+                    if config.train.meta_training:
+                        if k.split('.')[idx] == 'encoder':
+                            state_dict[f'encoder.vars.{enc_idx}'] = state_dict[k]
+                            enc_idx += 1
+                        elif k.split('.')[idx] == 'aggregator':
+                            state_dict[f'aggregator.vars.{agg_idx}'] = state_dict[k]
+                            agg_idx += 1
+                        elif k.split('.')[idx] == 'predictor':
+                            state_dict[f'vars.{pred_idx}'] = state_dict[k]
+                            pred_idx += 1
+                        pass
+                    else:
+                        if k.startswith("module.encoder") or k.startswith("module.aggregator"):
+                            state_dict[k[len("module.") :]] = state_dict[k]
+                        if k.split('.')[idx] == 'encoder':
+                            state_dict[f'encoder.vars.{enc_idx}'] = state_dict[k]
+                            enc_idx += 1
+                        elif k.split('.')[idx] == 'aggregator':
+                            state_dict[f'aggregator.vars.{agg_idx}'] = state_dict[k]
+                            agg_idx += 1
+                        elif k.split('.')[idx] == 'predictor':
+                            state_dict[f'vars.{pred_idx}'] = state_dict[k]
+                            pred_idx += 1
+                        # delete renamed or unused k
+                        del state_dict[k]
+                    
+            # print("model keys")
+            # for k in list(model.state_dict().keys()):
+            #     print(k)
+            
+            # print("encoder keys")
+            # for k in list(encoder.state_dict().keys()):
+            #     print(k)
 
             config.train.start_epoch = 0
-            msg = model.load_state_dict(state_dict, strict=False)
+            # msg = model.load_state_dict(state_dict, strict=False)
+            # print("[loading weights] missing keys:")
+            # print(msg.missing_keys)
+            if config.train.meta_training:
+                msg = da_model.load_state_dict(state_dict, strict=False)
+            else:
+                msg = model.load_state_dict(state_dict, strict=False)
             print("[loading weights] missing keys:")
             print(msg.missing_keys)
             # assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}
@@ -178,28 +228,6 @@ def main_worker(gpu, ngpus_per_node, config):
     else:
         # raise NotImplementedError("Only DistributedDataParallel is supported.")
         pass
-
-    # define loss function (criterion) and optimizer
-    if config.train.criterion == 'crossentropy':
-        criterion = nn.CrossEntropyLoss().cuda(config.gpu)
-
-    # optimize only the linear classifier
-    parameters = list(filter(lambda p: p.requires_grad, model.parameters()))
-    print(f'parameters except {len(parameters)} are frozen...')
-    # assert len(parameters) == 2  # fc.weight, fc.bias
-    
-    if config.train.optimizer == 'sgd':
-        optimizer = torch.optim.SGD(
-            parameters, config.train.lr, momentum=config.train.momentum,
-            weight_decay=config.train.weight_decay
-        )
-    elif config.train.optimizer == 'adam':
-        optimizer = torch.optim.Adam(
-            parameters, config.train.lr, 
-            weight_decay=config.train.weight_decay
-        )
-    else:
-        assert 0, f"optimizer not supported"
 
     # optionally resume from a checkpoint
     if config.train.resume:
@@ -284,7 +312,60 @@ def main_worker(gpu, ngpus_per_node, config):
         num_workers=config.multiprocessing.workers,
         pin_memory=True,
     )
+    
+    
+    # domain adaptation
+    if config.train.perform_da:
+        da_criterion = nn.CrossEntropyLoss().cuda(config.gpu)
+        neg_support_set = torch.load('neg_support_set.pth')
+        domain_adaptation(train_loader, neg_support_set, da_model, da_criterion, config)
+        # assert(0)
+    
+    # freeze all layers but the last fc
+    if config.train.freeze:
+        for name, param in model.named_parameters():
+            if not 'fc' in name:
+                param.requires_grad = False
+    # # init the fc layer
+    # model.fc.weight.data.normal_(mean=0.0, std=0.01)
+    # model.fc.bias.data.zero_()
+    
+    # define loss function (criterion) and optimizer
+    if config.train.criterion == 'crossentropy':
+        criterion = nn.CrossEntropyLoss().cuda(config.gpu)
 
+    # optimize only the linear classifier
+    parameters = list(filter(lambda p: p.requires_grad, model.parameters()))
+    print(f'parameters except {len(parameters)} are frozen...')
+    # assert len(parameters) == 2  # fc.weight, fc.bias
+    
+    if config.train.optimizer == 'sgd':
+        optimizer = torch.optim.SGD(
+            parameters, config.train.lr, momentum=config.train.momentum,
+            weight_decay=config.train.weight_decay
+        )
+    elif config.train.optimizer == 'adam':
+        optimizer = torch.optim.Adam(
+            parameters, config.train.lr, 
+            weight_decay=config.train.weight_decay
+        )
+    else:
+        assert 0, f"optimizer not supported"
+    
+    # optionally resume from a checkpoint
+    if config.train.resume:
+        if os.path.isfile(config.train.resume):
+            print("=> loading checkpoint '{}'".format(config.train.resume))
+            if config.gpu is None:
+                checkpoint = torch.load(config.train.resume)
+            else:
+                # Map model to be loaded to specified single gpu.
+                loc = "cuda:{}".format(config.gpu)
+                checkpoint = torch.load(config.train.resume, map_location=loc)
+            optimizer.load_state_dict(checkpoint["optimizer"])
+        else:
+            print("=> no checkpoint found at '{}'".format(config.train.resume))
+    
     if config.evaluate:
         validate(test_loader, model, criterion, config)
         return
@@ -323,6 +404,54 @@ def main_worker(gpu, ngpus_per_node, config):
     validate(test_loader, model, criterion, config)
 
 
+def domain_adaptation(train_loader, neg_support_set, da_model, da_criterion, config):
+    batch_time = AverageMeter('Time', ':6.3f')
+    data_time = AverageMeter('Data', ':6.3f')
+    losses = AverageMeter('Loss', ':.4f')
+    top1 = AverageMeter("Acc@1", ":6.2f")
+    top5 = AverageMeter("Acc@5", ":6.2f")
+    progress = ProgressMeter(
+        1,
+        [batch_time, data_time, losses, top1, top5],
+        prefix="Epoch: [{}]".format(0))
+    
+    da_model.train()
+    da_model.zero_grad()
+        
+    da_dataset = train_loader.dataset.tensors[0].cuda(config.gpu)#[:10]
+    
+    idx = 0
+    end = time.time()
+    fast_weights = da_model.parameters()
+    for step in range(config.train.adaptation_steps):
+        # logits, targets, _ = da_model(da_dataset, neg_support_set, fast_weights)
+        logits, targets, _ = da_model(da_dataset, da_dataset, fast_weights)
+        loss = da_criterion(logits, targets)
+        grad = torch.autograd.grad(loss, fast_weights)
+        fast_weights = [w-config.train.task_lr*grad[i] for i, w in enumerate(fast_weights)]
+        # grad = torch.autograd.grad(loss, fast_weights[-2:])
+        # fast_weights = list(fast_weights[:-2])+[w-config.train.task_lr*grad[i] for i, w in enumerate(fast_weights[-2:])]
+        # grad = torch.autograd.grad(loss, fast_weights)
+        # fast_weights = [w-config.train.task_lr*grad[i] for i, w in enumerate(fast_weights)]
+        
+        acc1, acc5 = accuracy(logits, targets, topk=(1, 5))
+        losses.update(loss.item(), logits.size(0))
+        top1.update(acc1[0], logits.size(0))
+        top5.update(acc5[0], logits.size(0))
+        losses.update(loss.item(), logits.size(0))
+    
+        # measure elapsed time
+        batch_time.update(time.time() - end)
+        end = time.time()
+        
+        progress.display(idx)
+        idx += 1
+        
+    da_model.encoder.vars = nn.ParameterList(fast_weights[:da_model.enc_param_idx])
+    da_model.aggregator.vars = nn.ParameterList(fast_weights[da_model.enc_param_idx:da_model.agg_param_idx])
+    # assert(0)
+
+
 def train(train_loader, model, criterion, optimizer, epoch, config):
     batch_time = AverageMeter("Time", ":6.3f")
     data_time = AverageMeter("Data", ":6.3f")
@@ -342,7 +471,8 @@ def train(train_loader, model, criterion, optimizer, epoch, config):
     BatchNorm in train mode may revise running mean/std (even if it receives
     no gradient), which are part of the model parameters too.
     """
-    model.eval()
+    if config.train.freeze:
+        model.eval()
 
     end = time.time()
     for i, x in enumerate(train_loader):
@@ -525,3 +655,4 @@ def accuracy(output, target, topk=(1,)):
             correct_k = correct[:k].reshape(-1).float().sum(0, keepdim=True)
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
+    

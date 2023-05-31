@@ -1,0 +1,39 @@
+# Default config
+seed: null
+visible_gpus: all
+gpu: 4,5,6,7
+num_workers: 4
+
+# Dataset config
+dataset_name: hhar
+train_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/pretrain/train.pkl
+test_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/pretrain/test.pkl
+val_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/pretrain/val.pkl
+domains: [0,1,2,3,4,5,6,7,8,9]
+
+# Training config
+optimizer: adam
+criterion: crossentropy
+# resume: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/ichar_meta/checkpoint_0003.pth.tar
+resume: ''
+epochs: 100
+start_epoch: 0
+batch_size: 256
+lr: 0.0005 # 0.0005
+fix_pred_lr: false
+wd: 0.001
+log_freq: 100
+ckpt_dir: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/newsetting_preliminary_cpc_default
+cos: false
+schedule: []
+
+# Model config
+pretext: cpc
+input_channels: 3
+z_dim: 256
+agg_blocks: 5
+num_filters: 256
+pred_steps: 12
+n_negatives: 15
+offset: 8
+neg_per_domain: false

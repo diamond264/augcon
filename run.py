@@ -1,7 +1,7 @@
 import argparse
 import yaml
 from util.config import Config
-import pretrain, finetune
+import pretrain, finetune, pretrain_backup
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -11,6 +11,8 @@ def parse_args():
                         help='Run pretraining code')
     parser.add_argument('--finetune', action='store_true', default=False,
                         help='Run finetuning code')
+    parser.add_argument('--debug', action='store_true', default=False,
+                        help='Run debugging code')
     args = parser.parse_args()
     return args
 
@@ -37,6 +39,9 @@ def main():
     elif args.finetune:
         print(f'Running finetuning code...')
         finetune.run(config)
+    elif args.debug:
+        print(f'Running debugging code...')
+        pretrain_backup.run(config)
     else:
         print(f'Please specify either --pretrain or --finetune')
 

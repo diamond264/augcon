@@ -1,5 +1,5 @@
 seed: null
-gpu: 0
+gpu: null
 data:
   train_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/pretrain/train.pkl
   test_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/pretrain/test.pkl
@@ -13,18 +13,26 @@ multiprocessing:
   dist_url: tcp://localhost:10001
   dist_backend: nccl
 train:
+  task_per_domain: true
+  num_task: 5
+  task_size: 90
+  task_steps: 10
+  # 0.001
+  task_lr: 0.005
+  # momentum: 0.9
   optimizer: adam
   criterion: crossentropy
-  # resume: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/230418_target_user_b_model_nexus4/checkpoint_0499.pth.tar
+  # resume: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/test/checkpoint_2000.pth.tar
   resume: ''
-  epochs: 100
+  epochs: 1000
   start_epoch: 0
   batch_size: 256
-  lr: 0.0001
+  # 0.001
+  lr: 0.001
   fix_pred_lr: false
-  weight_decay: 0.0001
-  print_freq: 100
-  save_dir: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/ichar
+  weight_decay: 0
+  print_freq: 1
+  save_dir: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/ichar_meta2
   cos: false
   schedule: []
 model:
@@ -33,6 +41,6 @@ model:
   z_dim: 256
   num_blocks: 5
   num_filters: 256
-  pred_steps: 12
+  pred_steps: 4
   n_negatives: 15
-  offset: 16
+  offset: 4

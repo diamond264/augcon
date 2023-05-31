@@ -1,12 +1,24 @@
 seed: null
-gpu: 0
 evaluate: false
+gpu: 0
 data:
     name: hhar
-    num_cls: 6
-    train_dataset_path: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/target_user_b_model_s3/finetune/5shot/target/train.pkl
-    test_dataset_path: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/target_user_b_model_s3/finetune/5shot/target/test.pkl
-    val_dataset_path: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/target_user_b_model_s3/finetune/5shot/target/val.pkl
+    num_cls: 9
+    # train_dataset_path: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/target_user_b_model_nexus4/finetune/5shot/target/train.pkl
+    # test_dataset_path: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/target_user_b_model_nexus4/finetune/5shot/target/test.pkl
+    # val_dataset_path: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/target_user_b_model_nexus4/finetune/5shot/target/val.pkl
+    # train_dataset_path: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/target_user_a_model_s3/finetune/5shot/target/train.pkl
+    # test_dataset_path: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/target_user_a_model_s3/finetune/5shot/target/test.pkl
+    # val_dataset_path: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/target_user_a_model_s3/finetune/5shot/target/val.pkl
+    # train_dataset_path: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/target_user_f_model_s3mini/finetune/10shot/target/train.pkl
+    # test_dataset_path: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/target_user_f_model_s3mini/finetune/10shot/target/test.pkl
+    # val_dataset_path: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/target_user_f_model_s3mini/finetune/10shot/target/val.pkl
+    # train_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA0003-hskim/finetune/10shot/target/train.pkl
+    # test_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA0003-hskim/finetune/10shot/target/test.pkl
+    # val_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA0003-hskim/finetune/10shot/target/val.pkl
+    train_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/finetune/10shot/target/train.pkl
+    test_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/finetune/10shot/target/test.pkl
+    val_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/finetune/10shot/target/val.pkl
 multiprocessing:
     multiprocessing_distributed: false
     workers: 32
@@ -15,20 +27,34 @@ multiprocessing:
     dist_url: tcp://localhost:10002
     dist_backend: nccl
 train:
-    pretrained: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/230418_target_user_c_model_lgwatch/checkpoint_0099.pth.tar
+    # meta_training: false
+    meta_training: true
+    perform_da: true
+    # perform_da: false
+    # pretrained: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/ichar/checkpoint_0099.pth.tar
+    # pretrained: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/ichar_meta2/checkpoint_0999.pth.tar
+    # pretrained: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/ichar_meta2/meta_with_outdomain_negs.pth.tar
+    pretrained: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/ichar_meta/perdom.pth.tar
+    # pretrained: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/ichar_meta/non_meta.pth.tar
+    # pretrained: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/ichar_meta/checkpoint_0099.pth.tar
+    # pretrained: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/230418_target_user_f_model_s3mini/checkpoint_0099.pth.tar
+    # pretrained: null
     optimizer: adam
     criterion: crossentropy
     resume: ''
-    epochs: 50
+    epochs: 30
     start_epoch: 0
     batch_size: 4
-    lr: 0.0005
+    lr: 0.001
     fix_pred_lr: false
-    weight_decay: 0
+    weight_decay: 0.001
     print_freq: 2
-    save_dir: /mnt/sting/hjyoon/projects/augcontrast/models/finetuned/230418_target_user_c_model_s3mini_domain_target_shot_5
+    save_dir: /mnt/sting/hjyoon/projects/augcontrast/models/finetuned/test
     cos: false
     schedule: []
+    adaptation_steps: 10
+    task_lr: 0.005
+    freeze: true
 test:
     batch_size: 2
     print_freq: 100
@@ -38,4 +64,10 @@ model:
     z_dim: 256
     num_blocks: 5
     num_filters: 256
+    # seq_len: 14
     seq_len: 30
+    # pred_steps: 4
+    pred_steps: 12
+    n_negatives: 15
+    # offset: 4
+    offset: 16
