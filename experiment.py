@@ -13,11 +13,11 @@ from util.args import parse_args
 from util.config import Config
 from util.logger import Logger
 
-from core.CPC import CPCClassifier
+from core.CPC import CPCLearner
 from core.MetaCPC import MetaCPCLearner
 from data_loader.default_data_loader import DefaultDataLoader
 
-class Finetune:
+class Experiment:
     def __init__(self, cfg, logger):
         self.cfg = cfg
         self.logger = logger
@@ -26,23 +26,18 @@ class Finetune:
         self.configure_random_seed()
     
     def configure_gpus(self):
-        self.logger.info(f'Setting visible GPUs: {self.cfg.visible_gpus}')
-        if self.cfg.visible_gpus == 'all':
-            self.cfg.visible_gpus = '0,1,2,3,4,5,6,7'
-        os.environ["CUDA_VISIBLE_DEVICES"] = self.cfg.visible_gpus
-        visible_gpus = [int(gpu) for gpu in self.cfg.visible_gpus.split(',')]
-        
-        self.gpu = self.cfg.gpu
-        if self.gpu is None:
-            self.logger.warning(f'Only GPU training is supported. Setting gpu 0 as default.')
-            self.gpu = [visible_gpus[0]]
-        if self.gpu == 'all':
-            self.gpu = visible_gpus
+        self.logger.info(f'Setting GPUs: {self.cfg.gpu}')
+        self.gpu = []
+        if self.cfg.gpu == 'all':
+            self.gpu = [0,1,2,3,4,5,6,7]
+        elif isinstance(self.cfg.gpu, int):
+            self.gpu = [self.cfg.gpu]
+        elif isinstance(self.cfg.gpu, list) and len(self.cfg.gpu) > 0:
+            self.gpu = self.cfg.gpu
         else:
-            if isinstance(self.gpu, int):
-                self.gpu = [visible_gpus[self.gpu]]
-            else:
-                self.gpu = [visible_gpus[int(idx)] for idx in self.gpu.split(',')]
+            self.logger.warning(f'Only GPU training is supported. Setting gpu 0 as default.')
+            self.gpu = [0]
+        os.environ["CUDA_VISIBLE_DEVICES"] = ','.join([str(gpu) for gpu in self.gpu])
         self.logger.info(f'GPUs {self.gpu} will be used')
     
     def configure_random_seed(self):
@@ -62,11 +57,10 @@ class Finetune:
             self.logger.warning('from checkpoints.')
     
     def run(self):
-        self.logger.info('Start Finetuning')
         # Model creation
         learner = None
         if self.cfg.pretext == 'cpc':
-            learner = CPCClassifier(self.cfg, self.gpu, self.logger)
+            learner = CPCLearner(self.cfg, self.gpu, self.logger)
         if self.cfg.pretext == 'metacpc':
             learner = MetaCPCLearner(self.cfg, self.gpu, self.logger)
         else:
@@ -77,7 +71,7 @@ class Finetune:
         train_dataset, val_dataset, test_dataset = default_data_loader.get_datasets()
         
         # Start training
-        learner.perform_train(train_dataset, val_dataset, test_dataset)
+        learner.run(train_dataset, val_dataset, test_dataset)
 
 if __name__ == '__main__':
     args = parse_args()
@@ -92,5 +86,5 @@ if __name__ == '__main__':
     cfg.log_config(logger)
     logger.info("==========================================")
     
-    pretrain = Finetune(cfg, logger)
-    pretrain.run()
+    exp = Experiment(cfg, logger)
+    exp.run()

@@ -1,38 +1,53 @@
-2023-05-31 19:04:34,771 - AUGCON - INFO - logger initialized (config/pretrain/new_setting.yaml.log)
-2023-05-31 19:04:34,771 - AUGCON - INFO - ================= Config =================
-2023-05-31 19:04:34,771 - AUGCON - INFO -   seed: None
-2023-05-31 19:04:34,771 - AUGCON - INFO -   visible_gpus: all
-2023-05-31 19:04:34,771 - AUGCON - INFO -   gpu: 4,5,6,7
-2023-05-31 19:04:34,771 - AUGCON - INFO -   num_workers: 4
-2023-05-31 19:04:34,771 - AUGCON - INFO -   dataset_name: hhar
-2023-05-31 19:04:34,771 - AUGCON - INFO -   train_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/pretrain/train.pkl
-2023-05-31 19:04:34,771 - AUGCON - INFO -   test_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/pretrain/test.pkl
-2023-05-31 19:04:34,771 - AUGCON - INFO -   val_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/pretrain/val.pkl
-2023-05-31 19:04:34,771 - AUGCON - INFO -   domains: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-2023-05-31 19:04:34,771 - AUGCON - INFO -   optimizer: adam
-2023-05-31 19:04:34,771 - AUGCON - INFO -   criterion: crossentropy
-2023-05-31 19:04:34,771 - AUGCON - INFO -   resume: 
-2023-05-31 19:04:34,771 - AUGCON - INFO -   epochs: 100
-2023-05-31 19:04:34,771 - AUGCON - INFO -   start_epoch: 0
-2023-05-31 19:04:34,771 - AUGCON - INFO -   batch_size: 256
-2023-05-31 19:04:34,771 - AUGCON - INFO -   lr: 0.0005
-2023-05-31 19:04:34,771 - AUGCON - INFO -   fix_pred_lr: False
-2023-05-31 19:04:34,771 - AUGCON - INFO -   wd: 0.001
-2023-05-31 19:04:34,771 - AUGCON - INFO -   log_freq: 100
-2023-05-31 19:04:34,771 - AUGCON - INFO -   ckpt_dir: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/newsetting_preliminary_cpc_default
-2023-05-31 19:04:34,771 - AUGCON - INFO -   cos: False
-2023-05-31 19:04:34,771 - AUGCON - INFO -   schedule: []
-2023-05-31 19:04:34,771 - AUGCON - INFO -   pretext: cpc
-2023-05-31 19:04:34,771 - AUGCON - INFO -   input_channels: 3
-2023-05-31 19:04:34,771 - AUGCON - INFO -   z_dim: 256
-2023-05-31 19:04:34,771 - AUGCON - INFO -   agg_blocks: 5
-2023-05-31 19:04:34,772 - AUGCON - INFO -   num_filters: 256
-2023-05-31 19:04:34,772 - AUGCON - INFO -   pred_steps: 12
-2023-05-31 19:04:34,772 - AUGCON - INFO -   n_negatives: 15
-2023-05-31 19:04:34,772 - AUGCON - INFO -   offset: 8
-2023-05-31 19:04:34,772 - AUGCON - INFO -   neg_per_domain: False
-2023-05-31 19:04:34,772 - AUGCON - INFO - ==========================================
-2023-05-31 19:04:34,772 - AUGCON - INFO - Setting visible GPUs: all
-2023-05-31 19:04:34,772 - AUGCON - INFO - GPUs [4, 5, 6, 7] will be used
-2023-05-31 19:04:48,968 - AUGCON - INFO - Epoch [1/100]-(0/58) Loss: 2.7755, Acc(1): 6.28, Acc(5): 31.28
-2023-05-31 19:05:09,980 - AUGCON - INFO - Epoch [2/100]-(0/58) Loss: 2.2728, Acc(1): 17.93, Acc(5): 67.48
+2023-06-05 15:22:24,867 - AUGCON - INFO - logger initialized (config/pretrain/new_setting.yaml.log)
+2023-06-05 15:22:24,867 - AUGCON - INFO - ================= Config =================
+2023-06-05 15:22:24,867 - AUGCON - INFO -   mode: pretrain
+2023-06-05 15:22:24,867 - AUGCON - INFO -   seed: 0
+2023-06-05 15:22:24,867 - AUGCON - INFO -   gpu: [0, 2]
+2023-06-05 15:22:24,867 - AUGCON - INFO -   num_workers: 8
+2023-06-05 15:22:24,868 - AUGCON - INFO -   dataset_name: hhar
+2023-06-05 15:22:24,868 - AUGCON - INFO -   train_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/pretrain/train.pkl
+2023-06-05 15:22:24,868 - AUGCON - INFO -   test_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/pretrain/test.pkl
+2023-06-05 15:22:24,868 - AUGCON - INFO -   val_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/pretrain/val.pkl
+2023-06-05 15:22:24,868 - AUGCON - INFO -   domains: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+2023-06-05 15:22:24,868 - AUGCON - INFO -   optimizer: adam
+2023-06-05 15:22:24,868 - AUGCON - INFO -   criterion: crossentropy
+2023-06-05 15:22:24,868 - AUGCON - INFO -   pretrained: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/newsetting_preliminary_metacpc_default/checkpoint_0000.pth.tar
+2023-06-05 15:22:24,868 - AUGCON - INFO -   resume: 
+2023-06-05 15:22:24,868 - AUGCON - INFO -   epochs: 100
+2023-06-05 15:22:24,868 - AUGCON - INFO -   start_epoch: 0
+2023-06-05 15:22:24,868 - AUGCON - INFO -   batch_size: 256
+2023-06-05 15:22:24,868 - AUGCON - INFO -   lr: 0.0005
+2023-06-05 15:22:24,868 - AUGCON - INFO -   fix_pred_lr: False
+2023-06-05 15:22:24,868 - AUGCON - INFO -   wd: 0.001
+2023-06-05 15:22:24,868 - AUGCON - INFO -   log_freq: 20
+2023-06-05 15:22:24,868 - AUGCON - INFO -   ckpt_dir: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/newsetting_preliminary_metacpc_default
+2023-06-05 15:22:24,868 - AUGCON - INFO -   cos: False
+2023-06-05 15:22:24,868 - AUGCON - INFO -   schedule: []
+2023-06-05 15:22:24,868 - AUGCON - INFO -   pooling: mean
+2023-06-05 15:22:24,868 - AUGCON - INFO -   num_cls: 9
+2023-06-05 15:22:24,868 - AUGCON - INFO -   pretext: metacpc
+2023-06-05 15:22:24,868 - AUGCON - INFO -   input_channels: 3
+2023-06-05 15:22:24,868 - AUGCON - INFO -   z_dim: 256
+2023-06-05 15:22:24,868 - AUGCON - INFO -   agg_blocks: 5
+2023-06-05 15:22:24,868 - AUGCON - INFO -   num_filters: 256
+2023-06-05 15:22:24,868 - AUGCON - INFO -   pred_steps: 12
+2023-06-05 15:22:24,868 - AUGCON - INFO -   n_negatives: 15
+2023-06-05 15:22:24,868 - AUGCON - INFO -   offset: 8
+2023-06-05 15:22:24,868 - AUGCON - INFO -   task_per_domain: True
+2023-06-05 15:22:24,868 - AUGCON - INFO -   num_task: 5
+2023-06-05 15:22:24,868 - AUGCON - INFO -   multi_cond_num_task: 2
+2023-06-05 15:22:24,868 - AUGCON - INFO -   task_size: 90
+2023-06-05 15:22:24,868 - AUGCON - INFO -   task_steps: 10
+2023-06-05 15:22:24,868 - AUGCON - INFO -   task_lr: 0.005
+2023-06-05 15:22:24,868 - AUGCON - INFO -   neg_per_domain: False
+2023-06-05 15:22:24,868 - AUGCON - INFO -   freeze: True
+2023-06-05 15:22:24,868 - AUGCON - INFO - ==========================================
+2023-06-05 15:22:24,868 - AUGCON - INFO - Setting GPUs: [0, 2]
+2023-06-05 15:22:24,869 - AUGCON - INFO - GPUs [0, 2] will be used
+2023-06-05 15:22:24,869 - AUGCON - WARNING - You have chosen to seed training. 
+2023-06-05 15:22:24,869 - AUGCON - WARNING - This will turn on the CUDNN deterministic setting, 
+2023-06-05 15:22:24,869 - AUGCON - WARNING - which can slow down your training considerably! 
+2023-06-05 15:22:24,869 - AUGCON - WARNING - You may see unexpected behavior when restarting 
+2023-06-05 15:22:24,869 - AUGCON - WARNING - from checkpoints.
+2023-06-05 15:22:25,280 - AUGCON - INFO - Executing MetaCPC
+2023-06-05 15:22:25,281 - AUGCON - INFO - Logs are skipped during training

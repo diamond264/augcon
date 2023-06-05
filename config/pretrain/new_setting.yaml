@@ -1,8 +1,9 @@
 # Default config
-seed: null
-visible_gpus: all
-gpu: 4,5,6,7
-num_workers: 4
+# mode: finetune
+mode: pretrain
+seed: 0
+gpu: [0, 2]
+num_workers: 8
 
 # Dataset config
 dataset_name: hhar
@@ -14,21 +15,25 @@ domains: [0,1,2,3,4,5,6,7,8,9]
 # Training config
 optimizer: adam
 criterion: crossentropy
+pretrained: '/mnt/sting/hjyoon/projects/augcontrast/models/pretrained/newsetting_preliminary_metacpc_default/checkpoint_0000.pth.tar'
 # resume: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/ichar_meta/checkpoint_0003.pth.tar
 resume: ''
+
 epochs: 100
 start_epoch: 0
 batch_size: 256
 lr: 0.0005 # 0.0005
 fix_pred_lr: false
 wd: 0.001
-log_freq: 100
-ckpt_dir: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/newsetting_preliminary_cpc_default
+log_freq: 20
+ckpt_dir: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/newsetting_preliminary_metacpc_default
 cos: false
 schedule: []
+pooling: mean
+num_cls: 9
 
 # Model config
-pretext: cpc
+pretext: metacpc
 input_channels: 3
 z_dim: 256
 agg_blocks: 5
@@ -36,4 +41,11 @@ num_filters: 256
 pred_steps: 12
 n_negatives: 15
 offset: 8
+task_per_domain: true
+num_task: 5
+multi_cond_num_task: 2
+task_size: 90
+task_steps: 10
+task_lr: 0.005
 neg_per_domain: false
+freeze: true

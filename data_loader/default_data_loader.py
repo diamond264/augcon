@@ -20,6 +20,9 @@ class DefaultDataLoader():
             with open(self.cfg.val_dataset_path, 'rb') as f:
                 self.val_dataset = pickle.load(f)
     
+    def get_datasets(self):
+        return self.train_dataset, self.val_dataset, self.test_dataset
+    
     def get_loaders(self):
         train_loader = torch.utils.data.DataLoader(
             self.train_dataset,
