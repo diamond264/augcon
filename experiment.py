@@ -61,7 +61,7 @@ class Experiment:
         learner = None
         if self.cfg.pretext == 'cpc':
             learner = CPCLearner(self.cfg, self.gpu, self.logger)
-        if self.cfg.pretext == 'metacpc':
+        elif self.cfg.pretext == 'metacpc':
             learner = MetaCPCLearner(self.cfg, self.gpu, self.logger)
         else:
             self.logger.warning('Pretext task not supported')

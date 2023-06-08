@@ -15,13 +15,13 @@ from collections import defaultdict
 # https://github.com/facebookresearch/fairseq/blob/176cd934982212a4f75e0669ee81b834ee71dbb0/fairseq/models/wav2vec/wav2vec.py#L431
 
 class Encoder(nn.Module):
-    def __init__(self, input_channels=3, z_dim=256, num_blocks=4):
+    def __init__(self, input_channels=3, z_dim=256, num_blocks=4, kernel_sizes=[8, 4, 2, 1], strides=[4, 2, 1, 1]):
         super(Encoder, self).__init__()
         self.num_blocks = num_blocks
         
         filters = [32, 64, 128, z_dim]
-        self.kernel_sizes = [4, 2, 1, 1]
-        self.strides = [2, 1, 1, 1]
+        self.kernel_sizes = kernel_sizes
+        self.strides = strides
         
         self.blocks = nn.ModuleList()
         for i in range(num_blocks):
@@ -102,14 +102,19 @@ class Predictor(nn.Module):
         return z
 
 
-class MLPHead(nn.Module):
-    def __init__(self, input_size, hidden_size, num_cls):
+class ClassificationHead(nn.Module):
+    def __init__(self, input_size, hidden_size, num_cls, mlp=False):
         super().__init__()
-        self.block = nn.Sequential(
-            nn.Linear(input_size, hidden_size),
-            nn.ReLU(),
-            nn.Linear(hidden_size, num_cls),
-        )
+        if mlp:
+            self.block = nn.Sequential(
+                nn.Linear(input_size, hidden_size),
+                nn.ReLU(),
+                nn.Linear(hidden_size, num_cls),
+            )
+        else:
+            self.block = nn.Sequential(
+                nn.Linear(input_size, num_cls),
+            )
     
     def forward(self, x):
         x = self.block(x)
@@ -125,9 +130,10 @@ def buffered_arange(max):
     return buffered_arange.buf[:max]
 
 class CPCNet(nn.Module):
-    def __init__(self, input_channels=3, z_dim=256, agg_blocks=4, pred_steps=12, n_negatives=15, offset=16):
+    def __init__(self, input_channels=3, z_dim=256, enc_blocks=4, kernel_sizes=[8, 4, 2, 1], strides=[4, 2, 1, 1],
+                 agg_blocks=4, pred_steps=12, n_negatives=15, offset=16):
         super(CPCNet, self).__init__()
-        self.encoder = Encoder(input_channels, z_dim)
+        self.encoder = Encoder(input_channels, z_dim, enc_blocks, kernel_sizes, strides)
         self.aggregator = Aggregator(agg_blocks, z_dim)
         self.predictor = Predictor(z_dim, pred_steps)
         
@@ -219,12 +225,13 @@ class CPCNet(nn.Module):
 
 
 class CPCClassifier(nn.Module):
-    def __init__(self, input_channels=3, z_dim=256, agg_blocks=4, pooling='mean', num_cls=10):
+    def __init__(self, input_channels=3, z_dim=256, enc_blocks=4, kernel_sizes=[8, 4, 2, 1], strides=[4, 2, 1, 1],
+                 agg_blocks=4, pooling='mean', num_cls=10, mlp=False):
         super(CPCClassifier, self).__init__()
-        self.encoder = Encoder(input_channels, z_dim)
+        self.encoder = Encoder(input_channels, z_dim, enc_blocks, kernel_sizes, strides)
         self.aggregator = Aggregator(agg_blocks, z_dim)
         self.pooling = pooling
-        self.classifier = MLPHead(z_dim, z_dim, num_cls)
+        self.classifier = ClassificationHead(z_dim, z_dim, num_cls, mlp)
             
     def forward(self, x):
         x = self.encoder(x)
@@ -265,16 +272,16 @@ class CPCLearner:
     def main_worker(self, rank, world_size, train_dataset, val_dataset, test_dataset, logs):
         # Model initialization
         if self.cfg.mode == 'pretrain':
-            net = CPCNet(self.cfg.input_channels, self.cfg.z_dim, self.cfg.agg_blocks,
-                        self.cfg.pred_steps, self.cfg.n_negatives, self.cfg.offset)
+            net = CPCNet(self.cfg.input_channels, self.cfg.z_dim, self.cfg.enc_blocks, self.cfg.kernel_sizes, self.cfg.strides,
+                         self.cfg.agg_blocks, self.cfg.pred_steps, self.cfg.n_negatives, self.cfg.offset)
         elif self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
-            net = CPCClassifier(self.cfg.input_channels, self.cfg.z_dim, self.cfg.agg_blocks,
-                                self.cfg.pooling, self.cfg.num_cls)
+            net = CPCClassifier(self.cfg.input_channels, self.cfg.z_dim, self.cfg.enc_blocks, self.cfg.kernel_sizes, self.cfg.strides,
+                                self.cfg.agg_blocks, self.cfg.pooling, self.cfg.num_cls, self.cfg.mlp)
         
         # DDP setting
         if world_size > 1:
             dist.init_process_group(backend='nccl',
-                                    init_method='tcp://localhost:10001',
+                                    init_method=self.cfg.dist_url,
                                     world_size=world_size,
                                     rank=rank)
             torch.cuda.set_device(rank)
@@ -336,9 +343,18 @@ class CPCLearner:
                     log = "Missing keys: {}".format(msg.missing_keys)
                     logs.append(log)
                     print(log)
+            else:
+                if rank == 0:
+                    log = "No checkpoint found at '{}'".format(self.cfg.pretrained)
+                    logs.append(log)
+                    print(log)
             
             # Freezing the encoder
             if self.cfg.freeze:
+                if rank == 0:
+                    log = "Freezing the encoder"
+                    logs.append(log)
+                    print(log)
                 for name, param in net.named_parameters():
                     if not 'classifier' in name:
                         param.requires_grad = False
@@ -386,7 +402,7 @@ class CPCLearner:
                     self.finetune(rank, net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
                     self.validate(rank, net, val_loader, criterion, logs)
                 
-                if rank == 0:
+                if rank == 0 and (epoch+1) % self.cfg.save_freq == 0:
                     ckpt_dir = self.cfg.ckpt_dir
                     ckpt_filename = 'checkpoint_{:04d}.pth.tar'.format(epoch)
                     ckpt_filename = os.path.join(ckpt_dir, ckpt_filename)
@@ -398,7 +414,8 @@ class CPCLearner:
                                 del state_dict[k]
                     self.save_checkpoint(ckpt_filename, epoch, state_dict, optimizer)
         
-        self.validate(rank, net, test_loader, criterion, logs)
+        if self.cfg.mode != 'pretrain':
+            self.validate(rank, net, test_loader, criterion, logs)
     
     def split_per_domain(self, dataset):
         indices_per_domain = defaultdict(list)

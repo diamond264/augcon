@@ -1,0 +1,46 @@
+### Default config
+mode: pretrain
+seed: 0
+gpu: [4,5,6,7]
+num_workers: 8
+dist_url: tcp://localhost:10002
+
+### Dataset config
+dataset_name: hhar
+train_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_PH0014-wjlee/pretrain/train.pkl
+test_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_PH0014-wjlee/pretrain/test.pkl
+val_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_PH0014-wjlee/pretrain/val.pkl
+input_channels: 3
+num_cls: 9
+
+### Training config
+optimizer: adam
+criterion: crossentropy
+start_epoch: 0
+epochs: 100
+batch_size: 2048
+lr: 0.001
+wd: 0.0
+
+### Logs and checkpoints
+resume: ''
+ckpt_dir: /mnt/sting/hjyoon/projects/augcontrast/models/exp0/pretrain/cpc_random_4111
+log_freq: 20
+save_freq: 10
+
+### Model config
+pretext: cpc
+## Encoder
+enc_blocks: 4
+kernel_sizes: [4, 1, 1, 1]
+strides: [2, 1, 1, 1]
+## Aggregator
+agg_blocks: 5
+z_dim: 256
+## Predictor
+pooling: mean
+pred_steps: 12
+n_negatives: 15
+offset: 4
+neg_per_domain: false
+

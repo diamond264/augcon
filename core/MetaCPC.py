@@ -7,6 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.distributed as dist
 import torch.multiprocessing as mp
+import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from torch.utils.data import DistributedSampler
 
@@ -15,15 +16,15 @@ from collections import defaultdict
 # reference:
 # https://github.com/facebookresearch/fairseq/blob/176cd934982212a4f75e0669ee81b834ee71dbb0/fairseq/models/wav2vec/wav2vec.py#L431
 class Encoder(nn.Module):
-    def __init__(self, input_channels=3, z_dim=256, num_blocks=4):
+    def __init__(self, input_channels=3, z_dim=256, num_blocks=4, kernel_sizes=[8, 4, 2, 1], strides=[4, 2, 1, 1]):
         super(Encoder, self).__init__()
         self.num_blocks = num_blocks
         
         self.vars = nn.ParameterList()
         
         filters = [32, 64, 128, z_dim]
-        self.kernel_sizes = [4, 2, 1, 1]
-        self.strides = [2, 1, 1, 1]
+        self.kernel_sizes = kernel_sizes
+        self.strides = strides
         
         for i in range(num_blocks):
             block = nn.Sequential(nn.Conv1d(input_channels, filters[i],
@@ -197,14 +198,19 @@ class Predictor(nn.Module):
         return self.vars
 
 
-class MLPHead(nn.Module):
-    def __init__(self, input_size, hidden_size, num_cls):
+class ClassificationHead(nn.Module):
+    def __init__(self, input_size, hidden_size, num_cls, mlp=False):
         super().__init__()
-        self.block = nn.Sequential(
-            nn.Linear(input_size, hidden_size),
-            nn.ReLU(),
-            nn.Linear(hidden_size, num_cls),
-        )
+        if mlp:
+            self.block = nn.Sequential(
+                nn.Linear(input_size, hidden_size),
+                nn.ReLU(),
+                nn.Linear(hidden_size, num_cls),
+            )
+        else:
+            self.block = nn.Sequential(
+                nn.Linear(input_size, num_cls),
+            )
     
     def forward(self, x):
         x = self.block(x)
@@ -220,9 +226,10 @@ def buffered_arange(max):
     return buffered_arange.buf[:max]
 
 class CPCNet(nn.Module):
-    def __init__(self, input_channels=3, z_dim=256, agg_blocks=4, pred_steps=12, n_negatives=15, offset=16):
+    def __init__(self, input_channels=3, z_dim=256, enc_blocks=4, kernel_sizes=[8, 4, 2, 1], strides=[4, 2, 1, 1],
+                 agg_blocks=4, pred_steps=12, n_negatives=15, offset=16):
         super(CPCNet, self).__init__()
-        self.encoder = Encoder(input_channels, z_dim)
+        self.encoder = Encoder(input_channels, z_dim, enc_blocks, kernel_sizes, strides)
         self.aggregator = Aggregator(agg_blocks, z_dim)
         self.predictor = Predictor(z_dim, pred_steps)
         
@@ -347,12 +354,13 @@ class CPCNet(nn.Module):
 
 
 class CPCClassifier(nn.Module):
-    def __init__(self, input_channels=3, z_dim=256, agg_blocks=4, pooling='mean', num_cls=10):
+    def __init__(self, input_channels=3, z_dim=256, enc_blocks=4, kernel_sizes=[8, 4, 2, 1], strides=[4, 2, 1, 1],
+                 agg_blocks=4, pooling='mean', num_cls=10, mlp=False):
         super(CPCClassifier, self).__init__()
-        self.encoder = Encoder(input_channels, z_dim)
+        self.encoder = Encoder(input_channels, z_dim, enc_blocks, kernel_sizes, strides)
         self.aggregator = Aggregator(agg_blocks, z_dim)
         self.pooling = pooling
-        self.classifier = MLPHead(z_dim, z_dim, num_cls)
+        self.classifier = ClassificationHead(z_dim, z_dim, num_cls, mlp)
             
     def forward(self, x):
         x = self.encoder(x)
@@ -392,16 +400,16 @@ class MetaCPCLearner:
         
     def main_worker(self, rank, world_size, train_dataset, val_dataset, test_dataset, logs):
         # Model initialization
-        net = CPCNet(self.cfg.input_channels, self.cfg.z_dim, self.cfg.agg_blocks,
-                    self.cfg.pred_steps, self.cfg.n_negatives, self.cfg.offset)
+        net = CPCNet(self.cfg.input_channels, self.cfg.z_dim, self.cfg.enc_blocks, self.cfg.kernel_sizes, self.cfg.strides,
+                         self.cfg.agg_blocks, self.cfg.pred_steps, self.cfg.n_negatives, self.cfg.offset)
         if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
-            cls_net = CPCClassifier(self.cfg.input_channels, self.cfg.z_dim, self.cfg.agg_blocks,
-                                    self.cfg.pooling, self.cfg.num_cls)
+            cls_net = CPCClassifier(self.cfg.input_channels, self.cfg.z_dim, self.cfg.enc_blocks, self.cfg.kernel_sizes, self.cfg.strides,
+                                    self.cfg.agg_blocks, self.cfg.pooling, self.cfg.num_cls, self.cfg.mlp)
         
         # DDP setting
         if world_size > 1:
             dist.init_process_group(backend='nccl',
-                                    init_method='tcp://localhost:10001',
+                                    init_method=self.cfg.dist_url,
                                     world_size=world_size,
                                     rank=rank)
             torch.cuda.set_device(rank)
@@ -412,14 +420,15 @@ class MetaCPCLearner:
                 cls_net = nn.parallel.DistributedDataParallel(cls_net, device_ids=[rank], find_unused_parameters=True)
             
             train_sampler = DistributedSampler(train_dataset)
-            val_sampler = DistributedSampler(val_dataset)
-            test_sampler = DistributedSampler(test_dataset)
-            train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size//world_size,
-                                    shuffle=False, sampler=train_sampler, num_workers=self.cfg.num_workers, drop_last=True)
-            val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size//world_size,
-                                    shuffle=False, sampler=val_sampler, num_workers=self.cfg.num_workers, drop_last=True)
-            test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size//world_size,
-                                    shuffle=False, sampler=test_sampler, num_workers=self.cfg.num_workers, drop_last=True)
+            if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
+                val_sampler = DistributedSampler(val_dataset)
+                test_sampler = DistributedSampler(test_dataset)
+                train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size//world_size,
+                                        shuffle=False, sampler=train_sampler, num_workers=self.cfg.num_workers, drop_last=True)
+                val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size//world_size,
+                                        shuffle=False, sampler=val_sampler, num_workers=self.cfg.num_workers, drop_last=True)
+                test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size//world_size,
+                                        shuffle=False, sampler=test_sampler, num_workers=self.cfg.num_workers, drop_last=True)
             meta_train_dataset = torch.utils.data.Subset(train_dataset, list(train_sampler))
             if rank == 0:
                 log = "DDP is used for training - training {} instances for each worker".format(len(list(train_sampler)))
@@ -430,12 +439,13 @@ class MetaCPCLearner:
             net.cuda()
             if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
                 cls_net.cuda()
-            train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size,
-                                    shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
-            val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size,
-                                    shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
-            test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size,
-                                    shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
+            if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
+                train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size,
+                                        shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
+                val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size,
+                                        shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
+                test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size,
+                                        shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
             meta_train_dataset = train_dataset
             if rank == 0:
                 log = "Single GPU is used for training - training {} instances for each worker".format(len(train_dataset))
@@ -470,7 +480,7 @@ class MetaCPCLearner:
                     if k in net.state_dict().keys():
                         state['state_dict'][k] = v
                 
-                net.load_state_dict(state['state_dict'])
+                net.load_state_dict(state['state_dict'], strict=False)
                 optimizer.load_state_dict(state['optimizer'])
                 self.cfg.start_epoch = state['epoch']
             
@@ -500,7 +510,7 @@ class MetaCPCLearner:
                     
                 self.pretrain(rank, net, supports, queries, criterion, optimizer, epoch, self.cfg.epochs, logs)
                 
-                if rank == 0:
+                if rank == 0 and (epoch+1) % self.cfg.save_freq == 0:
                     ckpt_dir = self.cfg.ckpt_dir
                     ckpt_filename = 'checkpoint_{:04d}.pth.tar'.format(epoch)
                     ckpt_filename = os.path.join(ckpt_dir, ckpt_filename)
@@ -553,17 +563,35 @@ class MetaCPCLearner:
                 
                 # Meta-train the pretrained model for domain adaptation
                 if self.cfg.domain_adaptation:
+                    if rank == 0:
+                        log = "Perform domain adaptation step"
+                        logs.append(log)
+                        print(log)
                     if world_size > 1:
                         train_sampler.set_epoch(0)
                     net.train()
                     net.zero_grad()
-                    support = meta_train_dataset
-                    enc_parameters = self.meta_train(net, support, criterion)
+                    support = [e[0] for e in meta_train_dataset]
+                    support = torch.stack(support, dim=0).cuda()
+                    enc_parameters = self.meta_train(rank, net, support, criterion, log_internals=True, logs=logs)
                 else:
                     enc_parameters = list(net.parameters())
-                # Load the pretrain model weights to classifier encoder
-                # cls_net.load_enc_params(enc_parameters)
                 
+                if rank == 0:
+                    log = "Loading encoder parameters to the classifier"
+                    logs.append(log)
+                    print(log)
+                
+                enc_dict = {}
+                for idx, k in enumerate(list(cls_net.state_dict().keys())):
+                    if not 'classifier' in k:
+                        enc_dict[k] = enc_parameters[idx]
+                
+                msg = cls_net.load_state_dict(enc_dict, strict=False)
+                if rank == 0:
+                    log = "Missing keys: {}".format(msg.missing_keys)
+                    logs.append(log)
+                    print(log)
             else:
                 if rank == 0:
                     log = "Loading state_dict from checkpoint - {}".format(self.cfg.resume)
@@ -577,7 +605,7 @@ class MetaCPCLearner:
                     if k in cls_net.state_dict().keys():
                         state['state_dict'][k] = v
                 
-                cls_net.load_state_dict(state['state_dict'])
+                cls_net.load_state_dict(state['state_dict'], strict=False)
                 optimizer.load_state_dict(state['optimizer'])
                 self.cfg.start_epoch = state['epoch']
             
@@ -586,21 +614,21 @@ class MetaCPCLearner:
             else:
                 cls_net.eval()
             
-            if self.cfg.mode != 'eval':
+            if self.cfg.mode == 'finetune':
                 for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
                     if world_size > 1:
                         train_sampler.set_epoch(epoch)
                         val_sampler.set_epoch(epoch)
                         test_sampler.set_epoch(epoch)
                         
-                        self.finetune(rank, net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
-                        self.validate(rank, net, val_loader, criterion, logs)
+                    self.finetune(rank, cls_net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
+                    self.validate(rank, cls_net, val_loader, criterion, logs)
                     
-                    if rank == 0:
+                    if rank == 0 and (epoch+1) % self.cfg.save_freq == 0:
                         ckpt_dir = self.cfg.ckpt_dir
                         ckpt_filename = 'checkpoint_{:04d}.pth.tar'.format(epoch)
                         ckpt_filename = os.path.join(ckpt_dir, ckpt_filename)
-                        state_dict = net.state_dict()
+                        state_dict = cls_net.state_dict()
                         if world_size > 1:
                             for k, v in list(state_dict.items()):
                                 if 'module.' in k:
@@ -608,7 +636,7 @@ class MetaCPCLearner:
                                     del state_dict[k]
                         self.save_checkpoint(ckpt_filename, epoch, state_dict, optimizer)
             
-            self.validate(rank, net, test_loader, criterion, logs)
+            self.validate(rank, cls_net, test_loader, criterion, logs)
     
     def split_per_domain(self, dataset):
         indices_per_domain = defaultdict(list)
@@ -678,25 +706,34 @@ class MetaCPCLearner:
         net.train()
         net.zero_grad()
         
-        loss = 0
+        log = f'Epoch [{epoch+1}/{num_epochs}]'
+        if rank == 0:
+            logs.append(log)
+            print(log)
+        
+        q_losses = []
         for task_idx in range(len(supports)):
             support = supports[task_idx].cuda()
             query = queries[task_idx].cuda()
             
-            fast_weights = self.meta_train(net, support, criterion)
+            fast_weights = self.meta_train(rank, net, support, criterion, log_internals=self.cfg.log_meta_train, logs=logs)
             
             q_logits, q_targets = net(query, fast_weights)
             q_loss = criterion(q_logits, q_targets)
-            loss += q_loss
+            q_losses.append(q_loss)
             
             if task_idx % self.cfg.log_freq == 0:
                 acc1, acc5 = self.accuracy(q_logits, q_targets, topk=(1, 5))
-                log = f'Epoch [{epoch+1}/{num_epochs}]-({task_idx}/{len(supports)}) '
+                log = f'\t({task_idx}/{len(supports)}) '
                 log += f'Loss: {q_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
                 if rank == 0:
                     logs.append(log)
                     print(log)
         
+        q_losses = torch.stack(q_losses, dim=0)
+        loss = torch.sum(q_losses)
+        reg_term = torch.sum((q_losses - torch.mean(q_losses))**2)
+        loss += reg_term * self.cfg.reg_lambda
         loss = loss/len(supports)
         optimizer.zero_grad()
         loss.backward()
@@ -725,13 +762,19 @@ class MetaCPCLearner:
             loss.backward()
             optimizer.step()
     
-    def meta_train(self, net, support, criterion):
+    def meta_train(self, rank, net, support, criterion, log_internals=False, logs=None):
         fast_weights = list(net.parameters())
-        for _ in range(self.cfg.task_steps):
+        for i in range(self.cfg.task_steps):
             s_logits, s_targets = net(support, fast_weights)
             s_loss = criterion(s_logits, s_targets)
             grad = torch.autograd.grad(s_loss, fast_weights)
             fast_weights = list(map(lambda p: p[1] - self.cfg.task_lr * p[0], zip(grad, fast_weights)))
+            
+            if log_internals and rank == 0:
+                acc1, acc5 = self.accuracy(s_logits, s_targets, topk=(1, 5))
+                log = f'\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {s_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+                logs.append(log)
+                print(log)
         
         return fast_weights
     
@@ -757,7 +800,7 @@ class MetaCPCLearner:
         total_loss /= len(val_loader)
         
         if rank == 0:
-            log = f'Validation Loss: {total_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+            log = f'\tValidation Loss: {total_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
             log += f', F1: {f1.item():.2f}, Recall: {recall.item():.2f}, Precision: {precision.item():.2f}'
             logs.append(log)
             print(log)
@@ -788,3 +831,20 @@ class MetaCPCLearner:
                 correct_k = correct[:k].reshape(-1).float().sum(0, keepdim=True)
                 res.append(correct_k.mul_(100.0 / batch_size))
             return res
+    
+    def scores(self, output, target):
+        with torch.no_grad():
+            batch_size = target.size(0)
+
+            _, pred = output.max(1)
+            correct = pred.eq(target)
+
+            # Compute f1-score, recall, and precision for top-1 prediction
+            tp = torch.logical_and(correct, target).sum()
+            fp = pred.sum() - tp
+            fn = target.sum() - tp
+            precision = tp / (tp + fp + 1e-12)
+            recall = tp / (tp + fn + 1e-12)
+            f1 = (2 * precision * recall) / (precision + recall + 1e-12)
+
+            return f1, recall, precision

@@ -13,8 +13,9 @@ class DefaultDataLoader():
         if self.cfg.dataset_name == 'hhar':
             with open(self.cfg.train_dataset_path, 'rb') as f:
                 self.train_dataset = pickle.load(f)
-                indices = random.sample(range(len(self.train_dataset)), 15000)
-                self.train_dataset = torch.utils.data.Subset(self.train_dataset, indices)
+                if len(self.train_dataset) > 15000:
+                    indices = random.sample(range(len(self.train_dataset)), 15000)
+                    self.train_dataset = torch.utils.data.Subset(self.train_dataset, indices)
             with open(self.cfg.test_dataset_path, 'rb') as f:
                 self.test_dataset = pickle.load(f)
             with open(self.cfg.val_dataset_path, 'rb') as f:

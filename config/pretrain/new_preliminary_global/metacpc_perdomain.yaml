@@ -1,0 +1,52 @@
+### Default config
+mode: pretrain
+seed: 0
+gpu: [4,5,6,7]
+num_workers: 4
+dist_url: tcp://localhost:10002
+
+### Dataset config
+dataset_name: hhar
+train_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/pretrain/train.pkl
+test_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/pretrain/test.pkl
+val_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/pretrain/val.pkl
+input_channels: 3
+num_cls: 9
+
+### Training config
+optimizer: adam
+criterion: crossentropy
+start_epoch: 0
+epochs: 1000
+lr: 0.001 # 0.0005
+wd: 0.0
+
+### Logs and checkpoints
+resume: ''
+ckpt_dir: /mnt/sting/hjyoon/projects/augcontrast/models/0605_preliminary_global/pretrain/metacpc_perdomain
+log_freq: 1
+save_freq: 10
+log_meta_train: false
+
+### Model config
+pretext: metacpc
+## Encoder
+enc_blocks: 4
+kernel_sizes: [8, 4, 2, 1]
+strides: [4, 2, 1, 1]
+## Aggregator
+agg_blocks: 5
+z_dim: 256
+## Predictor
+pooling: mean
+pred_steps: 12
+n_negatives: 15
+offset: 4
+## Meta-learning
+task_per_domain: true
+num_task: 10
+multi_cond_num_task: 5
+task_size: 90
+task_steps: 10
+task_lr: 0.005
+reg_lambda: 0
