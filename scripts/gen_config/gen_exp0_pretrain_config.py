@@ -74,7 +74,8 @@ multi_cond_num_task: {multi_cond_num_task}
 task_size: 90
 task_steps: 10
 task_lr: 0.005
-reg_lambda: 0'''
+reg_lambda: 0
+log_meta_train: false'''
                     model_config = f'''### Model config
 pretext: {pretext}
 ## Encoder
