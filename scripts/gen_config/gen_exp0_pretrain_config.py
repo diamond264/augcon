@@ -38,11 +38,12 @@ val_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/{domain}/pretrai
 input_channels: 3
 num_cls: 9
 '''
-                    training_config = '''### Training config
+                    epochs = 100 if pretext == 'cpc' else 1000
+                    training_config = f'''### Training config
 optimizer: adam
 criterion: crossentropy
 start_epoch: 0
-epochs: 100
+epochs: {epochs}
 batch_size: 2048
 lr: 0.001
 wd: 0.0

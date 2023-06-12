@@ -1,45 +1,253 @@
-2023-06-08 00:52:47,690 - AUGCON - INFO - logger initialized (/home/hjyoon/projects/augcon/config/exp0/pretrain/without_target_domain_WA4697-jhryu/metacpc_perdomain_8421.yaml.log)
-2023-06-08 00:52:47,690 - AUGCON - INFO - ================= Config =================
-2023-06-08 00:52:47,690 - AUGCON - INFO -   mode: pretrain
-2023-06-08 00:52:47,690 - AUGCON - INFO -   seed: 0
-2023-06-08 00:52:47,690 - AUGCON - INFO -   gpu: [0, 1, 2, 3]
-2023-06-08 00:52:47,690 - AUGCON - INFO -   num_workers: 8
-2023-06-08 00:52:47,690 - AUGCON - INFO -   dist_url: tcp://localhost:10001
-2023-06-08 00:52:47,690 - AUGCON - INFO -   dataset_name: hhar
-2023-06-08 00:52:47,690 - AUGCON - INFO -   train_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/pretrain/train.pkl
-2023-06-08 00:52:47,690 - AUGCON - INFO -   test_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/pretrain/test.pkl
-2023-06-08 00:52:47,690 - AUGCON - INFO -   val_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/pretrain/val.pkl
-2023-06-08 00:52:47,690 - AUGCON - INFO -   input_channels: 3
-2023-06-08 00:52:47,691 - AUGCON - INFO -   num_cls: 9
-2023-06-08 00:52:47,691 - AUGCON - INFO -   optimizer: adam
-2023-06-08 00:52:47,691 - AUGCON - INFO -   criterion: crossentropy
-2023-06-08 00:52:47,691 - AUGCON - INFO -   start_epoch: 0
-2023-06-08 00:52:47,691 - AUGCON - INFO -   epochs: 100
-2023-06-08 00:52:47,691 - AUGCON - INFO -   batch_size: 2048
-2023-06-08 00:52:47,691 - AUGCON - INFO -   lr: 0.001
-2023-06-08 00:52:47,691 - AUGCON - INFO -   wd: 0.0
-2023-06-08 00:52:47,691 - AUGCON - INFO -   resume: 
-2023-06-08 00:52:47,691 - AUGCON - INFO -   ckpt_dir: /mnt/sting/hjyoon/projects/augcontrast/models/exp0/pretrain/cpc_perdomain_8421
-2023-06-08 00:52:47,691 - AUGCON - INFO -   log_freq: 20
-2023-06-08 00:52:47,691 - AUGCON - INFO -   save_freq: 20
-2023-06-08 00:52:47,691 - AUGCON - INFO -   pretext: metacpc
-2023-06-08 00:52:47,691 - AUGCON - INFO -   enc_blocks: 4
-2023-06-08 00:52:47,691 - AUGCON - INFO -   kernel_sizes: [8, 4, 2, 1]
-2023-06-08 00:52:47,691 - AUGCON - INFO -   strides: [4, 2, 1, 1]
-2023-06-08 00:52:47,691 - AUGCON - INFO -   agg_blocks: 4
-2023-06-08 00:52:47,691 - AUGCON - INFO -   z_dim: 256
-2023-06-08 00:52:47,691 - AUGCON - INFO -   pooling: mean
-2023-06-08 00:52:47,691 - AUGCON - INFO -   pred_steps: 12
-2023-06-08 00:52:47,691 - AUGCON - INFO -   n_negatives: 15
-2023-06-08 00:52:47,691 - AUGCON - INFO -   offset: 4
-2023-06-08 00:52:47,691 - AUGCON - INFO -   neg_per_domain: True
-2023-06-08 00:52:47,691 - AUGCON - INFO - ==========================================
-2023-06-08 00:52:47,691 - AUGCON - INFO - Setting GPUs: [0, 1, 2, 3]
-2023-06-08 00:52:47,691 - AUGCON - INFO - GPUs [0, 1, 2, 3] will be used
-2023-06-08 00:52:47,692 - AUGCON - WARNING - You have chosen to seed training. 
-2023-06-08 00:52:47,692 - AUGCON - WARNING - This will turn on the CUDNN deterministic setting, 
-2023-06-08 00:52:47,692 - AUGCON - WARNING - which can slow down your training considerably! 
-2023-06-08 00:52:47,692 - AUGCON - WARNING - You may see unexpected behavior when restarting 
-2023-06-08 00:52:47,692 - AUGCON - WARNING - from checkpoints.
-2023-06-08 00:52:47,835 - AUGCON - INFO - Executing MetaCPC
-2023-06-08 00:52:47,836 - AUGCON - INFO - Logs are skipped during training
+2023-06-08 19:25:06,403 - AUGCON - INFO - logger initialized (/home/hjyoon/projects/augcon/config/exp0/pretrain/without_target_domain_WA4697-jhryu/metacpc_perdomain_8421.yaml.log)
+2023-06-08 19:25:06,404 - AUGCON - INFO - ================= Config =================
+2023-06-08 19:25:06,404 - AUGCON - INFO -   mode: pretrain
+2023-06-08 19:25:06,404 - AUGCON - INFO -   seed: 0
+2023-06-08 19:25:06,404 - AUGCON - INFO -   gpu: [0, 1, 2, 3]
+2023-06-08 19:25:06,404 - AUGCON - INFO -   num_workers: 8
+2023-06-08 19:25:06,404 - AUGCON - INFO -   dist_url: tcp://localhost:10001
+2023-06-08 19:25:06,404 - AUGCON - INFO -   dataset_name: hhar
+2023-06-08 19:25:06,404 - AUGCON - INFO -   train_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/pretrain/train.pkl
+2023-06-08 19:25:06,404 - AUGCON - INFO -   test_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/pretrain/test.pkl
+2023-06-08 19:25:06,404 - AUGCON - INFO -   val_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/pretrain/val.pkl
+2023-06-08 19:25:06,405 - AUGCON - INFO -   input_channels: 3
+2023-06-08 19:25:06,405 - AUGCON - INFO -   num_cls: 9
+2023-06-08 19:25:06,405 - AUGCON - INFO -   optimizer: adam
+2023-06-08 19:25:06,405 - AUGCON - INFO -   criterion: crossentropy
+2023-06-08 19:25:06,405 - AUGCON - INFO -   start_epoch: 0
+2023-06-08 19:25:06,405 - AUGCON - INFO -   epochs: 100
+2023-06-08 19:25:06,405 - AUGCON - INFO -   batch_size: 2048
+2023-06-08 19:25:06,405 - AUGCON - INFO -   lr: 0.001
+2023-06-08 19:25:06,405 - AUGCON - INFO -   wd: 0.0
+2023-06-08 19:25:06,405 - AUGCON - INFO -   resume: 
+2023-06-08 19:25:06,405 - AUGCON - INFO -   ckpt_dir: /mnt/sting/hjyoon/projects/augcontrast/models/exp0/pretrain/metacpc_perdomain_8421
+2023-06-08 19:25:06,405 - AUGCON - INFO -   log_freq: 20
+2023-06-08 19:25:06,405 - AUGCON - INFO -   save_freq: 100
+2023-06-08 19:25:06,405 - AUGCON - INFO -   pretext: metacpc
+2023-06-08 19:25:06,405 - AUGCON - INFO -   enc_blocks: 4
+2023-06-08 19:25:06,405 - AUGCON - INFO -   kernel_sizes: [8, 4, 2, 1]
+2023-06-08 19:25:06,405 - AUGCON - INFO -   strides: [4, 2, 1, 1]
+2023-06-08 19:25:06,405 - AUGCON - INFO -   agg_blocks: 5
+2023-06-08 19:25:06,405 - AUGCON - INFO -   z_dim: 256
+2023-06-08 19:25:06,405 - AUGCON - INFO -   pooling: mean
+2023-06-08 19:25:06,405 - AUGCON - INFO -   pred_steps: 12
+2023-06-08 19:25:06,405 - AUGCON - INFO -   n_negatives: 15
+2023-06-08 19:25:06,405 - AUGCON - INFO -   offset: 4
+2023-06-08 19:25:06,405 - AUGCON - INFO -   task_per_domain: True
+2023-06-08 19:25:06,405 - AUGCON - INFO -   num_task: 10
+2023-06-08 19:25:06,405 - AUGCON - INFO -   multi_cond_num_task: 5
+2023-06-08 19:25:06,405 - AUGCON - INFO -   task_size: 90
+2023-06-08 19:25:06,405 - AUGCON - INFO -   task_steps: 10
+2023-06-08 19:25:06,405 - AUGCON - INFO -   task_lr: 0.005
+2023-06-08 19:25:06,405 - AUGCON - INFO -   reg_lambda: 0
+2023-06-08 19:25:06,405 - AUGCON - INFO -   log_meta_train: False
+2023-06-08 19:25:06,405 - AUGCON - INFO - ==========================================
+2023-06-08 19:25:06,405 - AUGCON - INFO - Setting GPUs: [0, 1, 2, 3]
+2023-06-08 19:25:06,405 - AUGCON - INFO - GPUs [0, 1, 2, 3] will be used
+2023-06-08 19:25:06,406 - AUGCON - WARNING - You have chosen to seed training. 
+2023-06-08 19:25:06,406 - AUGCON - WARNING - This will turn on the CUDNN deterministic setting, 
+2023-06-08 19:25:06,406 - AUGCON - WARNING - which can slow down your training considerably! 
+2023-06-08 19:25:06,406 - AUGCON - WARNING - You may see unexpected behavior when restarting 
+2023-06-08 19:25:06,406 - AUGCON - WARNING - from checkpoints.
+2023-06-08 19:25:06,545 - AUGCON - INFO - Executing MetaCPC
+2023-06-08 19:25:06,545 - AUGCON - INFO - Logs are skipped during training
+2023-06-08 19:36:26,678 - AUGCON - INFO - DDP is used for training - training 3750 instances for each worker
+2023-06-08 19:36:26,679 - AUGCON - INFO - Epoch [1/100]
+2023-06-08 19:36:26,679 - AUGCON - INFO - 	(0/15) Loss: 3.7197, Acc(1): 6.31, Acc(5): 30.58
+2023-06-08 19:36:26,679 - AUGCON - INFO - Epoch [2/100]
+2023-06-08 19:36:26,680 - AUGCON - INFO - 	(0/15) Loss: 3.4194, Acc(1): 5.88, Acc(5): 31.62
+2023-06-08 19:36:26,680 - AUGCON - INFO - Epoch [3/100]
+2023-06-08 19:36:26,680 - AUGCON - INFO - 	(0/15) Loss: 3.0834, Acc(1): 6.05, Acc(5): 31.03
+2023-06-08 19:36:26,680 - AUGCON - INFO - Epoch [4/100]
+2023-06-08 19:36:26,680 - AUGCON - INFO - 	(0/15) Loss: 3.0608, Acc(1): 6.20, Acc(5): 31.06
+2023-06-08 19:36:26,680 - AUGCON - INFO - Epoch [5/100]
+2023-06-08 19:36:26,681 - AUGCON - INFO - 	(0/15) Loss: 2.9312, Acc(1): 6.67, Acc(5): 31.74
+2023-06-08 19:36:26,681 - AUGCON - INFO - Epoch [6/100]
+2023-06-08 19:36:26,681 - AUGCON - INFO - 	(0/15) Loss: 2.9173, Acc(1): 6.23, Acc(5): 31.07
+2023-06-08 19:36:26,681 - AUGCON - INFO - Epoch [7/100]
+2023-06-08 19:36:26,681 - AUGCON - INFO - 	(0/15) Loss: 2.8627, Acc(1): 6.41, Acc(5): 31.30
+2023-06-08 19:36:26,681 - AUGCON - INFO - Epoch [8/100]
+2023-06-08 19:36:26,681 - AUGCON - INFO - 	(0/15) Loss: 2.8824, Acc(1): 6.42, Acc(5): 31.15
+2023-06-08 19:36:26,682 - AUGCON - INFO - Epoch [9/100]
+2023-06-08 19:36:26,682 - AUGCON - INFO - 	(0/15) Loss: 2.8722, Acc(1): 6.60, Acc(5): 31.66
+2023-06-08 19:36:26,682 - AUGCON - INFO - Epoch [10/100]
+2023-06-08 19:36:26,682 - AUGCON - INFO - 	(0/15) Loss: 2.8541, Acc(1): 6.29, Acc(5): 31.04
+2023-06-08 19:36:26,682 - AUGCON - INFO - Epoch [11/100]
+2023-06-08 19:36:26,682 - AUGCON - INFO - 	(0/15) Loss: 2.8310, Acc(1): 6.31, Acc(5): 31.11
+2023-06-08 19:36:26,683 - AUGCON - INFO - Epoch [12/100]
+2023-06-08 19:36:26,683 - AUGCON - INFO - 	(0/15) Loss: 2.8129, Acc(1): 6.09, Acc(5): 31.17
+2023-06-08 19:36:26,683 - AUGCON - INFO - Epoch [13/100]
+2023-06-08 19:36:26,683 - AUGCON - INFO - 	(0/15) Loss: 2.8252, Acc(1): 6.24, Acc(5): 31.12
+2023-06-08 19:36:26,683 - AUGCON - INFO - Epoch [14/100]
+2023-06-08 19:36:26,683 - AUGCON - INFO - 	(0/15) Loss: 2.8085, Acc(1): 6.23, Acc(5): 31.71
+2023-06-08 19:36:26,684 - AUGCON - INFO - Epoch [15/100]
+2023-06-08 19:36:26,684 - AUGCON - INFO - 	(0/15) Loss: 2.8103, Acc(1): 6.41, Acc(5): 31.53
+2023-06-08 19:36:26,684 - AUGCON - INFO - Epoch [16/100]
+2023-06-08 19:36:26,684 - AUGCON - INFO - 	(0/15) Loss: 2.8067, Acc(1): 6.21, Acc(5): 31.11
+2023-06-08 19:36:26,684 - AUGCON - INFO - Epoch [17/100]
+2023-06-08 19:36:26,684 - AUGCON - INFO - 	(0/15) Loss: 2.7872, Acc(1): 6.57, Acc(5): 31.58
+2023-06-08 19:36:26,685 - AUGCON - INFO - Epoch [18/100]
+2023-06-08 19:36:26,685 - AUGCON - INFO - 	(0/15) Loss: 2.7910, Acc(1): 6.52, Acc(5): 30.87
+2023-06-08 19:36:26,685 - AUGCON - INFO - Epoch [19/100]
+2023-06-08 19:36:26,685 - AUGCON - INFO - 	(0/15) Loss: 2.7884, Acc(1): 6.25, Acc(5): 31.41
+2023-06-08 19:36:26,685 - AUGCON - INFO - Epoch [20/100]
+2023-06-08 19:36:26,685 - AUGCON - INFO - 	(0/15) Loss: 2.7907, Acc(1): 6.26, Acc(5): 31.70
+2023-06-08 19:36:26,686 - AUGCON - INFO - Epoch [21/100]
+2023-06-08 19:36:26,686 - AUGCON - INFO - 	(0/15) Loss: 2.7851, Acc(1): 6.39, Acc(5): 31.21
+2023-06-08 19:36:26,686 - AUGCON - INFO - Epoch [22/100]
+2023-06-08 19:36:26,686 - AUGCON - INFO - 	(0/15) Loss: 2.7813, Acc(1): 6.63, Acc(5): 31.16
+2023-06-08 19:36:26,686 - AUGCON - INFO - Epoch [23/100]
+2023-06-08 19:36:26,686 - AUGCON - INFO - 	(0/15) Loss: 2.7888, Acc(1): 6.09, Acc(5): 31.51
+2023-06-08 19:36:26,687 - AUGCON - INFO - Epoch [24/100]
+2023-06-08 19:36:26,687 - AUGCON - INFO - 	(0/15) Loss: 2.7849, Acc(1): 6.08, Acc(5): 30.86
+2023-06-08 19:36:26,687 - AUGCON - INFO - Epoch [25/100]
+2023-06-08 19:36:26,687 - AUGCON - INFO - 	(0/15) Loss: 2.7771, Acc(1): 6.25, Acc(5): 31.15
+2023-06-08 19:36:26,687 - AUGCON - INFO - Epoch [26/100]
+2023-06-08 19:36:26,687 - AUGCON - INFO - 	(0/15) Loss: 2.7821, Acc(1): 6.32, Acc(5): 32.03
+2023-06-08 19:36:26,688 - AUGCON - INFO - Epoch [27/100]
+2023-06-08 19:36:26,688 - AUGCON - INFO - 	(0/15) Loss: 2.7803, Acc(1): 6.29, Acc(5): 31.36
+2023-06-08 19:36:26,688 - AUGCON - INFO - Epoch [28/100]
+2023-06-08 19:36:26,688 - AUGCON - INFO - 	(0/15) Loss: 2.7826, Acc(1): 6.95, Acc(5): 31.55
+2023-06-08 19:36:26,688 - AUGCON - INFO - Epoch [29/100]
+2023-06-08 19:36:26,688 - AUGCON - INFO - 	(0/15) Loss: 2.7814, Acc(1): 6.42, Acc(5): 31.86
+2023-06-08 19:36:26,688 - AUGCON - INFO - Epoch [30/100]
+2023-06-08 19:36:26,689 - AUGCON - INFO - 	(0/15) Loss: 2.7776, Acc(1): 6.56, Acc(5): 32.05
+2023-06-08 19:36:26,689 - AUGCON - INFO - Epoch [31/100]
+2023-06-08 19:36:26,689 - AUGCON - INFO - 	(0/15) Loss: 2.7781, Acc(1): 6.34, Acc(5): 31.41
+2023-06-08 19:36:26,689 - AUGCON - INFO - Epoch [32/100]
+2023-06-08 19:36:26,689 - AUGCON - INFO - 	(0/15) Loss: 2.7767, Acc(1): 6.32, Acc(5): 31.79
+2023-06-08 19:36:26,689 - AUGCON - INFO - Epoch [33/100]
+2023-06-08 19:36:26,690 - AUGCON - INFO - 	(0/15) Loss: 2.7744, Acc(1): 6.59, Acc(5): 31.78
+2023-06-08 19:36:26,690 - AUGCON - INFO - Epoch [34/100]
+2023-06-08 19:36:26,690 - AUGCON - INFO - 	(0/15) Loss: 2.7754, Acc(1): 6.29, Acc(5): 31.41
+2023-06-08 19:36:26,690 - AUGCON - INFO - Epoch [35/100]
+2023-06-08 19:36:26,690 - AUGCON - INFO - 	(0/15) Loss: 2.7764, Acc(1): 6.39, Acc(5): 31.42
+2023-06-08 19:36:26,690 - AUGCON - INFO - Epoch [36/100]
+2023-06-08 19:36:26,691 - AUGCON - INFO - 	(0/15) Loss: 2.7763, Acc(1): 6.32, Acc(5): 31.60
+2023-06-08 19:36:26,691 - AUGCON - INFO - Epoch [37/100]
+2023-06-08 19:36:26,691 - AUGCON - INFO - 	(0/15) Loss: 2.7760, Acc(1): 6.33, Acc(5): 31.31
+2023-06-08 19:36:26,691 - AUGCON - INFO - Epoch [38/100]
+2023-06-08 19:36:26,691 - AUGCON - INFO - 	(0/15) Loss: 2.7769, Acc(1): 6.57, Acc(5): 31.97
+2023-06-08 19:36:26,691 - AUGCON - INFO - Epoch [39/100]
+2023-06-08 19:36:26,692 - AUGCON - INFO - 	(0/15) Loss: 2.7737, Acc(1): 6.37, Acc(5): 31.68
+2023-06-08 19:36:26,692 - AUGCON - INFO - Epoch [40/100]
+2023-06-08 19:36:26,692 - AUGCON - INFO - 	(0/15) Loss: 2.7724, Acc(1): 6.45, Acc(5): 32.28
+2023-06-08 19:36:26,692 - AUGCON - INFO - Epoch [41/100]
+2023-06-08 19:36:26,692 - AUGCON - INFO - 	(0/15) Loss: 2.7736, Acc(1): 6.45, Acc(5): 31.61
+2023-06-08 19:36:26,692 - AUGCON - INFO - Epoch [42/100]
+2023-06-08 19:36:26,693 - AUGCON - INFO - 	(0/15) Loss: 2.7745, Acc(1): 6.60, Acc(5): 32.02
+2023-06-08 19:36:26,693 - AUGCON - INFO - Epoch [43/100]
+2023-06-08 19:36:26,693 - AUGCON - INFO - 	(0/15) Loss: 2.7728, Acc(1): 6.86, Acc(5): 32.08
+2023-06-08 19:36:26,693 - AUGCON - INFO - Epoch [44/100]
+2023-06-08 19:36:26,693 - AUGCON - INFO - 	(0/15) Loss: 2.7719, Acc(1): 6.73, Acc(5): 33.17
+2023-06-08 19:36:26,693 - AUGCON - INFO - Epoch [45/100]
+2023-06-08 19:36:26,694 - AUGCON - INFO - 	(0/15) Loss: 2.7708, Acc(1): 6.88, Acc(5): 33.27
+2023-06-08 19:36:26,694 - AUGCON - INFO - Epoch [46/100]
+2023-06-08 19:36:26,694 - AUGCON - INFO - 	(0/15) Loss: 2.7717, Acc(1): 6.73, Acc(5): 33.32
+2023-06-08 19:36:26,694 - AUGCON - INFO - Epoch [47/100]
+2023-06-08 19:36:26,694 - AUGCON - INFO - 	(0/15) Loss: 2.7736, Acc(1): 6.44, Acc(5): 31.60
+2023-06-08 19:36:26,694 - AUGCON - INFO - Epoch [48/100]
+2023-06-08 19:36:26,695 - AUGCON - INFO - 	(0/15) Loss: 2.7737, Acc(1): 6.35, Acc(5): 31.80
+2023-06-08 19:36:26,695 - AUGCON - INFO - Epoch [49/100]
+2023-06-08 19:36:26,695 - AUGCON - INFO - 	(0/15) Loss: 2.7724, Acc(1): 6.53, Acc(5): 32.22
+2023-06-08 19:36:26,695 - AUGCON - INFO - Epoch [50/100]
+2023-06-08 19:36:26,695 - AUGCON - INFO - 	(0/15) Loss: 2.7715, Acc(1): 6.58, Acc(5): 32.66
+2023-06-08 19:36:26,695 - AUGCON - INFO - Epoch [51/100]
+2023-06-08 19:36:26,696 - AUGCON - INFO - 	(0/15) Loss: 2.7745, Acc(1): 6.06, Acc(5): 31.64
+2023-06-08 19:36:26,696 - AUGCON - INFO - Epoch [52/100]
+2023-06-08 19:36:26,696 - AUGCON - INFO - 	(0/15) Loss: 2.7704, Acc(1): 7.03, Acc(5): 33.65
+2023-06-08 19:36:26,696 - AUGCON - INFO - Epoch [53/100]
+2023-06-08 19:36:26,696 - AUGCON - INFO - 	(0/15) Loss: 2.7722, Acc(1): 6.70, Acc(5): 32.59
+2023-06-08 19:36:26,696 - AUGCON - INFO - Epoch [54/100]
+2023-06-08 19:36:26,697 - AUGCON - INFO - 	(0/15) Loss: 2.7724, Acc(1): 6.36, Acc(5): 32.16
+2023-06-08 19:36:26,697 - AUGCON - INFO - Epoch [55/100]
+2023-06-08 19:36:26,697 - AUGCON - INFO - 	(0/15) Loss: 2.7729, Acc(1): 6.25, Acc(5): 31.28
+2023-06-08 19:36:26,697 - AUGCON - INFO - Epoch [56/100]
+2023-06-08 19:36:26,697 - AUGCON - INFO - 	(0/15) Loss: 2.7704, Acc(1): 7.01, Acc(5): 33.46
+2023-06-08 19:36:26,697 - AUGCON - INFO - Epoch [57/100]
+2023-06-08 19:36:26,698 - AUGCON - INFO - 	(0/15) Loss: 2.7728, Acc(1): 6.35, Acc(5): 31.86
+2023-06-08 19:36:26,698 - AUGCON - INFO - Epoch [58/100]
+2023-06-08 19:36:26,698 - AUGCON - INFO - 	(0/15) Loss: 2.7697, Acc(1): 6.82, Acc(5): 34.18
+2023-06-08 19:36:26,698 - AUGCON - INFO - Epoch [59/100]
+2023-06-08 19:36:26,698 - AUGCON - INFO - 	(0/15) Loss: 2.7658, Acc(1): 7.71, Acc(5): 36.28
+2023-06-08 19:36:26,698 - AUGCON - INFO - Epoch [60/100]
+2023-06-08 19:36:26,699 - AUGCON - INFO - 	(0/15) Loss: 2.7729, Acc(1): 6.35, Acc(5): 31.84
+2023-06-08 19:36:26,699 - AUGCON - INFO - Epoch [61/100]
+2023-06-08 19:36:26,699 - AUGCON - INFO - 	(0/15) Loss: 2.7728, Acc(1): 6.36, Acc(5): 32.20
+2023-06-08 19:36:26,699 - AUGCON - INFO - Epoch [62/100]
+2023-06-08 19:36:26,699 - AUGCON - INFO - 	(0/15) Loss: 2.7642, Acc(1): 8.05, Acc(5): 37.22
+2023-06-08 19:36:26,699 - AUGCON - INFO - Epoch [63/100]
+2023-06-08 19:36:26,700 - AUGCON - INFO - 	(0/15) Loss: 2.7684, Acc(1): 7.61, Acc(5): 35.33
+2023-06-08 19:36:26,700 - AUGCON - INFO - Epoch [64/100]
+2023-06-08 19:36:26,700 - AUGCON - INFO - 	(0/15) Loss: 2.7611, Acc(1): 8.42, Acc(5): 37.55
+2023-06-08 19:36:26,700 - AUGCON - INFO - Epoch [65/100]
+2023-06-08 19:36:26,700 - AUGCON - INFO - 	(0/15) Loss: 2.7675, Acc(1): 7.62, Acc(5): 35.37
+2023-06-08 19:36:26,700 - AUGCON - INFO - Epoch [66/100]
+2023-06-08 19:36:26,701 - AUGCON - INFO - 	(0/15) Loss: 2.7716, Acc(1): 6.87, Acc(5): 32.59
+2023-06-08 19:36:26,701 - AUGCON - INFO - Epoch [67/100]
+2023-06-08 19:36:26,701 - AUGCON - INFO - 	(0/15) Loss: 2.7702, Acc(1): 7.11, Acc(5): 34.13
+2023-06-08 19:36:26,701 - AUGCON - INFO - Epoch [68/100]
+2023-06-08 19:36:26,701 - AUGCON - INFO - 	(0/15) Loss: 2.7735, Acc(1): 6.44, Acc(5): 32.00
+2023-06-08 19:36:26,701 - AUGCON - INFO - Epoch [69/100]
+2023-06-08 19:36:26,702 - AUGCON - INFO - 	(0/15) Loss: 2.7718, Acc(1): 6.49, Acc(5): 32.27
+2023-06-08 19:36:26,702 - AUGCON - INFO - Epoch [70/100]
+2023-06-08 19:36:26,702 - AUGCON - INFO - 	(0/15) Loss: 2.7675, Acc(1): 7.08, Acc(5): 34.85
+2023-06-08 19:36:26,702 - AUGCON - INFO - Epoch [71/100]
+2023-06-08 19:36:26,702 - AUGCON - INFO - 	(0/15) Loss: 2.7565, Acc(1): 8.80, Acc(5): 40.47
+2023-06-08 19:36:26,702 - AUGCON - INFO - Epoch [72/100]
+2023-06-08 19:36:26,703 - AUGCON - INFO - 	(0/15) Loss: 2.7742, Acc(1): 6.27, Acc(5): 31.86
+2023-06-08 19:36:26,703 - AUGCON - INFO - Epoch [73/100]
+2023-06-08 19:36:26,703 - AUGCON - INFO - 	(0/15) Loss: 2.7477, Acc(1): 9.81, Acc(5): 42.93
+2023-06-08 19:36:26,703 - AUGCON - INFO - Epoch [74/100]
+2023-06-08 19:36:26,703 - AUGCON - INFO - 	(0/15) Loss: 2.7755, Acc(1): 6.36, Acc(5): 32.23
+2023-06-08 19:36:26,703 - AUGCON - INFO - Epoch [75/100]
+2023-06-08 19:36:26,704 - AUGCON - INFO - 	(0/15) Loss: 2.7689, Acc(1): 6.80, Acc(5): 33.38
+2023-06-08 19:36:26,704 - AUGCON - INFO - Epoch [76/100]
+2023-06-08 19:36:26,704 - AUGCON - INFO - 	(0/15) Loss: 2.7152, Acc(1): 10.65, Acc(5): 46.54
+2023-06-08 19:36:26,704 - AUGCON - INFO - Epoch [77/100]
+2023-06-08 19:36:26,704 - AUGCON - INFO - 	(0/15) Loss: 2.7538, Acc(1): 7.85, Acc(5): 37.03
+2023-06-08 19:36:26,704 - AUGCON - INFO - Epoch [78/100]
+2023-06-08 19:36:26,705 - AUGCON - INFO - 	(0/15) Loss: 2.6612, Acc(1): 11.63, Acc(5): 48.72
+2023-06-08 19:36:26,705 - AUGCON - INFO - Epoch [79/100]
+2023-06-08 19:36:26,705 - AUGCON - INFO - 	(0/15) Loss: 2.7568, Acc(1): 7.76, Acc(5): 35.94
+2023-06-08 19:36:26,705 - AUGCON - INFO - Epoch [80/100]
+2023-06-08 19:36:26,705 - AUGCON - INFO - 	(0/15) Loss: 2.6082, Acc(1): 11.53, Acc(5): 51.28
+2023-06-08 19:36:26,705 - AUGCON - INFO - Epoch [81/100]
+2023-06-08 19:36:26,706 - AUGCON - INFO - 	(0/15) Loss: 2.7643, Acc(1): 7.95, Acc(5): 35.79
+2023-06-08 19:36:26,706 - AUGCON - INFO - Epoch [82/100]
+2023-06-08 19:36:26,706 - AUGCON - INFO - 	(0/15) Loss: 2.7655, Acc(1): 8.40, Acc(5): 36.84
+2023-06-08 19:36:26,706 - AUGCON - INFO - Epoch [83/100]
+2023-06-08 19:36:26,706 - AUGCON - INFO - 	(0/15) Loss: 2.4383, Acc(1): 13.26, Acc(5): 58.64
+2023-06-08 19:36:26,706 - AUGCON - INFO - Epoch [84/100]
+2023-06-08 19:36:26,707 - AUGCON - INFO - 	(0/15) Loss: 2.5176, Acc(1): 11.68, Acc(5): 54.06
+2023-06-08 19:36:26,707 - AUGCON - INFO - Epoch [85/100]
+2023-06-08 19:36:26,707 - AUGCON - INFO - 	(0/15) Loss: 2.7741, Acc(1): 7.71, Acc(5): 36.02
+2023-06-08 19:36:26,707 - AUGCON - INFO - Epoch [86/100]
+2023-06-08 19:36:26,707 - AUGCON - INFO - 	(0/15) Loss: 2.4884, Acc(1): 12.49, Acc(5): 55.95
+2023-06-08 19:36:26,707 - AUGCON - INFO - Epoch [87/100]
+2023-06-08 19:36:26,708 - AUGCON - INFO - 	(0/15) Loss: 2.3508, Acc(1): 14.62, Acc(5): 63.13
+2023-06-08 19:36:26,708 - AUGCON - INFO - Epoch [88/100]
+2023-06-08 19:36:26,708 - AUGCON - INFO - 	(0/15) Loss: 2.7362, Acc(1): 8.39, Acc(5): 38.30
+2023-06-08 19:36:26,708 - AUGCON - INFO - Epoch [89/100]
+2023-06-08 19:36:26,708 - AUGCON - INFO - 	(0/15) Loss: 2.4067, Acc(1): 13.03, Acc(5): 60.46
+2023-06-08 19:36:26,708 - AUGCON - INFO - Epoch [90/100]
+2023-06-08 19:36:26,709 - AUGCON - INFO - 	(0/15) Loss: 2.3784, Acc(1): 14.32, Acc(5): 61.72
+2023-06-08 19:36:26,709 - AUGCON - INFO - Epoch [91/100]
+2023-06-08 19:36:26,709 - AUGCON - INFO - 	(0/15) Loss: 2.6890, Acc(1): 9.34, Acc(5): 41.58
+2023-06-08 19:36:26,709 - AUGCON - INFO - Epoch [92/100]
+2023-06-08 19:36:26,709 - AUGCON - INFO - 	(0/15) Loss: 2.6421, Acc(1): 10.77, Acc(5): 47.78
+2023-06-08 19:36:26,709 - AUGCON - INFO - Epoch [93/100]
+2023-06-08 19:36:26,710 - AUGCON - INFO - 	(0/15) Loss: 2.6283, Acc(1): 10.71, Acc(5): 50.05
+2023-06-08 19:36:26,710 - AUGCON - INFO - Epoch [94/100]
+2023-06-08 19:36:26,710 - AUGCON - INFO - 	(0/15) Loss: 2.2967, Acc(1): 16.50, Acc(5): 65.45
+2023-06-08 19:36:26,710 - AUGCON - INFO - Epoch [95/100]
+2023-06-08 19:36:26,710 - AUGCON - INFO - 	(0/15) Loss: 2.6793, Acc(1): 11.24, Acc(5): 43.77
+2023-06-08 19:36:26,710 - AUGCON - INFO - Epoch [96/100]
+2023-06-08 19:36:26,711 - AUGCON - INFO - 	(0/15) Loss: 2.2864, Acc(1): 13.17, Acc(5): 61.01
+2023-06-08 19:36:26,711 - AUGCON - INFO - Epoch [97/100]
+2023-06-08 19:36:26,711 - AUGCON - INFO - 	(0/15) Loss: 2.5955, Acc(1): 11.15, Acc(5): 50.95
+2023-06-08 19:36:26,711 - AUGCON - INFO - Epoch [98/100]
+2023-06-08 19:36:26,711 - AUGCON - INFO - 	(0/15) Loss: 2.6490, Acc(1): 11.34, Acc(5): 46.90
+2023-06-08 19:36:26,711 - AUGCON - INFO - Epoch [99/100]
+2023-06-08 19:36:26,712 - AUGCON - INFO - 	(0/15) Loss: 2.2520, Acc(1): 13.78, Acc(5): 62.47
+2023-06-08 19:36:26,712 - AUGCON - INFO - Epoch [100/100]
+2023-06-08 19:36:26,712 - AUGCON - INFO - 	(0/15) Loss: 2.5474, Acc(1): 12.53, Acc(5): 52.75

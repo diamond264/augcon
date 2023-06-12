@@ -17,7 +17,7 @@ num_cls: 9
 optimizer: adam
 criterion: crossentropy
 start_epoch: 0
-epochs: 100
+epochs: 1000
 batch_size: 2048
 lr: 0.001
 wd: 0.0
@@ -50,4 +50,5 @@ task_size: 90
 task_steps: 10
 task_lr: 0.005
 reg_lambda: 0
+log_meta_train: false
 
