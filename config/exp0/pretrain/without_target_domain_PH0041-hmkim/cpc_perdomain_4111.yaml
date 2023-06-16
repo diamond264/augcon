@@ -19,12 +19,12 @@ criterion: crossentropy
 start_epoch: 0
 epochs: 100
 batch_size: 2048
-lr: 0.001
+lr: 0.0005
 wd: 0.0
 
 ### Logs and checkpoints
 resume: ''
-ckpt_dir: /mnt/sting/hjyoon/projects/augcontrast/models/exp0/pretrain/cpc_perdomain_4111
+ckpt_dir: /mnt/sting/hjyoon/projects/augcontrast/models/exp0/pretrain/target_domain_PH0041-hmkim/cpc_perdomain_4111
 log_freq: 20
 save_freq: 10
 

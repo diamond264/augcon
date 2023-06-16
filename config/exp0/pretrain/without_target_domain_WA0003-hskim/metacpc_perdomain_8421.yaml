@@ -6,7 +6,7 @@ num_workers: 8
 dist_url: tcp://localhost:10001
 
 ### Dataset config
-dataset_name: hhar
+dataset_name: ichar
 train_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA0003-hskim/pretrain/train.pkl
 test_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA0003-hskim/pretrain/test.pkl
 val_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA0003-hskim/pretrain/val.pkl
@@ -19,12 +19,12 @@ criterion: crossentropy
 start_epoch: 0
 epochs: 1000
 batch_size: 2048
-lr: 0.001
+lr: 0.0005
 wd: 0.0
 
 ### Logs and checkpoints
 resume: ''
-ckpt_dir: /mnt/sting/hjyoon/projects/augcontrast/models/exp0/pretrain/metacpc_perdomain_8421
+ckpt_dir: /mnt/sting/hjyoon/projects/augcontrast/models/exp0/pretrain/without_target_domain_WA0003-hskim/metacpc_perdomain_8421
 log_freq: 20
 save_freq: 100
 
@@ -48,7 +48,7 @@ num_task: 10
 multi_cond_num_task: 5
 task_size: 90
 task_steps: 10
-task_lr: 0.005
+task_lr: 0.001
 reg_lambda: 0
 log_meta_train: false
 

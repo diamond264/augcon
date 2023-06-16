@@ -10,7 +10,7 @@ class DefaultDataLoader():
         self.load_dataset()
     
     def load_dataset(self):
-        if self.cfg.dataset_name == 'hhar':
+        if self.cfg.dataset_name == 'hhar' or self.cfg.dataset_name == 'ichar':
             with open(self.cfg.train_dataset_path, 'rb') as f:
                 self.train_dataset = pickle.load(f)
                 if len(self.train_dataset) > 15000:

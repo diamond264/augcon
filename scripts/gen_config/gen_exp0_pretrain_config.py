@@ -10,7 +10,7 @@ def run():
     print(domains)
     pretexts = ['cpc', 'metacpc']
     
-    for architecture in ['8421', '4111']:
+    for architecture in ['8421']:
         for pretext in pretexts:
             for domain in domains:
                 for perdomain in [True, False]:
@@ -31,7 +31,7 @@ num_workers: 8
 dist_url: tcp://localhost:10002
 '''
                     dataset_config = f'''### Dataset config
-dataset_name: hhar
+dataset_name: ichar
 train_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/{domain}/pretrain/train.pkl
 test_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/{domain}/pretrain/test.pkl
 val_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/{domain}/pretrain/val.pkl
@@ -45,14 +45,14 @@ criterion: crossentropy
 start_epoch: 0
 epochs: {epochs}
 batch_size: 2048
-lr: 0.001
+lr: 0.0005
 wd: 0.0
 '''
                     ckpt_name = f'{pretext}_perdomain_{architecture}' if perdomain else f'{pretext}_random_{architecture}'
                     save_freq = 10 if pretext == 'cpc' else 100
                     log_config = f'''### Logs and checkpoints
 resume: ''
-ckpt_dir: /mnt/sting/hjyoon/projects/augcontrast/models/exp0/pretrain/{ckpt_name}
+ckpt_dir: /mnt/sting/hjyoon/projects/augcontrast/models/exp0/pretrain/without_{domain}/{ckpt_name}
 log_freq: 20
 save_freq: {save_freq}
 '''
@@ -74,7 +74,7 @@ num_task: {num_task}
 multi_cond_num_task: {multi_cond_num_task}
 task_size: 90
 task_steps: 10
-task_lr: 0.005
+task_lr: 0.001
 reg_lambda: 0
 log_meta_train: false'''
                     model_config = f'''### Model config

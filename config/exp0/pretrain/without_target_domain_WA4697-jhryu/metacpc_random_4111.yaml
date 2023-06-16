@@ -19,12 +19,12 @@ criterion: crossentropy
 start_epoch: 0
 epochs: 1000
 batch_size: 2048
-lr: 0.001
+lr: 0.0005
 wd: 0.0
 
 ### Logs and checkpoints
 resume: ''
-ckpt_dir: /mnt/sting/hjyoon/projects/augcontrast/models/exp0/pretrain/metacpc_random_4111
+ckpt_dir: /mnt/sting/hjyoon/projects/augcontrast/models/exp0/pretrain/target_domain_WA4697-jhryu/metacpc_random_4111
 log_freq: 20
 save_freq: 100
 
@@ -48,7 +48,7 @@ num_task: null
 multi_cond_num_task: 15
 task_size: 90
 task_steps: 10
-task_lr: 0.005
+task_lr: 0.001
 reg_lambda: 0
 log_meta_train: false
 
