@@ -435,7 +435,7 @@ class MetaCPCLearner:
                 logs.append(log)
                 print(log)
         else:
-            torch.cuda.set_device(self.gpu[0])
+            torch.cuda.set_device(rank)
             net.cuda()
             if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
                 cls_net.cuda()
@@ -549,13 +549,20 @@ class MetaCPCLearner:
                     loc = 'cuda:{}'.format(rank)
                     state = torch.load(self.cfg.pretrained, map_location=loc)['state_dict']
                     
-                    for k, v in list(state.items()):
-                        if world_size > 1:
-                            k = 'module.' + k
-                        if k in net.state_dict().keys():
-                            state[k] = v
-                    
-                    msg = net.load_state_dict(state, strict=False)
+                    if self.cfg.no_vars:
+                        enc_dict = {}
+                        for idx, k in enumerate(list(cls_net.state_dict().keys())):
+                            if not 'classifier' in k:
+                                enc_dict[k] = list(state.items())[idx][1]
+                        msg = net.load_state_dict(enc_dict, strict=False)
+                    else:
+                        for k, v in list(state.items()):
+                            if world_size > 1:
+                                k = 'module.' + k
+                            if k in net.state_dict().keys():
+                                state[k] = v
+                        
+                        msg = net.load_state_dict(state, strict=False)
                     if rank == 0:
                         log = "Missing keys: {}".format(msg.missing_keys)
                         logs.append(log)
