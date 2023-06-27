@@ -10,7 +10,7 @@ from collections import defaultdict
 
 class ProcessICSR():
     def __init__(self, file, class_type, seq_len=32000,
-                 split_ratio=0.6, drop_size_threshold=500,
+                 split_ratio=0.6, drop_size_threshold=100,
                  shots=[10, 5, 2, 1],
                  finetune_test_size=300, finetune_val_size=100):
         self.metadata = {
