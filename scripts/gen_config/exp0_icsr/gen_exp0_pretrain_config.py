@@ -17,20 +17,42 @@ def run():
             for domain in domains:
                 for perdomain in [True, False]:
                     if perdomain:
-                        default_config = f'''### Default config
+                        if domain in ['target_domain_PH0007-jskim', 'target_domain_PH0012-thanh',
+                                      'target_domain_PH0014-wjlee', 'target_domain_PH0034-ykha',
+                                      'target_domain_PH0038-iygoo']:
+                            default_config = f'''### Default config
 mode: pretrain
 seed: 0
-gpu: [0,1,2,3]
+gpu: [0,1]
 num_workers: 8
 dist_url: tcp://localhost:10001
 '''
-                    else:
-                        default_config = f'''### Default config
+                        else:
+                            default_config = f'''### Default config
 mode: pretrain
 seed: 0
-gpu: [4,5,6,7]
+gpu: [2,3]
 num_workers: 8
 dist_url: tcp://localhost:10002
+'''
+                    else:
+                        if domain in ['target_domain_PH0007-jskim', 'target_domain_PH0012-thanh',
+                                      'target_domain_PH0014-wjlee', 'target_domain_PH0034-ykha',
+                                      'target_domain_PH0038-iygoo']:
+                            default_config = f'''### Default config
+mode: pretrain
+seed: 0
+gpu: [4,5]
+num_workers: 8
+dist_url: tcp://localhost:10003
+'''
+                        else:
+                            default_config = f'''### Default config
+mode: pretrain
+seed: 0
+gpu: [6,7]
+num_workers: 8
+dist_url: tcp://localhost:10004
 '''
                     dataset_config = f'''### Dataset config
 dataset_name: icsr
@@ -70,8 +92,8 @@ save_freq: {save_freq}
                     if pretext == 'cpc':
                         learning_config = f'neg_per_domain: {neg_per_domain}'
                     elif pretext == 'metacpc':
-                        num_task = 6 if perdomain else 'null'
-                        multi_cond_num_task = 3 if perdomain else 9
+                        num_task = 4 if perdomain else 'null'
+                        multi_cond_num_task = 2 if perdomain else 6
                         learning_config = f'''### Meta-learning
 task_per_domain: {neg_per_domain}
 num_task: {num_task}

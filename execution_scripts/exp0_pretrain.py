@@ -21,14 +21,25 @@ def run(config_dir, python_script, workers, worker_idx):
     configs = glob(os.path.join(config_dir, 'pretrain/without_*/*.yaml'))
     config_per_gpu = defaultdict(list)
     for config in configs:
+        domain = '_'.join(config.split('/')[-2].split('_')[1:])
         if 'perdomain' in config:
-            gpu = '0,1,2,3'
+            if domain in ['target_domain_PH0007-jskim', 'target_domain_PH0012-thanh',
+                          'target_domain_PH0014-wjlee', 'target_domain_PH0034-ykha',
+                          'target_domain_PH0038-iygoo']:
+                gpu = '0,1'
+            else:
+                gpu = '2,3'
         if 'random' in config:
-            gpu = '4,5,6,7'
+            if domain in ['target_domain_PH0007-jskim', 'target_domain_PH0012-thanh',
+                          'target_domain_PH0014-wjlee', 'target_domain_PH0034-ykha',
+                          'target_domain_PH0038-iygoo']:
+                gpu = '4,5'
+            else:
+                gpu = '6,7'
         config_per_gpu[gpu].append(config)
     
     processes = []
-    print(config_per_gpu)
+    # print(config_per_gpu)
     for gpu, config_list in config_per_gpu.items():
         configs = config_list[worker_idx::workers]
         processes.append(mp.Process(target=execute_script, args=(gpu, python_script, configs)))
