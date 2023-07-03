@@ -69,7 +69,7 @@ criterion: crossentropy
 start_epoch: 0
 epochs: {epochs}
 batch_size: 128
-lr: 0.001
+lr: 0.0001
 wd: 0.0
 '''
                     ckpt_name = f'{pretext}_perdomain_{architecture}' if perdomain else f'{pretext}_random_{architecture}'
@@ -100,7 +100,7 @@ num_task: {num_task}
 multi_cond_num_task: {multi_cond_num_task}
 task_size: 100
 task_steps: 10
-task_lr: 0.003
+task_lr: 0.0005
 reg_lambda: 0
 log_meta_train: false'''
                     model_config = f'''### Model config
