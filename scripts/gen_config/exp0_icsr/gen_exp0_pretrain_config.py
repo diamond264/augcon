@@ -69,7 +69,7 @@ criterion: crossentropy
 start_epoch: 0
 epochs: {epochs}
 batch_size: 128
-lr: 0.0001
+lr: 0.0005
 wd: 0.0
 '''
                     ckpt_name = f'{pretext}_perdomain_{architecture}' if perdomain else f'{pretext}_random_{architecture}'
@@ -92,15 +92,15 @@ save_freq: {save_freq}
                     if pretext == 'cpc':
                         learning_config = f'neg_per_domain: {neg_per_domain}'
                     elif pretext == 'metacpc':
-                        num_task = 6 if perdomain else 'null'
-                        multi_cond_num_task = 3 if perdomain else 9
+                        num_task = 10 if perdomain else 'null'
+                        multi_cond_num_task = 5 if perdomain else 15
                         learning_config = f'''### Meta-learning
 task_per_domain: {neg_per_domain}
 num_task: {num_task}
 multi_cond_num_task: {multi_cond_num_task}
-task_size: 100
+task_size: 70
 task_steps: 10
-task_lr: 0.0005
+task_lr: 0.001
 reg_lambda: 0
 log_meta_train: false'''
                     model_config = f'''### Model config
