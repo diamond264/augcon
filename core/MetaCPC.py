@@ -22,7 +22,7 @@ class Encoder(nn.Module):
         
         self.vars = nn.ParameterList()
         
-        filters = [32, 64, 128, z_dim]
+        filters = [32, 64, 128, 256, z_dim]
         self.kernel_sizes = kernel_sizes
         self.strides = strides
         
@@ -91,6 +91,8 @@ class Aggregator(nn.Module):
         
         # define convolutional blocks with increasing kernel sizes
         kernel_sizes = [2, 3, 4, 5, 6, 7]
+        if num_filters == 512:
+            kernel_sizes = [3, 3, 3, 3, 3, 3, 3, 3, 3]
         for i in range(num_blocks):
             k = kernel_sizes[i]
             block = nn.Sequential(LeftZeroPad1d(k-1), 
@@ -421,11 +423,13 @@ class MetaCPCLearner:
             
             train_sampler = DistributedSampler(train_dataset)
             if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
-                val_sampler = DistributedSampler(val_dataset)
+                if len(val_dataset) > 0:
+                    val_sampler = DistributedSampler(val_dataset)
                 test_sampler = DistributedSampler(test_dataset)
                 train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size//world_size,
                                         shuffle=False, sampler=train_sampler, num_workers=self.cfg.num_workers, drop_last=True)
-                val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size//world_size,
+                if len(val_dataset) > 0:
+                    val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size//world_size,
                                         shuffle=False, sampler=val_sampler, num_workers=self.cfg.num_workers, drop_last=True)
                 test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size//world_size,
                                         shuffle=False, sampler=test_sampler, num_workers=self.cfg.num_workers, drop_last=True)
@@ -442,8 +446,9 @@ class MetaCPCLearner:
             if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
                 train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size,
                                         shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
-                val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size,
-                                        shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
+                if len(val_dataset) > 0:
+                    val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size,
+                                            shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
                 test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size,
                                         shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
             meta_train_dataset = train_dataset
@@ -625,11 +630,13 @@ class MetaCPCLearner:
                 for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
                     if world_size > 1:
                         train_sampler.set_epoch(epoch)
-                        val_sampler.set_epoch(epoch)
+                        if len(val_dataset) > 0:
+                            val_sampler.set_epoch(epoch)
                         test_sampler.set_epoch(epoch)
                         
                     self.finetune(rank, cls_net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
-                    self.validate(rank, cls_net, val_loader, criterion, logs)
+                    if len(val_dataset) > 0:
+                        self.validate(rank, cls_net, val_loader, criterion, logs)
                     
                     if rank == 0 and (epoch+1) % self.cfg.save_freq == 0:
                         ckpt_dir = self.cfg.ckpt_dir
@@ -654,6 +661,7 @@ class MetaCPCLearner:
     def gen_per_domain_tasks(self, dataset, indices_per_domain, task_size, num_task=None):
         supports = []
         queries = []
+        
         with torch.no_grad():
             if num_task is None:
                 for _, indices in indices_per_domain.items():
@@ -671,12 +679,22 @@ class MetaCPCLearner:
                 for _ in range(num_task):
                     dom = random.choice(list(indices_per_domain.keys()))
                     indices = indices_per_domain[dom]
-                    support = torch.utils.data.Subset(dataset, indices[:task_size])
+                    # support = torch.utils.data.Subset(dataset, indices[:task_size])
+                    support = torch.utils.data.Subset(dataset, indices[:len(indices)//2])
                     support = [e[0] for e in support]
+                    if len(support) >= task_size:
+                        support = random.sample(support, task_size)
+                    else:
+                        support = support * (task_size // len(support)) + random.sample(support, task_size % len(support))
                     support = torch.stack(support, dim=0)
                     
-                    query = torch.utils.data.Subset(dataset, indices[task_size:2*task_size])
+                    # query = torch.utils.data.Subset(dataset, indices[task_size:2*task_size])
+                    query = torch.utils.data.Subset(dataset, indices[len(indices)//2:])                        
                     query = [e[0] for e in query]
+                    if len(query) >= task_size:
+                        query = random.sample(query, task_size)
+                    else:
+                        query = query * (task_size // len(query)) + random.sample(query, task_size % len(query))
                     query = torch.stack(query, dim=0)
                     supports.append(support)
                     queries.append(query)

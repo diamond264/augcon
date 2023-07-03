@@ -3,8 +3,8 @@
 import os
 from glob import glob
 
-data_path = '/mnt/sting/hjyoon/projects/cross/HHAR/augcon'
-config_path = '/home/hjyoon/projects/augcon/config/exp0_hhar'
+data_path = '/mnt/sting/hjyoon/projects/cross/ICSR/augcon'
+config_path = '/home/hjyoon/projects/augcon/config/exp0_icsr'
 
 def pretty_print(domain_idx):
     for domain in domain_idx:
@@ -39,12 +39,12 @@ num_workers: 1
 dist_url: tcp://localhost:10001
 '''
                             dataset_config = f'''### Dataset config
-dataset_name: hhar
-train_dataset_path: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/{tgt_domain}/finetune/10shot/target/train.pkl
-test_dataset_path: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/{tgt_domain}/finetune/10shot/target/test.pkl
-val_dataset_path: /mnt/sting/hjyoon/projects/cross/HHAR/augcon/{tgt_domain}/finetune/10shot/target/val.pkl
-input_channels: 3
-num_cls: 9
+dataset_name: icsr
+train_dataset_path: /mnt/sting/hjyoon/projects/cross/ICSR/augcon/{tgt_domain}/finetune/10shot/target/train.pkl
+test_dataset_path: /mnt/sting/hjyoon/projects/cross/ICSR/augcon/{tgt_domain}/finetune/10shot/target/test.pkl
+val_dataset_path: /mnt/sting/hjyoon/projects/cross/ICSR/augcon/{tgt_domain}/finetune/10shot/target/val.pkl
+input_channels: 1
+num_cls: 14
 '''
                             epochs = 50
                             training_config = f'''### Training config
@@ -61,8 +61,8 @@ wd: 0.0
                             save_freq = 10
                             log_config = f'''### Logs and checkpoints
 resume: ''
-pretrained: /mnt/sting/hjyoon/projects/augcontrast/models/exp0_hhar/pretrain/{pretrained_model}/{pretrained_ckpt}
-ckpt_dir: /mnt/sting/hjyoon/projects/augcontrast/models/exp0_hhar/finetune_da_{domain_adaptation}/{pretrained_model}/tgt_{tgt_domain}_seed{seed}
+pretrained: /mnt/sting/hjyoon/projects/augcontrast/models/exp0_icsr/pretrain/{pretrained_model}/{pretrained_ckpt}
+ckpt_dir: /mnt/sting/hjyoon/projects/augcontrast/models/exp0_icsr/finetune_da_{domain_adaptation}/{pretrained_model}/tgt_{tgt_domain}_seed{seed}
 log_freq: 5
 save_freq: {save_freq}
 '''

@@ -19,7 +19,7 @@ class Encoder(nn.Module):
         super(Encoder, self).__init__()
         self.num_blocks = num_blocks
         
-        filters = [32, 64, 128, z_dim]
+        filters = [32, 64, 128, 256, z_dim]
         self.kernel_sizes = kernel_sizes
         self.strides = strides
         
@@ -57,6 +57,8 @@ class Aggregator(nn.Module):
         self.num_blocks = num_blocks
         # define convolutional blocks with increasing kernel sizes
         kernel_sizes = [2, 3, 4, 5, 6, 7]
+        if num_blocks == 9:
+            kernel_sizes = [3, 3, 3, 3, 3, 3, 3, 3, 3]
         self.blocks = nn.ModuleList()
         for i in range(num_blocks):
             k = kernel_sizes[i]
@@ -289,12 +291,14 @@ class CPCLearner:
             net = nn.parallel.DistributedDataParallel(net, device_ids=[rank], find_unused_parameters=True)
             
             train_sampler = DistributedSampler(train_dataset)
-            val_sampler = DistributedSampler(val_dataset)
+            if len(val_dataset) > 0:
+                val_sampler = DistributedSampler(val_dataset)
             test_sampler = DistributedSampler(test_dataset)
             train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size//world_size,
                                       shuffle=False, sampler=train_sampler, num_workers=self.cfg.num_workers, drop_last=True)
-            val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size//world_size,
-                                      shuffle=False, sampler=val_sampler, num_workers=self.cfg.num_workers, drop_last=True)
+            if len(val_dataset) > 0:
+                val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size//world_size,
+                                        shuffle=False, sampler=val_sampler, num_workers=self.cfg.num_workers, drop_last=True)
             test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size//world_size,
                                       shuffle=False, sampler=test_sampler, num_workers=self.cfg.num_workers, drop_last=True)
             if rank == 0:
@@ -307,8 +311,9 @@ class CPCLearner:
             net.cuda()
             train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size,
                                       shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
-            val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size,
-                                      shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
+            if len(val_dataset) > 0:
+                val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size,
+                                        shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
             test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size,
                                       shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
             if rank == 0:
@@ -393,14 +398,16 @@ class CPCLearner:
             for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
                 if world_size > 1:
                     train_sampler.set_epoch(epoch)
-                    val_sampler.set_epoch(epoch)
+                    if len(val_dataset) > 0:
+                        val_sampler.set_epoch(epoch)
                     test_sampler.set_epoch(epoch)
                 
                 if self.cfg.mode == 'pretrain':
                     self.pretrain(rank, net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
                 elif self.cfg.mode == 'finetune':
                     self.finetune(rank, net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
-                    self.validate(rank, net, val_loader, criterion, logs)
+                    if len(val_dataset) > 0:
+                        self.validate(rank, net, val_loader, criterion, logs)
                 
                 if rank == 0 and (epoch+1) % self.cfg.save_freq == 0:
                     ckpt_dir = self.cfg.ckpt_dir

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import torch.utils.data
 import pandas as pd
 import os
@@ -10,9 +12,9 @@ from collections import defaultdict
 
 class ProcessICSR():
     def __init__(self, file, class_type, seq_len=32000,
-                 split_ratio=0.6, drop_size_threshold=100,
+                 drop_size_threshold=100,
                  shots=[10, 5, 2, 1],
-                 finetune_test_size=300, finetune_val_size=100):
+                 finetune_test_size=100, finetune_val_size=100):
         self.metadata = {
             'domain': ['PH0007-jskim', 'PH0012-thanh', 'PH0014-wjlee',
                        'PH0034-ykha', 'PH0038-iygoo', 'PH0041-hmkim',
@@ -33,7 +35,6 @@ class ProcessICSR():
         self.domain_type = 'domain'
         self.class_type = class_type
         
-        self.split_ratio = split_ratio
         self.shots = shots
         self.shots.sort(reverse=True)
         
@@ -45,8 +46,7 @@ class ProcessICSR():
         print(f'Valid domains (size {len(self.valid_domains)}):')
         print(self.valid_domains)
         
-        data = (self.features, self.class_labels, self.domain_labels)
-        self.pt_data, self.ft_data = self.split_pt_ft(data)
+        self.data = (self.features, self.class_labels, self.domain_labels)
     
     def set_domain(self, domain=None):
         self.domain_ = domain
@@ -124,17 +124,16 @@ class ProcessICSR():
         return source_data, target_data
     
     def process(self, pretrain_dir='', finetune_dir='',):
-        pt_source_data, pt_target_data = self.split_source_target(self.pt_data)
+        pt_source_data, ft_target_data = self.split_pt_ft(self.data)
         print(f'Loaded source domain pre-training data({len(pt_source_data[0])})')
-        ft_source_data, ft_target_data = self.split_source_target(self.ft_data)
         print(f'Loaded target domain fine-tuning data({len(ft_target_data[0])})')
         
         pt_features, pt_class_labels, pt_domain_labels = pt_source_data
         pt_idxs = list(range(len(pt_features)))
         random.shuffle(pt_idxs)
-        train_idxs = pt_idxs[:int(0.8*len(pt_idxs))]
-        test_idxs = pt_idxs[int(0.8*len(pt_idxs)):int(0.9*len(pt_idxs))]
-        val_idxs = pt_idxs[int(0.9*len(pt_idxs)):]
+        train_idxs = pt_idxs[:int(0.9*len(pt_idxs))]
+        test_idxs = pt_idxs[int(0.9*len(pt_idxs)):int(0.95*len(pt_idxs))]
+        val_idxs = pt_idxs[int(0.95*len(pt_idxs)):]
         
         features = [pt_features[i] for i in train_idxs]
         class_labels = [pt_class_labels[i] for i in train_idxs]
@@ -250,22 +249,23 @@ class ProcessICSR():
     def split_pt_ft(self, data):
         print('splitting pre-training data and fine-tuning data')
         features, class_labels, domain_labels = data
-        idxs = list(range(len(features)))
-        random.shuffle(idxs)
-        idxs_1 = idxs[:int(len(idxs)*self.split_ratio)]
-        idxs_2 = idxs[int(len(idxs)*self.split_ratio):]
         
-        data_1 = (
-            [features[i] for i in idxs_1],
-            [class_labels[i] for i in idxs_1],
-            [domain_labels[i] for i in idxs_1]
+        target_idxs = np.where(np.array(domain_labels) == self.domain)[0]
+        random.shuffle(target_idxs)
+        source_idxs = np.where(np.array(domain_labels) != self.domain)[0]
+        random.shuffle(source_idxs)
+        
+        data_pt = (
+            [features[i] for i in source_idxs],
+            [class_labels[i] for i in source_idxs],
+            [domain_labels[i] for i in source_idxs]
         )
-        data_2 = (
-            [features[i] for i in idxs_2],
-            [class_labels[i] for i in idxs_2],
-            [domain_labels[i] for i in idxs_2]
+        data_ft = (
+            [features[i] for i in target_idxs],
+            [class_labels[i] for i in target_idxs],
+            [domain_labels[i] for i in target_idxs]
         )
-        return data_1, data_2
+        return data_pt, data_ft
 
     def split_window(self, df):
         features = []
