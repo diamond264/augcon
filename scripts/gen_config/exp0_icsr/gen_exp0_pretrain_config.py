@@ -69,7 +69,7 @@ criterion: crossentropy
 start_epoch: 0
 epochs: {epochs}
 batch_size: 128
-lr: 0.0005
+lr: 0.0001
 wd: 0.0
 '''
                     ckpt_name = f'{pretext}_perdomain_{architecture}' if perdomain else f'{pretext}_random_{architecture}'
@@ -83,8 +83,8 @@ save_freq: {save_freq}
                     if architecture == '8421':
                         # kernel_sizes = '[8, 4, 2, 1]'
                         # strides = '[4, 2, 1, 1]'
-                        kernel_sizes = '[16, 12, 8, 4]'
-                        strides = '[8, 6, 4, 2]'
+                        kernel_sizes = '[16, 16, 8, 4]'
+                        strides = '[8, 8, 4, 2]'
                     elif architecture == '4111':
                         kernel_sizes = '[4, 1, 1, 1]'
                         strides = '[2, 1, 1, 1]'
@@ -92,15 +92,15 @@ save_freq: {save_freq}
                     if pretext == 'cpc':
                         learning_config = f'neg_per_domain: {neg_per_domain}'
                     elif pretext == 'metacpc':
-                        num_task = 10 if perdomain else 'null'
-                        multi_cond_num_task = 5 if perdomain else 15
+                        num_task = 8 if perdomain else 'null'
+                        multi_cond_num_task = 4 if perdomain else 12
                         learning_config = f'''### Meta-learning
 task_per_domain: {neg_per_domain}
 num_task: {num_task}
 multi_cond_num_task: {multi_cond_num_task}
 task_size: 70
 task_steps: 10
-task_lr: 0.001
+task_lr: 0.0005
 reg_lambda: 0
 log_meta_train: false'''
                     model_config = f'''### Model config

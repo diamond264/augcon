@@ -2,7 +2,7 @@ from glob import glob
 from tqdm import tqdm
 import pickle
 
-training_data = glob('/mnt/sting/hjyoon/projects/cross/HHAR/augcon/*/pretrain/train.pkl')
+training_data = glob('/mnt/sting/hjyoon/projects/cross/ICSR/augcon/*/pretrain/train.pkl')
 
 total_len = 0
 num = 0
