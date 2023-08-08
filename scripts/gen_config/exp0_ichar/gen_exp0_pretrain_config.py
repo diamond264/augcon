@@ -49,7 +49,7 @@ lr: 0.0005
 wd: 0.0
 '''
                     ckpt_name = f'{pretext}_perdomain_{architecture}' if perdomain else f'{pretext}_random_{architecture}'
-                    save_freq = 10 if pretext == 'cpc' else 100
+                    save_freq = epochs/10
                     log_config = f'''### Logs and checkpoints
 resume: ''
 ckpt_dir: /mnt/sting/hjyoon/projects/augcontrast/models/exp0/pretrain/without_{domain}/{ckpt_name}

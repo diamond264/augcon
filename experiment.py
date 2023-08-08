@@ -15,7 +15,12 @@ from util.logger import Logger
 
 from core.CPC import CPCLearner
 from core.MetaCPC import MetaCPCLearner
+from core.SimCLR import SimCLRLearner
+from core.SimCLR2D import SimCLRLearner
+from core.MetaSimCLR import MetaSimCLRLearner
+
 from data_loader.default_data_loader import DefaultDataLoader
+from data_loader.DomainNetDataset import DomainNetDataset
 
 class Experiment:
     def __init__(self, cfg, logger):
@@ -63,12 +68,33 @@ class Experiment:
             learner = CPCLearner(self.cfg, self.gpu, self.logger)
         elif self.cfg.pretext == 'metacpc':
             learner = MetaCPCLearner(self.cfg, self.gpu, self.logger)
+        elif self.cfg.pretext == 'simclr' and self.cfg.dtype=='1d':
+            learner = SimCLRLearner(self.cfg, self.gpu, self.logger)
+        elif self.cfg.pretext == 'simclr' and self.cfg.dtype=='2d':
+            learner = SimCLRLearner(self.cfg, self.gpu, self.logger)
+        elif self.cfg.pretext == 'metasimclr':
+            learner = MetaSimCLRLearner(self.cfg, self.gpu, self.logger)
         else:
             self.logger.warning('Pretext task not supported')
         
         # Loading dataset
-        default_data_loader = DefaultDataLoader(self.cfg, self.logger)
-        train_dataset, val_dataset, test_dataset = default_data_loader.get_datasets()
+        if self.cfg.dtype == '1d':
+            default_data_loader = DefaultDataLoader(self.cfg, self.logger)
+            train_dataset, val_dataset, test_dataset = default_data_loader.get_datasets()
+        elif self.cfg.dtype == '2d':
+            train_dataset = DomainNetDataset(self.cfg, self.logger, self.cfg.train_dataset_path)
+            val_dataset = DomainNetDataset(self.cfg, self.logger, self.cfg.val_dataset_path)
+            test_dataset = DomainNetDataset(self.cfg, self.logger, self.cfg.test_dataset_path)
+        
+        ### for testing
+        print(len(train_dataset), len(val_dataset), len(test_dataset))
+        from torch.utils.data import DataLoader, Dataset, DistributedSampler
+        train_loader = DataLoader(train_dataset, batch_size=12,
+                                      shuffle=False, num_workers=self.cfg.num_workers, drop_last=True)
+        for i, d in enumerate(train_loader):
+            print(d[0].shape, d[1].shape, d[2].shape)
+            assert(0)
+        assert(0)
         
         # Start training
         learner.run(train_dataset, val_dataset, test_dataset)

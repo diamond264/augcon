@@ -491,6 +491,7 @@ class MetaCPCLearner:
             
             # Pretrain
             indices_per_domain = self.split_per_domain(meta_train_dataset)
+            
             for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
                 if world_size > 1:
                     train_sampler.set_epoch(epoch)

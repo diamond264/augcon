@@ -67,8 +67,8 @@ log_freq: 5
 save_freq: {save_freq}
 '''
                             if architecture == '8421':
-                                kernel_sizes = '[8, 4, 2, 1]'
-                                strides = '[4, 2, 1, 1]'
+                                kernel_sizes = '[16, 16, 8, 4]'
+                                strides = '[8, 8, 4, 2]'
                             elif architecture == '4111':
                                 kernel_sizes = '[4, 1, 1, 1]'
                                 strides = '[2, 1, 1, 1]'
@@ -76,7 +76,7 @@ save_freq: {save_freq}
                             learning_config = f'''### Meta-learning
 domain_adaptation: {domain_adaptation}
 task_steps: 10
-task_lr: 0.001
+task_lr: 0.0005
 reg_lambda: 0
 mlp: false
 freeze: true'''

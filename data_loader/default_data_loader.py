@@ -1,12 +1,13 @@
 import random
 import torch
 import pickle
+from data_loader.CPCDataset import CPCDataset
+from data_loader.SimCLRDataset import SimCLRDataset
 
 class DefaultDataLoader():
     def __init__(self, cfg, logger):
         self.cfg = cfg
         self.logger = logger
-        
         self.load_dataset()
     
     def load_dataset(self):
@@ -21,29 +22,13 @@ class DefaultDataLoader():
             self.val_dataset = pickle.load(f)
     
     def get_datasets(self):
-        return self.train_dataset, self.val_dataset, self.test_dataset
-    
-    def get_loaders(self):
-        train_loader = torch.utils.data.DataLoader(
-            self.train_dataset,
-            batch_size=self.cfg.batch_size,
-            shuffle=True,
-            num_workers=self.cfg.num_workers,
-            drop_last=True
-        )
-        val_loader = torch.utils.data.DataLoader(
-            self.val_dataset,
-            batch_size=self.cfg.batch_size,
-            shuffle=True,
-            num_workers=self.cfg.num_workers,
-            drop_last=True
-        )
-        test_loader = torch.utils.data.DataLoader(
-            self.test_dataset,
-            batch_size=self.cfg.batch_size,
-            shuffle=True,
-            num_workers=self.cfg.num_workers,
-            drop_last=True
-        )
+        if self.cfg.pretext == 'cpc' or self.cfg.pretext == 'metacpc':
+            self.train_dataset = CPCDataset(self.train_dataset)
+            self.val_dataset = CPCDataset(self.val_dataset)
+            self.test_dataset = CPCDataset(self.test_dataset)
+        if self.cfg.pretext == 'simclr' or self.cfg.pretext == 'metasimclr':
+            self.train_dataset = SimCLRDataset(self.train_dataset)
+            self.val_dataset = SimCLRDataset(self.val_dataset)
+            self.test_dataset = SimCLRDataset(self.test_dataset)
         
-        return train_loader, val_loader, test_loader
+        return self.train_dataset, self.val_dataset, self.test_dataset
