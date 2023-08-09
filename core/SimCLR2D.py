@@ -20,10 +20,9 @@ class SimCLRNet(nn.Module):
 
         # create the encoders
         # num_classes is the output fc dimension
+        self.encoder = None
         if backbone == 'resnet18':
             self.encoder = models.resnet18(pretrained=False, num_classes=out_dim)
-        elif backbone == 'resnet50':
-            self.encoder = models.resnet50(pretrained=False, num_classes=out_dim)
 
         if mlp:  # hack: brute-force replacement
             dim_mlp = self.encoder.fc.in_features
@@ -129,9 +128,9 @@ class SimCLRLearner:
     def main_worker(self, rank, world_size, train_dataset, val_dataset, test_dataset, logs):
         # Model initialization
         if self.cfg.mode == 'pretrain' or self.cfg.mode == 'eval_pretrain':
-            net = SimCLRNet(self.cfg.input_channels, self.cfg.z_dim, self.cfg.out_dim, self.cfg.T, self.cfg.mlp)
+            net = SimCLRNet(self.cfg.backbone, self.cfg.input_channels, self.cfg.z_dim, self.cfg.out_dim, self.cfg.T, self.cfg.mlp)
         elif self.cfg.mode == 'finetune' or self.cfg.mode == 'eval_finetune':
-            net = SimCLRClassifier(self.cfg.input_channels, self.cfg.z_dim, self.cfg.num_cls, self.cfg.mlp)
+            net = SimCLRClassifier(self.cfg.backbone, self.cfg.input_channels, self.cfg.z_dim, self.cfg.num_cls, self.cfg.mlp)
         
         # DDP setting
         if world_size > 1:
@@ -185,7 +184,8 @@ class SimCLRLearner:
                 logs.append(log)
                 print(log)
         
-        self.all_domains = self.split_per_domain(train_dataset)
+        # self.all_domains = self.split_per_domain(train_dataset)
+        self.all_domains = train_dataset.get_domains()
         
         # Define criterion
         if self.cfg.criterion == 'crossentropy':
@@ -340,9 +340,9 @@ class SimCLRLearner:
         net.train()
         
         for batch_idx, data in enumerate(train_loader):
-            features = data[0].cuda()
-            pos_features = data[1].cuda()
-            domains = data[3].cuda()
+            features = data[0][0].cuda()
+            pos_features = data[0][1].cuda()
+            domains = data[2].cuda()
             
             if self.cfg.neg_per_domain:
                 all_logits = []

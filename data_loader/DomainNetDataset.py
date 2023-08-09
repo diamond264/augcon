@@ -7,6 +7,7 @@ from tqdm import tqdm
 from PIL import ImageFile
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
+from torch.utils.data import Dataset, ConcatDataset
 
 from core.image_loader.SimCLRLoader import SimCLRLoader
 
@@ -30,49 +31,45 @@ class DomainNetDataset(torch.utils.data.Dataset):
                                  std=[0.229, 0.224, 0.225])
         ])
 
-        self.features = []
-        self.class_labels = []
+        self.dataset = []
+        self.domains = []
         self.domain_labels = []
         self.logger.info(f"Loading dataset from {file_path}")
-        self.preprocessing(100)
+        self.loader = self.get_loader()
+        self.preprocessing()
         self.logger.info(f"Preprocessing took {time.time() - st} seconds")
 
-    def preprocessing(self, limit_per_domain=None):
+    def get_loader(self):
+        if self.cfg.pretext == 'simclr':
+            loader = SimCLRLoader(pre_transform=self.pre_transform,
+                                  post_transform=self.post_transform)
+        else:
+            loader = transforms.Compose([
+                self.pre_transform,
+                self.post_transform
+            ])
+        return loader
+
+    def preprocessing(self):
         for i, domain in enumerate(self.cfg.domains):
-            if self.cfg.pretext == 'simclr':
-                loader = SimCLRLoader(pre_transform=self.pre_transform,
-                                      augmentations=self.cfg.augmentations,
-                                      post_transform=self.post_transform)
-            else:
-                loader = transforms.Compose([
-                    self.pre_transform,
-                    self.post_transform
-                ])
-            
-            path = os.path.join(self.file_path, domain)
-            dataset = ImageFolder(path, transform=loader)
-
-            self.logger.info(f"- Loading {domain} dataset ({i}/{len(self.cfg.domains)})")
-            cnt = 0
-            for (feature, classidx) in tqdm(dataset):
-                self.features.append(feature)
-                self.class_labels.append(int(classidx))
-                self.domain_labels.append(i)
-                cnt += 1
-                if limit_per_domain is not None:
-                    if cnt >= limit_per_domain:
-                        break
-
-        self.class_labels = np.array(self.class_labels)
+            dataset = ImageFolder(os.path.join(self.file_path, domain), self.loader)
+            self.dataset = ConcatDataset([self.dataset, dataset])
+            self.domain_labels.extend([i] * len(dataset))
+            self.domains.append(i)
+        
         self.domain_labels = np.array(self.domain_labels)
-        self.class_labels = torch.utils.data.TensorDataset(torch.from_numpy(self.class_labels))
         self.domain_labels = torch.utils.data.TensorDataset(torch.from_numpy(self.domain_labels))
+        
+        self.dataset = torch.utils.data.Subset(self.dataset, np.arange(15000))
+        self.domain_labels = torch.utils.data.Subset(self.domain_labels, np.arange(15000))
 
     def __len__(self):
-        return len(self.features)
-
-    def get_num_domains(self):
-        return len(self.domains)
+        return len(self.dataset)
+    
+    def get_domains(self):
+        return self.domains
 
     def __getitem__(self, idx):
-        return self.features[idx], self.class_labels[idx][0], self.domain_labels[idx][0]
+        feature, class_label = self.dataset[idx]
+        domain_label = self.domain_labels[idx][0]
+        return feature, class_label, domain_label
