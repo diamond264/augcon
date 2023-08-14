@@ -10,70 +10,61 @@ import torch.multiprocessing as mp
 from torch.utils.data import DataLoader, Dataset, DistributedSampler
 from net.resnet import ResNet18, ResNet18_meta
 
-class SimCLRNet(nn.Module):
+class Predictor(nn.Module):
+    def __init__(self, dim, pred_dim=1):
+        super(Predictor, self).__init__()
+        self.layer = nn.Sequential(nn.Linear(dim, pred_dim, bias=False),
+                                   nn.BatchNorm1d(pred_dim),
+                                   nn.ReLU(inplace=True), # hidden layer
+                                   nn.Linear(pred_dim, dim))
+    
+    def forward(self, x):
+        x = self.layer(x)
+        return x
+
+
+class SimSiamNet(nn.Module):
     """
     Build a SimCLR model with: a query encoder, a key encoder, and a queue
     https://arxiv.org/abs/1911.05722
     """
-    def __init__(self, backbone='resnet18', input_channels=3, z_dim=96, out_dim=50, T=0.1, mlp=True):
-        super(SimCLRNet, self).__init__()
-        self.T = T
-
-        # create the encoders
-        # num_classes is the output fc dimension
+    def __init__(self, backbone='resnet18', out_dim=128, pred_dim=64, mlp=True):
+        super(SimSiamNet, self).__init__()
         self.encoder = None
         if backbone == 'resnet18':
-            # self.encoder = models.resnet18(pretrained=False, num_classes=out_dim)
             self.encoder = ResNet18(num_classes=out_dim, mlp=mlp)
-
-    def forward(self, feature, aug_feature, full_batch_size):
-        # compute query features
-        z = self.encoder(feature)  # queries: NxC
-        z = nn.functional.normalize(z, dim=1)
-            
-        aug_z = self.encoder(aug_feature)
-        aug_z = nn.functional.normalize(aug_z, dim=1)
+            if mlp:
+                self.encoder.fc[6].bias.requires_grad = False
+                self.encoder.fc = nn.Sequential(self.encoder.fc, nn.BatchNorm1d(out_dim, affine=False))
         
-        LARGE_NUM = 1e9
-        batch_size = z.size(0)
+        self.predictor = Predictor(dim=out_dim, pred_dim=pred_dim)
 
-        labels = torch.arange(batch_size).cuda()
-        masks = F.one_hot(torch.arange(batch_size), batch_size).cuda()
-        # mask = ~torch.eye(batch_size, dtype=bool).cuda()
-
-        logits_aa = torch.matmul(z, z.t())
-        # logits_aa = logits_aa[mask].reshape(batch_size, batch_size-1)
-        logits_aa = logits_aa - masks * LARGE_NUM
-        logits_bb = torch.matmul(aug_z, aug_z.t())
-        # logits_bb = logits_bb[mask].reshape(batch_size, batch_size-1)
-        logits_bb = logits_bb - masks * LARGE_NUM
-        logits_ab = torch.matmul(z, aug_z.t())
-
-        logits = torch.cat([logits_ab, logits_aa, logits_bb], dim=1)
-        # logits = logits_ab
-        logits /= self.T
-        logits = F.pad(logits, (0, full_batch_size*3-logits.shape[1]), "constant", -LARGE_NUM)
-
-        return logits, labels
+    def forward(self, feature, aug_feature):
+        z = self.encoder(feature)
+        p = self.predictor(z)
+        aug_z = self.encoder(aug_feature)
+        aug_p = self.predictor(aug_z)
+        
+        # p = nn.functional.normalize(p, dim=1)
+        # aug_p = nn.functional.normalize(aug_p, dim=1)
+        # z = nn.functional.normalize(z, dim=1)
+        # aug_z = nn.functional.normalize(aug_z, dim=1)
+        return p, aug_p, z.detach(), aug_z.detach()
 
 
-class SimCLRClassifier(nn.Module):
-    def __init__(self, backbone, input_channels, z_dim, num_cls, mlp=True):
-        super(SimCLRClassifier, self).__init__()
-        # num_classes is the output fc dimension
+class SimSiamClassifier(nn.Module):
+    def __init__(self, backbone, num_cls, mlp=True):
+        super(SimSiamClassifier, self).__init__()
+        self.encoder = None
         if backbone == 'resnet18':
-            # self.encoder = models.resnet18(pretrained=False, num_classes=num_cls)
             self.encoder = ResNet18(num_classes=num_cls, mlp=mlp)
-        elif backbone == 'resnet50':
-            self.encoder = models.resnet50(pretrained=False, num_classes=num_cls)
         
     def forward(self, x):
         x = self.encoder(x)
-        # pred = self.classifier(x)
         return x
 
 
-class SimCLRLearner:
+class SimSiamLearner:
     def __init__(self, cfg, gpu, logger):
         self.cfg = cfg
         self.gpu = gpu
@@ -82,7 +73,7 @@ class SimCLRLearner:
     def run(self, train_dataset, val_dataset, test_dataset):
         num_gpus = len(self.gpu)
         logs = mp.Manager().list([])
-        self.logger.info("Executing SimCLR")
+        self.logger.info("Executing SimSiam(2D)")
         self.logger.info("Logs are skipped during training")
         if num_gpus > 1:
             mp.spawn(self.main_worker,
@@ -97,9 +88,9 @@ class SimCLRLearner:
     def main_worker(self, rank, world_size, train_dataset, val_dataset, test_dataset, logs):
         # Model initialization
         if self.cfg.mode == 'pretrain' or self.cfg.mode == 'eval_pretrain':
-            net = SimCLRNet(self.cfg.backbone, self.cfg.input_channels, self.cfg.z_dim, self.cfg.out_dim, self.cfg.T, self.cfg.mlp)
+            net = SimSiamNet(self.cfg.backbone, self.cfg.out_dim, self.cfg.pred_dim, self.cfg.mlp)
         elif self.cfg.mode == 'finetune' or self.cfg.mode == 'eval_finetune':
-            net = SimCLRClassifier(self.cfg.backbone, self.cfg.input_channels, self.cfg.z_dim, self.cfg.num_cls, self.cfg.mlp)
+            net = SimSiamClassifier(self.cfg.backbone, self.cfg.num_cls, self.cfg.mlp)
         
         # DDP setting
         if world_size > 1:
@@ -108,6 +99,7 @@ class SimCLRLearner:
                                     world_size=world_size,
                                     rank=rank)
             torch.cuda.set_device(rank)
+            net = torch.nn.SyncBatchNorm.convert_sync_batchnorm(net)
             net.cuda()
             net = nn.parallel.DistributedDataParallel(net, device_ids=[rank], find_unused_parameters=True)
             
@@ -153,11 +145,10 @@ class SimCLRLearner:
                 logs.append(log)
                 print(log)
         
-        # self.all_domains = self.split_per_domain(train_dataset)
-        self.all_domains = train_dataset.get_domains()
-        
         # Define criterion
-        if self.cfg.criterion == 'crossentropy':
+        if self.cfg.mode == 'pretrain' or self.cfg.mode == 'eval_pretrain':
+            criterion = nn.CosineSimilarity(dim=1).cuda()
+        elif self.cfg.mode == 'finetune' or self.cfg.mode == 'eval_finetune':
             criterion = nn.CrossEntropyLoss().cuda()
         
         # For finetuning, load pretrained model
@@ -179,11 +170,9 @@ class SimCLRLearner:
                 
                 new_state = {}
                 for k, v in list(state.items()):
-                    # if k.startswith('encoder.'):
-                    #     k = k[len('encoder.'):]
-                    if world_size > 1 and not 'fc' in k:
+                    if world_size > 1:
                         k = 'module.' + k
-                    if k in net.state_dict().keys():
+                    if k in net.state_dict().keys() and not 'fc' in k:
                         new_state[k] = v
                 
                 msg = net.load_state_dict(new_state, strict=False)
@@ -216,7 +205,7 @@ class SimCLRLearner:
                                         weight_decay=self.cfg.wd)
         elif self.cfg.optimizer == 'adam':
             optimizer = torch.optim.Adam(parameters, self.cfg.lr,
-                                        weight_decay=self.cfg.wd)
+                                         weight_decay=self.cfg.wd)
         # if self.cfg.mode == 'finetune':
         #     scheduler = StepLR(optimizer, step_size=self.cfg.lr_decay_step, gamma=self.cfg.lr_decay)
         
@@ -230,6 +219,7 @@ class SimCLRLearner:
             state = torch.load(self.cfg.resume, map_location=loc)
             
             for k, v in list(state['state_dict'].items()):
+                new_k = k
                 if world_size > 1:
                     new_k = 'module.' + k
                 if new_k in net.state_dict().keys():
@@ -260,8 +250,8 @@ class SimCLRLearner:
                     
                 elif self.cfg.mode == 'finetune':
                     self.finetune(rank, net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
-                    if len(val_dataset) > 0:
-                        self.validate_finetune(rank, net, val_loader, criterion, logs)
+                    # if len(val_dataset) > 0:
+                    #     self.validate_finetune(rank, net, val_loader, criterion, logs)
                 
                 if rank == 0 and (epoch+1) % self.cfg.save_freq == 0:
                     ckpt_dir = self.cfg.ckpt_dir
@@ -278,44 +268,25 @@ class SimCLRLearner:
             if self.cfg.mode == 'finetune':
                 self.validate_finetune(rank, net, test_loader, criterion, logs)
     
-    def split_per_domain(self, dataset):
-        domains = []
-        for d in dataset:
-            if d[3] not in domains:
-                domains.append(d[3])
-        domains = sorted(domains)
-        return domains
-    
     def pretrain(self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs):
         net.train()
         
         for batch_idx, data in enumerate(train_loader):
             features = data[0][0].cuda()
             pos_features = data[0][1].cuda()
-            domains = data[2].cuda()
             
-            if self.cfg.neg_per_domain:
-                all_logits = []
-                all_targets = []
-                for dom in self.all_domains:
-                    dom_idx = torch.nonzero(domains == dom).squeeze()
-                    if dom_idx.dim() == 0: dom_idx = dom_idx.unsqueeze(0)
-                    if torch.numel(dom_idx):
-                        dom_features = features[dom_idx]
-                        dom_pos_features = pos_features[dom_idx]
-                        logits, targets = net(dom_features, dom_pos_features, features.shape[0])
-                        all_logits.append(logits)
-                        all_targets.append(targets)
-                logits = torch.cat(all_logits, dim=0)
-                targets = torch.cat(all_targets, dim=0)
-            else:
-                logits, targets = net(features, pos_features, features.shape[0])
-            loss = criterion(logits, targets)
+            p1, p2, z1, z2 = net(features, pos_features)
+            # print(p1)
+            # print(p2)
+            # print(z1)
+            # print(z2)
+            # print(batch_idx)
+            # if batch_idx > 2: assert(0)
+            loss = -(criterion(p1, z2).mean() + criterion(p2, z1).mean()) * 0.5
 
             if batch_idx % self.cfg.log_freq == 0 and rank == 0:
-                acc1, acc5 = self.accuracy(logits, targets, topk=(1, 5))
                 log = f'Epoch [{epoch+1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) '
-                log += f'Loss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+                log += f'Loss: {loss.item():.4f}'
                 logs.append(log)
                 print(log)
 
@@ -332,31 +303,15 @@ class SimCLRLearner:
             for batch_idx, data in enumerate(val_loader):
                 features = data[1].cuda()
                 pos_features = data[2].cuda()
-                domains = data[4].cuda()
                 
-                if self.cfg.neg_per_domain:
-                    all_logits = []
-                    all_targets = []
-                    for dom in self.all_domains:
-                        dom_idx = torch.nonzero(domains == dom).squeeze()
-                        if dom_idx.dim() == 0: dom_idx = dom_idx.unsqueeze(0)
-                        if torch.numel(dom_idx):
-                            dom_features = features[dom_idx]
-                            dom_pos_features = pos_features[dom_idx]
-                            logits, targets = net(dom_features, dom_pos_features, features.shape[0])
-                            all_logits.append(logits)
-                            all_targets.append(targets)
-                    logits = torch.cat(all_logits, dim=0)
-                    targets = torch.cat(all_targets, dim=0)
-                else:
-                    logits, targets = net(features, pos_features, features.shape[0])
-                loss = criterion(logits, targets)
+                p1, p2, z1, z2 = net(features, pos_features)
+                loss = -(criterion(p1, z2).mean() + criterion(p2, z1).mean()) * 0.5
                 total_loss += loss
                 
             total_loss /= len(val_loader)
             
             if rank == 0:
-                log = f'[Pretrain] Validation Loss: {total_loss.item():.4f}'#, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+                log = f'[Pretrain] Validation Loss: {total_loss.item():.4f}'
                 logs.append(log)
                 print(log)
             

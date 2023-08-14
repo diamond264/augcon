@@ -40,28 +40,33 @@ class DomainNetDataset(torch.utils.data.Dataset):
         self.logger.info(f"Preprocessing took {time.time() - st} seconds")
 
     def get_loader(self):
-        if self.cfg.pretext == 'simclr':
-            loader = SimCLRLoader(pre_transform=self.pre_transform,
-                                  post_transform=self.post_transform)
-        else:
-            loader = transforms.Compose([
-                self.pre_transform,
-                self.post_transform
-            ])
+        loader = transforms.Compose([
+            self.pre_transform,
+            self.post_transform
+        ])
+        if self.cfg.mode == 'pretrain':
+            if self.cfg.pretext == 'simclr' or \
+               self.cfg.pretext == 'simsiam':
+                loader = SimCLRLoader(pre_transform=self.pre_transform,
+                                    post_transform=self.post_transform)
         return loader
 
     def preprocessing(self):
+        limit = 15000
+        
         for i, domain in enumerate(self.cfg.domains):
             dataset = ImageFolder(os.path.join(self.file_path, domain), self.loader)
+            
+            ##### FOR TESTING PURPOSES #####
+            if len(dataset) > limit and self.cfg.mode == 'pretrain':
+                dataset = torch.utils.data.Subset(dataset, np.random.choice(len(dataset), limit, replace=False))
+            
             self.dataset = ConcatDataset([self.dataset, dataset])
             self.domain_labels.extend([i] * len(dataset))
             self.domains.append(i)
         
         self.domain_labels = np.array(self.domain_labels)
         self.domain_labels = torch.utils.data.TensorDataset(torch.from_numpy(self.domain_labels))
-        
-        self.dataset = torch.utils.data.Subset(self.dataset, np.arange(15000))
-        self.domain_labels = torch.utils.data.Subset(self.domain_labels, np.arange(15000))
 
     def __len__(self):
         return len(self.dataset)

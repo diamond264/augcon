@@ -17,6 +17,7 @@ from core.CPC import CPCLearner
 from core.MetaCPC import MetaCPCLearner
 # from core.SimCLR import SimCLRLearner
 from core.SimCLR2D import SimCLRLearner
+from core.SimSiam2D import SimSiamLearner
 from core.MetaSimCLR import MetaSimCLRLearner
 
 from data_loader.default_data_loader import DefaultDataLoader
@@ -68,10 +69,13 @@ class Experiment:
             learner = CPCLearner(self.cfg, self.gpu, self.logger)
         elif self.cfg.pretext == 'metacpc':
             learner = MetaCPCLearner(self.cfg, self.gpu, self.logger)
-        elif self.cfg.pretext == 'simclr' and self.cfg.dtype=='1d':
-            learner = SimCLRLearner(self.cfg, self.gpu, self.logger)
+        # elif self.cfg.pretext == 'simclr' and self.cfg.dtype=='1d':
+        #     learner = SimCLRLearner(self.cfg, self.gpu, self.logger)
+        ##### FOR 2D DATA #####
         elif self.cfg.pretext == 'simclr' and self.cfg.dtype=='2d':
             learner = SimCLRLearner(self.cfg, self.gpu, self.logger)
+        elif self.cfg.pretext == 'simsiam' and self.cfg.dtype=='2d':
+            learner = SimSiamLearner(self.cfg, self.gpu, self.logger)
         elif self.cfg.pretext == 'metasimclr':
             learner = MetaSimCLRLearner(self.cfg, self.gpu, self.logger)
         else:
