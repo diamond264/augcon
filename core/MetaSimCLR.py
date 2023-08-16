@@ -424,14 +424,14 @@ class MetaSimCLRLearner:
                 net.zero_grad()
                 
                 if self.cfg.out_cls_neg_sampling:
-                    enc_parameters = self.adapt(rank, net, meta_train_dataset, criterion, log_internals=True, logs=logs)
+                    enc_parameters = self.adapt(rank, net, meta_train_dataset, criterion, log_steps=True, logs=logs)
                     self.meta_eval(rank, net, test_dataset, criterion, enc_parameters, logs)
                 else:
                     support = [e[1] for e in meta_train_dataset]
                     pos_support = [e[2] for e in meta_train_dataset]
                     support = torch.stack(support, dim=0).cuda()
                     pos_support = torch.stack(pos_support, dim=0).cuda()
-                    enc_parameters = self.meta_train(rank, net, support, pos_support, criterion, log_internals=True, logs=logs)
+                    enc_parameters = self.meta_train(rank, net, support, pos_support, criterion, log_steps=True, logs=logs)
                     self.meta_eval(rank, net, test_dataset, criterion, enc_parameters, logs)
             else:
                 enc_parameters = list(net.parameters())
@@ -733,7 +733,7 @@ class MetaSimCLRLearner:
             query = queries[task_idx].cuda()
             pos_query = pos_queries[task_idx].cuda()
             
-            fast_weights = self.meta_train(rank, net, support, pos_support, criterion, log_internals=self.cfg.log_meta_train, logs=logs)
+            fast_weights = self.meta_train(rank, net, support, pos_support, criterion, log_steps=self.cfg.log_meta_train, logs=logs)
             
             q_logits, q_targets = net(query, pos_query, fast_weights)
             q_loss = criterion(q_logits, q_targets)
@@ -760,7 +760,7 @@ class MetaSimCLRLearner:
         loss.backward()
         optimizer.step()
     
-    def meta_train(self, rank, net, support, pos_support, criterion, log_internals=False, logs=None):
+    def meta_train(self, rank, net, support, pos_support, criterion, log_steps=False, logs=None):
         fast_weights = list(net.parameters())
         for i in range(self.cfg.task_steps):
             s_logits, s_targets = net(support, pos_support, fast_weights)
@@ -768,7 +768,7 @@ class MetaSimCLRLearner:
             grad = torch.autograd.grad(s_loss, fast_weights)
             fast_weights = list(map(lambda p: p[1] - self.cfg.task_lr * p[0], zip(grad, fast_weights)))
             
-            if log_internals and rank == 0:
+            if log_steps and rank == 0:
                 acc1, acc5 = self.accuracy(s_logits, s_targets, topk=(1, 5))
                 log = f'\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {s_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
                 logs.append(log)
@@ -834,7 +834,7 @@ class MetaSimCLRLearner:
             logs.append(log)
             print(log)
     
-    def adapt(self, rank, net, train_dataset, criterion, log_internals=False, logs=None):
+    def adapt(self, rank, net, train_dataset, criterion, log_steps=False, logs=None):
         fast_weights = list(net.parameters())
         indices_per_class, opp_indices_per_class = self.split_per_class(train_dataset)
         full_batch_size = len(train_dataset)
@@ -876,7 +876,7 @@ class MetaSimCLRLearner:
                 g += self.cfg.task_wd * p
             fast_weights = list(map(lambda p: p[1] - self.cfg.task_lr * p[0], zip(grad, fast_weights)))
             
-            if log_internals and rank == 0:
+            if log_steps and rank == 0:
                 acc1, acc5 = self.accuracy(total_logits, total_targets, topk=(1, 5))
                 log = f'\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
                 logs.append(log)

@@ -236,11 +236,32 @@ class ResNet_meta(nn.Module):
         fc = nn.Linear(512*block.expansion, num_classes)
         if mlp:
             dim_mlp = fc.in_features
-            fc2 = nn.Linear(dim_mlp, dim_mlp)
+            fc2 = nn.Linear(dim_mlp, dim_mlp, bias=False)
             w = nn.Parameter(torch.ones_like(fc2.weight))
-            b = nn.Parameter(torch.zeros_like(fc2.bias))
             torch.nn.init.kaiming_normal_(w)
-            self.vars.extend([w, b])
+            self.vars.append(w)
+            
+            bn1 = nn.BatchNorm1d(dim_mlp)
+            w = nn.Parameter(torch.ones_like(bn1.weight))
+            b = nn.Parameter(torch.zeros_like(bn1.bias))
+            running_mean = nn.Parameter(torch.zeros_like(bn1.running_mean), requires_grad=False)
+            running_var = nn.Parameter(torch.ones_like(bn1.running_var), requires_grad=False)
+            num_batches_tracked = nn.Parameter(torch.zeros_like(bn1.num_batches_tracked), requires_grad=False)
+            self.vars.extend([w, b, running_mean, running_var, num_batches_tracked])
+            
+            fc3 = nn.Linear(dim_mlp, dim_mlp, bias=False)
+            w = nn.Parameter(torch.ones_like(fc3.weight))
+            torch.nn.init.kaiming_normal_(w)
+            self.vars.append(w)
+            
+            bn2 = nn.BatchNorm1d(dim_mlp)
+            w = nn.Parameter(torch.ones_like(bn2.weight))
+            b = nn.Parameter(torch.zeros_like(bn2.bias))
+            running_mean = nn.Parameter(torch.zeros_like(bn2.running_mean), requires_grad=False)
+            running_var = nn.Parameter(torch.ones_like(bn2.running_var), requires_grad=False)
+            num_batches_tracked = nn.Parameter(torch.zeros_like(bn2.num_batches_tracked), requires_grad=False)
+            self.vars.extend([w, b, running_mean, running_var, num_batches_tracked])
+            
         w = nn.Parameter(torch.ones_like(fc.weight))
         b = nn.Parameter(torch.zeros_like(fc.bias))
         torch.nn.init.kaiming_normal_(w)
@@ -270,7 +291,7 @@ class ResNet_meta(nn.Module):
     def forward(self, x, vars=None, bn_training=True):
         if vars is None:
             vars = self.vars
-        
+            
         x = F.conv2d(x, vars[0], stride=2, padding=3)
         x = F.batch_norm(x, vars[3], vars[4], vars[1], vars[2], training=bn_training)
         x = F.relu(x)
@@ -289,10 +310,19 @@ class ResNet_meta(nn.Module):
         
         x = F.adaptive_avg_pool2d(x, (1, 1))
         x = x.view(x.size(0), -1)
+        
         if self.mlp:
-            x = F.linear(x, vars[var_idx], vars[var_idx+1])
-            var_idx += 2
+            x = F.linear(x, vars[var_idx])
+            var_idx += 1
+            x = F.batch_norm(x, vars[var_idx+2], vars[var_idx+3], vars[var_idx], vars[var_idx+1], training=bn_training)
+            var_idx += 5
             x = F.relu(x)
+            x = F.linear(x, vars[var_idx])
+            var_idx += 1
+            x = F.batch_norm(x, vars[var_idx+2], vars[var_idx+3], vars[var_idx], vars[var_idx+1], training=bn_training)
+            var_idx += 5
+            x = F.relu(x)
+        
         x = F.linear(x, vars[var_idx], vars[var_idx+1])
         return x
     

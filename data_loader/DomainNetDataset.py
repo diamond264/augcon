@@ -4,6 +4,7 @@ import torch
 import numpy as np
 
 from tqdm import tqdm
+from collections import defaultdict
 from PIL import ImageFile
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
@@ -34,6 +35,7 @@ class DomainNetDataset(torch.utils.data.Dataset):
         self.dataset = []
         self.domains = []
         self.domain_labels = []
+        self.indices_by_domain = defaultdict(list)
         self.logger.info(f"Loading dataset from {file_path}")
         self.loader = self.get_loader()
         self.preprocessing()
@@ -46,33 +48,36 @@ class DomainNetDataset(torch.utils.data.Dataset):
         ])
         if self.cfg.mode == 'pretrain':
             if self.cfg.pretext == 'simclr' or \
-               self.cfg.pretext == 'simsiam':
+               self.cfg.pretext == 'simsiam' or \
+               self.cfg.pretext == 'metasimsiam':
                 loader = SimCLRLoader(pre_transform=self.pre_transform,
                                     post_transform=self.post_transform)
         return loader
 
     def preprocessing(self):
-        limit = 15000
-        
+        cnt = 0
         for i, domain in enumerate(self.cfg.domains):
             dataset = ImageFolder(os.path.join(self.file_path, domain), self.loader)
             
-            ##### FOR TESTING PURPOSES #####
-            if len(dataset) > limit and self.cfg.mode == 'pretrain':
-                dataset = torch.utils.data.Subset(dataset, np.random.choice(len(dataset), limit, replace=False))
+            # ##### FOR TESTING PURPOSES #####
+            # limit = 15000
+            # if len(dataset) > limit and self.cfg.mode == 'pretrain':
+            #     dataset = torch.utils.data.Subset(dataset, np.random.choice(len(dataset), limit, replace=False))
             
             self.dataset = ConcatDataset([self.dataset, dataset])
             self.domain_labels.extend([i] * len(dataset))
             self.domains.append(i)
+            self.indices_by_domain[i] = np.arange(len(dataset))+cnt
+            cnt += len(dataset)
         
         self.domain_labels = np.array(self.domain_labels)
         self.domain_labels = torch.utils.data.TensorDataset(torch.from_numpy(self.domain_labels))
 
+    def get_indices_by_domain(self):
+        return self.indices_by_domain
+
     def __len__(self):
         return len(self.dataset)
-    
-    def get_domains(self):
-        return self.domains
 
     def __getitem__(self, idx):
         feature, class_label = self.dataset[idx]

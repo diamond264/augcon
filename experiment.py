@@ -8,20 +8,26 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.backends.cudnn as cudnn
+from torch.utils.data import Subset
 
 from util.args import parse_args
 from util.config import Config
 from util.logger import Logger
 
-from core.CPC import CPCLearner
-from core.MetaCPC import MetaCPCLearner
-# from core.SimCLR import SimCLRLearner
-from core.SimCLR2D import SimCLRLearner
-from core.SimSiam2D import SimSiamLearner
-from core.MetaSimCLR import MetaSimCLRLearner
-
 from data_loader.default_data_loader import DefaultDataLoader
 from data_loader.DomainNetDataset import DomainNetDataset
+
+from core.CPC import CPCLearner
+# from core.SimCLR import SimCLRLearner
+
+from core.MetaCPC import MetaCPCLearner
+from core.MetaSimCLR import MetaSimCLRLearner
+
+from core.SimCLR2D import SimCLRLearner
+from core.SimSiam2D import SimSiamLearner
+
+from core.MetaSimSiam2D import MetaSimSiamLearner
+
 
 class Experiment:
     def __init__(self, cfg, logger):
@@ -78,6 +84,8 @@ class Experiment:
             learner = SimSiamLearner(self.cfg, self.gpu, self.logger)
         elif self.cfg.pretext == 'metasimclr':
             learner = MetaSimCLRLearner(self.cfg, self.gpu, self.logger)
+        elif self.cfg.pretext == 'metasimsiam':
+            learner = MetaSimSiamLearner(self.cfg, self.gpu, self.logger)
         else:
             self.logger.warning('Pretext task not supported')
         
@@ -92,6 +100,8 @@ class Experiment:
                 test_dataset = DomainNetDataset(self.cfg, self.logger, self.cfg.test_dataset_path)
         
         # Start training
+        if len(train_dataset) > 180000:
+            train_dataset = Subset(train_dataset, np.random.choice(len(train_dataset), 180000, replace=False))
         learner.run(train_dataset, val_dataset, test_dataset)
 
 if __name__ == '__main__':

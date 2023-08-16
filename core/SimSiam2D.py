@@ -24,10 +24,6 @@ class Predictor(nn.Module):
 
 
 class SimSiamNet(nn.Module):
-    """
-    Build a SimCLR model with: a query encoder, a key encoder, and a queue
-    https://arxiv.org/abs/1911.05722
-    """
     def __init__(self, backbone='resnet18', out_dim=128, pred_dim=64, mlp=True):
         super(SimSiamNet, self).__init__()
         self.encoder = None
@@ -45,11 +41,12 @@ class SimSiamNet(nn.Module):
         aug_z = self.encoder(aug_feature)
         aug_p = self.predictor(aug_z)
         
+        return p, aug_p, z.detach(), aug_z.detach()
+    
         # p = nn.functional.normalize(p, dim=1)
         # aug_p = nn.functional.normalize(aug_p, dim=1)
         # z = nn.functional.normalize(z, dim=1)
         # aug_z = nn.functional.normalize(aug_z, dim=1)
-        return p, aug_p, z.detach(), aug_z.detach()
 
 
 class SimSiamClassifier(nn.Module):

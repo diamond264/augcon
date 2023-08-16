@@ -52,13 +52,13 @@ def get_gaussian_blur(size=224):
 
 def get_random_crop(size=224):
     random_crop = transforms.Compose([
-        transforms.RandomResizedCrop(size=size),
+        transforms.RandomResizedCrop(size=size, scale=(0.2, 1.0)),
         transforms.RandomHorizontalFlip()
     ])
     return random_crop
 
 def get_color_distortion(s=1.0):
-    color_jitter = transforms.ColorJitter(0.8*s, 0.8*s, 0.8*s, 0.2*s)
+    color_jitter = transforms.ColorJitter(0.4*s, 0.4*s, 0.4*s, 0.1*s)
     rnd_color_jitter = transforms.RandomApply([color_jitter], p=0.8)
     rnd_gray = transforms.RandomGrayscale(p=0.2)
     color_distort = transforms.Compose([
