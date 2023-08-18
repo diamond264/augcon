@@ -22,6 +22,7 @@ from core.CPC import CPCLearner
 
 from core.MetaCPC import MetaCPCLearner
 from core.MetaSimCLR import MetaSimCLRLearner
+from core.ReptileSimSiam2D import ReptileSimSiamLearner
 
 from core.SimCLR2D import SimCLRLearner
 from core.SimSiam2D import SimSiamLearner
@@ -85,7 +86,8 @@ class Experiment:
         elif self.cfg.pretext == 'metasimclr':
             learner = MetaSimCLRLearner(self.cfg, self.gpu, self.logger)
         elif self.cfg.pretext == 'metasimsiam':
-            learner = MetaSimSiamLearner(self.cfg, self.gpu, self.logger)
+            # learner = MetaSimSiamLearner(self.cfg, self.gpu, self.logger)
+            learner = ReptileSimSiamLearner(self.cfg, self.gpu, self.logger)
         else:
             self.logger.warning('Pretext task not supported')
         
