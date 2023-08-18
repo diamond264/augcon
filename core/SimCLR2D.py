@@ -15,7 +15,7 @@ class SimCLRNet(nn.Module):
     Build a SimCLR model with: a query encoder, a key encoder, and a queue
     https://arxiv.org/abs/1911.05722
     """
-    def __init__(self, backbone='resnet18', input_channels=3, z_dim=96, out_dim=50, T=0.1, mlp=True):
+    def __init__(self, backbone='resnet18', out_dim=50, T=0.1, mlp=True):
         super(SimCLRNet, self).__init__()
         self.T = T
 
@@ -58,7 +58,7 @@ class SimCLRNet(nn.Module):
 
 
 class SimCLRClassifier(nn.Module):
-    def __init__(self, backbone, input_channels, z_dim, num_cls, mlp=True):
+    def __init__(self, backbone, num_cls, mlp=True):
         super(SimCLRClassifier, self).__init__()
         # num_classes is the output fc dimension
         if backbone == 'resnet18':
@@ -97,9 +97,9 @@ class SimCLRLearner:
     def main_worker(self, rank, world_size, train_dataset, val_dataset, test_dataset, logs):
         # Model initialization
         if self.cfg.mode == 'pretrain' or self.cfg.mode == 'eval_pretrain':
-            net = SimCLRNet(self.cfg.backbone, self.cfg.input_channels, self.cfg.z_dim, self.cfg.out_dim, self.cfg.T, self.cfg.mlp)
+            net = SimCLRNet(self.cfg.backbone, self.cfg.out_dim, self.cfg.T, self.cfg.mlp)
         elif self.cfg.mode == 'finetune' or self.cfg.mode == 'eval_finetune':
-            net = SimCLRClassifier(self.cfg.backbone, self.cfg.input_channels, self.cfg.z_dim, self.cfg.num_cls, self.cfg.mlp)
+            net = SimCLRClassifier(self.cfg.backbone, self.cfg.num_cls, self.cfg.mlp)
         
         # DDP setting
         if world_size > 1:
@@ -154,7 +154,7 @@ class SimCLRLearner:
                 print(log)
         
         # self.all_domains = self.split_per_domain(train_dataset)
-        self.all_domains = train_dataset.get_domains()
+        self.all_domains = None#train_dataset.get_domains()
         
         # Define criterion
         if self.cfg.criterion == 'crossentropy':

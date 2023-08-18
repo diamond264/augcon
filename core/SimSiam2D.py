@@ -41,12 +41,12 @@ class SimSiamNet(nn.Module):
         aug_z = self.encoder(aug_feature)
         aug_p = self.predictor(aug_z)
         
+        p = nn.functional.normalize(p, dim=1)
+        aug_p = nn.functional.normalize(aug_p, dim=1)
+        z = nn.functional.normalize(z, dim=1)
+        aug_z = nn.functional.normalize(aug_z, dim=1)
+        
         return p, aug_p, z.detach(), aug_z.detach()
-    
-        # p = nn.functional.normalize(p, dim=1)
-        # aug_p = nn.functional.normalize(aug_p, dim=1)
-        # z = nn.functional.normalize(z, dim=1)
-        # aug_z = nn.functional.normalize(aug_z, dim=1)
 
 
 class SimSiamClassifier(nn.Module):

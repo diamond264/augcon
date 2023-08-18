@@ -38,7 +38,7 @@ criterion: crossentropy
 start_epoch: 0
 epochs: 100
 batch_size: 512
-lr: 0.1
+lr: 0.025
 momentum: 0.9
 wd: 0.0001
 
@@ -88,7 +88,7 @@ criterion: crossentropy
 start_epoch: 0
 epochs: 100
 batch_size: 512
-lr: 0.1
+lr: 0.025
 momentum: 0.9
 wd: 0.0001
 
