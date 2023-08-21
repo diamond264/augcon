@@ -1,6 +1,7 @@
 import os
 import time
 import torch
+import random
 import numpy as np
 
 from tqdm import tqdm
@@ -17,11 +18,13 @@ _IMAGENET_MEAN = [0.485, 0.456, 0.406]
 _IMAGENET_STDDEV = [0.229, 0.224, 0.225]
 
 class DomainNetDataset(torch.utils.data.Dataset):
-    def __init__(self, cfg, logger, file_path):
+    def __init__(self, cfg, logger, file_path, train=True, label_dict=None):
         st = time.time()
         self.cfg = cfg
         self.logger = logger
         self.file_path = file_path
+        self.train = train
+        self.label_dict = label_dict
 
         self.pre_transform = transforms.Compose([
             transforms.Resize((224, 224))
@@ -53,9 +56,16 @@ class DomainNetDataset(torch.utils.data.Dataset):
                 loader = SimCLRLoader(pre_transform=self.pre_transform,
                                     post_transform=self.post_transform)
         return loader
+    
+    def get_label_dict(self):
+        return self.label_dict
 
     def preprocessing(self):
         cnt = 0
+        if self.cfg.mode == 'finetune' and len(self.cfg.domains) > 1:
+            print("Finetuning on multiple domains is not supported yet")
+            assert(0)
+        
         for i, domain in enumerate(self.cfg.domains):
             dataset = ImageFolder(os.path.join(self.file_path, domain), self.loader)
             
@@ -63,6 +73,9 @@ class DomainNetDataset(torch.utils.data.Dataset):
             # limit = 15000
             # if len(dataset) > limit and self.cfg.mode == 'pretrain':
             #     dataset = torch.utils.data.Subset(dataset, np.random.choice(len(dataset), limit, replace=False))
+            # ################################
+            dataset, self.label_dict = self.filter_nway_kshot(dataset, self.cfg.n_way, self.cfg.k_shot,
+                                                         train=self.train, label_dict=self.label_dict)
             
             self.dataset = ConcatDataset([self.dataset, dataset])
             self.domain_labels.extend([i] * len(dataset))
@@ -72,6 +85,30 @@ class DomainNetDataset(torch.utils.data.Dataset):
         
         self.domain_labels = np.array(self.domain_labels)
         self.domain_labels = torch.utils.data.TensorDataset(torch.from_numpy(self.domain_labels))
+
+    def filter_nway_kshot(self, dataset, n_way, k_shot, train=True, label_dict=None):
+        if label_dict == None:
+            all_labels = np.array(dataset.classes)
+            all_labels = np.arange(len(all_labels))
+            filtered_labels = np.random.choice(all_labels, n_way, replace=False)
+            label_dict = {label: i for i, label in enumerate(filtered_labels)}
+        
+        filtered_dataset = []
+        for label in label_dict.keys():
+            indices = np.array(dataset.targets)
+            indices = np.where(indices == label)[0]
+            if train:
+                if len(indices) < k_shot:
+                    continue
+            else:
+                k_shot = len(indices)
+            indices = np.random.choice(indices, k_shot, replace=False)
+            new_dataset = torch.utils.data.Subset(dataset, indices)
+            # Translate labels
+            new_dataset = [(feature, label_dict[label]) for feature, label in new_dataset]
+            filtered_dataset = ConcatDataset([filtered_dataset, new_dataset])
+            
+        return filtered_dataset, label_dict
 
     def get_indices_by_domain(self):
         return self.indices_by_domain

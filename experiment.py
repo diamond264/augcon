@@ -92,19 +92,23 @@ class Experiment:
             self.logger.warning('Pretext task not supported')
         
         # Loading dataset
-        if self.cfg.dtype == '1d':
-            default_data_loader = DefaultDataLoader(self.cfg, self.logger)
-            train_dataset, val_dataset, test_dataset = default_data_loader.get_datasets()
-        elif self.cfg.dtype == '2d':
-            if self.cfg.dataset_name == 'domainnet':
-                train_dataset = DomainNetDataset(self.cfg, self.logger, self.cfg.train_dataset_path)
-                val_dataset = DomainNetDataset(self.cfg, self.logger, self.cfg.val_dataset_path)
-                test_dataset = DomainNetDataset(self.cfg, self.logger, self.cfg.test_dataset_path)
-        
-        # Start training
-        if len(train_dataset) > 180000:
-            train_dataset = Subset(train_dataset, np.random.choice(len(train_dataset), 180000, replace=False))
-        learner.run(train_dataset, val_dataset, test_dataset)
+        if self.cfg.mode == 'finetune': episodes = self.cfg.episodes
+        else: episodes = 1
+        for episode in range(episodes):
+            if self.cfg.dtype == '1d':
+                default_data_loader = DefaultDataLoader(self.cfg, self.logger)
+                train_dataset, val_dataset, test_dataset = default_data_loader.get_datasets()
+            elif self.cfg.dtype == '2d':
+                if self.cfg.dataset_name == 'domainnet':
+                    train_dataset = DomainNetDataset(self.cfg, self.logger, self.cfg.train_dataset_path)
+                    label_dict = train_dataset.get_label_dict()
+                    val_dataset = DomainNetDataset(self.cfg, self.logger, self.cfg.val_dataset_path, train=False, label_dict=label_dict)
+                    test_dataset = DomainNetDataset(self.cfg, self.logger, self.cfg.test_dataset_path, train=False, label_dict=label_dict)
+            
+            # Start training
+            if len(train_dataset) > 180000:
+                train_dataset = Subset(train_dataset, np.random.choice(len(train_dataset), 180000, replace=False))
+            learner.run(train_dataset, val_dataset, test_dataset)
 
 if __name__ == '__main__':
     args = parse_args()
