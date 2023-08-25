@@ -1,5 +1,9 @@
 import os
+import numpy as np
 import sklearn.metrics as metrics
+
+from sklearn.neighbors import KNeighborsClassifier as KNN
+
 import torch
 import torch.nn as nn
 import torch.distributed as dist
@@ -42,10 +46,10 @@ class SimSiamNet(nn.Module):
         aug_z = self.encoder(aug_feature)
         aug_p = self.predictor(aug_z)
         
-        p = nn.functional.normalize(p, dim=1)
-        aug_p = nn.functional.normalize(aug_p, dim=1)
-        z = nn.functional.normalize(z, dim=1)
-        aug_z = nn.functional.normalize(aug_z, dim=1)
+        # p = nn.functional.normalize(p, dim=1)
+        # aug_p = nn.functional.normalize(aug_p, dim=1)
+        # z = nn.functional.normalize(z, dim=1)
+        # aug_z = nn.functional.normalize(aug_z, dim=1)
         
         return p, aug_p, z.detach(), aug_z.detach()
 
@@ -86,9 +90,9 @@ class SimSiamLearner:
     def main_worker(self, rank, world_size, train_dataset, val_dataset, test_dataset, logs):
         # Model initialization
         if self.cfg.mode == 'pretrain' or self.cfg.mode == 'eval_pretrain':
-            net = SimSiamNet(self.cfg.backbone, self.cfg.out_dim, self.cfg.pred_dim, self.cfg.mlp)
+            net = SimSiamNet(self.cfg.backbone, self.cfg.out_dim, self.cfg.pred_dim, self.cfg.pretrain_mlp)
         elif self.cfg.mode == 'finetune' or self.cfg.mode == 'eval_finetune':
-            net = SimSiamClassifier(self.cfg.backbone, self.cfg.n_way, self.cfg.mlp)
+            net = SimSiamClassifier(self.cfg.backbone, self.cfg.n_way, self.cfg.finetune_mlp)
         
         # DDP setting
         if world_size > 1:
@@ -274,17 +278,20 @@ class SimSiamLearner:
             pos_features = data[0][1].cuda()
             
             p1, p2, z1, z2 = net(features, pos_features)
-            # print(p1)
-            # print(p2)
-            # print(z1)
-            # print(z2)
-            # print(batch_idx)
-            # if batch_idx > 2: assert(0)
             loss = -(criterion(p1, z2).mean() + criterion(p2, z1).mean()) * 0.5
 
+            # concatenated zs
+            
             if batch_idx % self.cfg.log_freq == 0 and rank == 0:
+                std = torch.std(torch.cat((z1, z2), dim=0))
+                
+                KNNCls = KNN(n_neighbors=5)
+                KNNCls.fit(z1.detach().cpu().numpy(), y=data[1].numpy())
+                KNN_pred = KNNCls.predict(z2.detach().cpu().numpy())
+                KNN_acc = np.mean(KNN_pred == data[1].numpy())*100
+                
                 log = f'Epoch [{epoch+1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) '
-                log += f'Loss: {loss.item():.4f}'
+                log += f'Loss: {loss.item():.4f}\tStd: {std.item():.4f}\tKNN Acc: {KNN_acc:.2f}%'
                 logs.append(log)
                 print(log)
 

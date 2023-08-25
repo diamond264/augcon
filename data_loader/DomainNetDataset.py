@@ -12,18 +12,19 @@ from torchvision.datasets import ImageFolder
 from torch.utils.data import Dataset, ConcatDataset
 
 from core.image_loader.SimCLRLoader import SimCLRLoader
+from core.image_loader.MetaSimCLRLoader import MetaSimCLRLoader
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 _IMAGENET_MEAN = [0.485, 0.456, 0.406]
 _IMAGENET_STDDEV = [0.229, 0.224, 0.225]
 
 class DomainNetDataset(torch.utils.data.Dataset):
-    def __init__(self, cfg, logger, file_path, train=True, label_dict=None):
+    def __init__(self, cfg, logger, file_path, type='train', label_dict=None):
         st = time.time()
         self.cfg = cfg
         self.logger = logger
         self.file_path = file_path
-        self.train = train
+        self.type = type
         self.label_dict = label_dict
 
         self.pre_transform = transforms.Compose([
@@ -54,7 +55,11 @@ class DomainNetDataset(torch.utils.data.Dataset):
                self.cfg.pretext == 'simsiam' or \
                self.cfg.pretext == 'metasimsiam':
                 loader = SimCLRLoader(pre_transform=self.pre_transform,
-                                    post_transform=self.post_transform)
+                                      post_transform=self.post_transform)
+        elif self.cfg.mode == 'finetune' and not self.type == 'test' :
+            if self.cfg.pretext == 'metasimsiam':
+                loader = MetaSimCLRLoader(pre_transform=self.pre_transform,
+                                          post_transform=self.post_transform)
         return loader
     
     def get_label_dict(self):
@@ -74,8 +79,8 @@ class DomainNetDataset(torch.utils.data.Dataset):
             # if len(dataset) > limit and self.cfg.mode == 'pretrain':
             #     dataset = torch.utils.data.Subset(dataset, np.random.choice(len(dataset), limit, replace=False))
             # ################################
-            dataset, self.label_dict = self.filter_nway_kshot(dataset, self.cfg.n_way, self.cfg.k_shot,
-                                                         train=self.train, label_dict=self.label_dict)
+            if self.cfg.mode == 'finetune':
+                dataset = self.filter_nway_kshot(dataset, self.cfg.n_way, self.cfg.k_shot)
             
             self.dataset = ConcatDataset([self.dataset, dataset])
             self.domain_labels.extend([i] * len(dataset))
@@ -86,29 +91,34 @@ class DomainNetDataset(torch.utils.data.Dataset):
         self.domain_labels = np.array(self.domain_labels)
         self.domain_labels = torch.utils.data.TensorDataset(torch.from_numpy(self.domain_labels))
 
-    def filter_nway_kshot(self, dataset, n_way, k_shot, train=True, label_dict=None):
-        if label_dict == None:
+    def filter_nway_kshot(self, dataset, n_way, k_shot):
+        if self.label_dict == None:
             all_labels = np.array(dataset.classes)
-            all_labels = np.arange(len(all_labels))
             filtered_labels = np.random.choice(all_labels, n_way, replace=False)
-            label_dict = {label: i for i, label in enumerate(filtered_labels)}
-        
+            # For debugging purposes
+            # filtered_labels = all_labels[-n_way:]
+            self.label_dict = {label: i for i, label in enumerate(filtered_labels)}
+        print(self.label_dict.keys())
         filtered_dataset = []
-        for label in label_dict.keys():
+        for label in self.label_dict.keys():
+            label_to_num = {label: i for i, label in enumerate(dataset.classes)}
+            num_to_label = {i: label for i, label in enumerate(dataset.classes)}
+            label_num = label_to_num[label]
             indices = np.array(dataset.targets)
-            indices = np.where(indices == label)[0]
-            if train:
+            indices = np.where(indices == label_num)[0]
+            if self.type == 'train':
                 if len(indices) < k_shot:
                     continue
             else:
                 k_shot = len(indices)
             indices = np.random.choice(indices, k_shot, replace=False)
+            # For debugging purposes
+            # indices = indices[:k_shot]
             new_dataset = torch.utils.data.Subset(dataset, indices)
-            # Translate labels
-            new_dataset = [(feature, label_dict[label]) for feature, label in new_dataset]
+            new_dataset = [(feature, self.label_dict[num_to_label[label]]) for feature, label in new_dataset]
             filtered_dataset = ConcatDataset([filtered_dataset, new_dataset])
             
-        return filtered_dataset, label_dict
+        return filtered_dataset
 
     def get_indices_by_domain(self):
         return self.indices_by_domain

@@ -16,6 +16,7 @@ from util.logger import Logger
 
 from data_loader.default_data_loader import DefaultDataLoader
 from data_loader.DomainNetDataset import DomainNetDataset
+from data_loader.EmptyDataset import EmptyDataset
 
 from core.CPC import CPCLearner
 # from core.SimCLR import SimCLRLearner
@@ -100,14 +101,15 @@ class Experiment:
                 train_dataset, val_dataset, test_dataset = default_data_loader.get_datasets()
             elif self.cfg.dtype == '2d':
                 if self.cfg.dataset_name == 'domainnet':
-                    train_dataset = DomainNetDataset(self.cfg, self.logger, self.cfg.train_dataset_path)
+                    train_dataset = DomainNetDataset(self.cfg, self.logger, self.cfg.train_dataset_path, type='train')
                     label_dict = train_dataset.get_label_dict()
-                    val_dataset = DomainNetDataset(self.cfg, self.logger, self.cfg.val_dataset_path, train=False, label_dict=label_dict)
-                    test_dataset = DomainNetDataset(self.cfg, self.logger, self.cfg.test_dataset_path, train=False, label_dict=label_dict)
+                    # val_dataset = DomainNetDataset(self.cfg, self.logger, self.cfg.val_dataset_path, train=False, label_dict=label_dict)
+                    val_dataset = DomainNetDataset(self.cfg, self.logger, self.cfg.val_dataset_path, type='val', label_dict=label_dict)
+                    test_dataset = DomainNetDataset(self.cfg, self.logger, self.cfg.test_dataset_path, type='test', label_dict=label_dict)
             
-            # Start training
-            if len(train_dataset) > 180000:
-                train_dataset = Subset(train_dataset, np.random.choice(len(train_dataset), 180000, replace=False))
+            # # Start training
+            # if len(train_dataset) > 180000:
+            #     train_dataset = Subset(train_dataset, np.random.choice(len(train_dataset), 180000, replace=False))
             learner.run(train_dataset, val_dataset, test_dataset)
 
 if __name__ == '__main__':
