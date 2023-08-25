@@ -13,10 +13,11 @@ from util.args import parse_args
 from util.config import Config
 from util.logger import Logger
 
-from core.CPC import CPCLearner
+from core.CPC import CPCClassifier
+from core.MetaCPC import MetaCPCLearner
 from data_loader.default_data_loader import DefaultDataLoader
 
-class Pretrain:
+class Finetune:
     def __init__(self, cfg, logger):
         self.cfg = cfg
         self.logger = logger
@@ -61,48 +62,22 @@ class Pretrain:
             self.logger.warning('from checkpoints.')
     
     def run(self):
+        self.logger.info('Start Finetuning')
         # Model creation
         learner = None
         if self.cfg.pretext == 'cpc':
-            learner = CPCLearner(self.cfg, self.gpu, self.logger)
-        # if self.cfg.pretext == 'metacpc':
-        #     learner = MetaCPCLearner(self.cfg, self.gpu, self.logger)
+            learner = CPCClassifier(self.cfg, self.gpu, self.logger)
+        if self.cfg.pretext == 'metacpc':
+            learner = MetaCPCLearner(self.cfg, self.gpu, self.logger)
         else:
             self.logger.warning('Pretext task not supported')
         
-        # Criterion
-        if self.cfg.criterion == 'crossentropy':
-            criterion = nn.CrossEntropyLoss().cuda(self.gpu[0])
-        else:
-            self.logger.warning('Criterion not supported')
-        
-        # Optimizer
-        parameters = learner.parameters()
-        if self.cfg.optimizer == 'sgd':
-            optimizer = torch.optim.SGD(
-                parameters, self.cfg.lr,
-                momentum=self.cfg.momentum,
-                weight_decay=self.cfg.wd
-            )
-        elif self.cfg.optimizer == 'adam':
-            optimizer = torch.optim.Adam(
-                parameters, self.cfg.lr, 
-                weight_decay=self.cfg.wd
-            )
-        
-        # Resume previous training
-        if os.path.isfile(self.cfg.resume):
-            state = torch.load(self.cfg.resume)
-            learner.load_state_dict(state['state_dict'])
-            optimizer.load_state_dict(state['optimizer'])
-            self.cfg.start_epoch = state['epoch']
-        
         # Loading dataset
         default_data_loader = DefaultDataLoader(self.cfg, self.logger)
-        train_loader, val_loader, test_loader = default_data_loader.get_loaders()
+        train_dataset, val_dataset, test_dataset = default_data_loader.get_datasets()
         
         # Start training
-        learner.perform_train(train_loader, val_loader, test_loader, criterion, optimizer)
+        learner.perform_train(train_dataset, val_dataset, test_dataset)
 
 if __name__ == '__main__':
     args = parse_args()
@@ -117,5 +92,5 @@ if __name__ == '__main__':
     cfg.log_config(logger)
     logger.info("==========================================")
     
-    pretrain = Pretrain(cfg, logger)
+    pretrain = Finetune(cfg, logger)
     pretrain.run()

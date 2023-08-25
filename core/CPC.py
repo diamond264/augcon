@@ -1,32 +1,42 @@
 import os
 import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.distributed as dist
+import torch.multiprocessing as mp
+from torch.utils.data import DataLoader
+from torch.utils.data import DistributedSampler
+
+from collections import defaultdict
 
 # reference:
 # https://github.com/facebookresearch/fairseq/blob/176cd934982212a4f75e0669ee81b834ee71dbb0/fairseq/models/wav2vec/wav2vec.py#L431
+
 class Encoder(nn.Module):
-    def __init__(self, input_channels=3, z_dim=256):
-        super().__init__()
-        self.encoder = nn.Sequential(
-            nn.Conv1d(input_channels, 32, kernel_size=4, stride=2),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Conv1d(32, 64, kernel_size=2, stride=1),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Conv1d(64, 128, kernel_size=1, stride=1),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Conv1d(128, z_dim, kernel_size=1, stride=1),
-            nn.ReLU(),
-            nn.Dropout(p=0.2)
-        )
+    def __init__(self, input_channels=3, z_dim=256, num_blocks=4, kernel_sizes=[8, 4, 2, 1], strides=[4, 2, 1, 1]):
+        super(Encoder, self).__init__()
+        self.num_blocks = num_blocks
         
+        filters = [32, 64, 128, 256, z_dim]
+        self.kernel_sizes = kernel_sizes
+        self.strides = strides
+        
+        self.blocks = nn.ModuleList()
+        for i in range(num_blocks):
+            block = nn.Sequential(nn.Conv1d(input_channels, filters[i],
+                                            kernel_size=self.kernel_sizes[i],
+                                            stride=self.strides[i]), 
+                                  nn.ReLU(), 
+                                  nn.Dropout(p=0.2))
+            self.blocks.append(block)
+            input_channels = filters[i]
+    
     def forward(self, x):
-        z = self.encoder(x)
-        return z
+        for i in range(self.num_blocks):
+            x = self.blocks[i](x)
+        return x
 
 
 class LeftZeroPad1d(nn.Module):
@@ -47,6 +57,8 @@ class Aggregator(nn.Module):
         self.num_blocks = num_blocks
         # define convolutional blocks with increasing kernel sizes
         kernel_sizes = [2, 3, 4, 5, 6, 7]
+        if num_blocks == 9:
+            kernel_sizes = [3, 3, 3, 3, 3, 3, 3, 3, 3]
         self.blocks = nn.ModuleList()
         for i in range(num_blocks):
             k = kernel_sizes[i]
@@ -92,6 +104,25 @@ class Predictor(nn.Module):
         return z
 
 
+class ClassificationHead(nn.Module):
+    def __init__(self, input_size, hidden_size, num_cls, mlp=False):
+        super().__init__()
+        if mlp:
+            self.block = nn.Sequential(
+                nn.Linear(input_size, hidden_size),
+                nn.ReLU(),
+                nn.Linear(hidden_size, num_cls),
+            )
+        else:
+            self.block = nn.Sequential(
+                nn.Linear(input_size, num_cls),
+            )
+    
+    def forward(self, x):
+        x = self.block(x)
+        return x
+
+
 def buffered_arange(max):
     if not hasattr(buffered_arange, "buf"):
         buffered_arange.buf = torch.LongTensor()
@@ -101,9 +132,10 @@ def buffered_arange(max):
     return buffered_arange.buf[:max]
 
 class CPCNet(nn.Module):
-    def __init__(self, input_channels=3, z_dim=256, agg_blocks=4, pred_steps=12, n_negatives=15, offset=16):
+    def __init__(self, input_channels=3, z_dim=256, enc_blocks=4, kernel_sizes=[8, 4, 2, 1], strides=[4, 2, 1, 1],
+                 agg_blocks=4, pred_steps=12, n_negatives=15, offset=16):
         super(CPCNet, self).__init__()
-        self.encoder = Encoder(input_channels, z_dim)
+        self.encoder = Encoder(input_channels, z_dim, enc_blocks, kernel_sizes, strides)
         self.aggregator = Aggregator(agg_blocks, z_dim)
         self.predictor = Predictor(z_dim, pred_steps)
         
@@ -195,32 +227,26 @@ class CPCNet(nn.Module):
 
 
 class CPCClassifier(nn.Module):
-    def __init__(self, encoder, aggregator, z_dim=256, seq_len=30, num_cls=6):
+    def __init__(self, input_channels=3, z_dim=256, enc_blocks=4, kernel_sizes=[8, 4, 2, 1], strides=[4, 2, 1, 1],
+                 agg_blocks=4, pooling='mean', num_cls=10, mlp=False):
         super(CPCClassifier, self).__init__()
-        self.encoder = encoder
-        self.aggregator = aggregator
-        self.z_dim = z_dim
-        self.seq_len = seq_len
-        self.num_cls = num_cls
-        self.fc = self.build_classifier()
-    
-    def build_classifier(self):
-        classifier = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(self.z_dim*self.seq_len, 256),
-            nn.ReLU(inplace=True),
-            nn.Dropout(p=0.2),
-            nn.Linear(256, 128),
-            nn.ReLU(inplace=True),
-            nn.Dropout(p=0.2),
-            nn.Linear(128, self.num_cls)
-        )
-        return classifier
+        self.encoder = Encoder(input_channels, z_dim, enc_blocks, kernel_sizes, strides)
+        self.aggregator = Aggregator(agg_blocks, z_dim)
+        self.pooling = pooling
+        self.classifier = ClassificationHead(z_dim, z_dim, num_cls, mlp)
             
     def forward(self, x):
-        z = self.encoder(x)
-        c = self.aggregator(z)
-        pred = self.fc(c)
+        x = self.encoder(x)
+        x = self.aggregator(x)
+        if self.pooling == 'mean':
+            c = torch.mean(x, dim=2)
+        elif self.pooling == 'max':
+            c, _ = torch.max(x, dim=2)
+        elif self.pooling == 'sum':
+            c = torch.sum(x, dim=2)
+        else:
+            raise ValueError("Invalid pooling mode. Please choose from 'mean', 'max', or 'sum'.")
+        pred = self.classifier(c)
         return pred
 
 
@@ -229,32 +255,183 @@ class CPCLearner:
         self.cfg = cfg
         self.gpu = gpu
         self.logger = logger
-        
-        self.net = CPCNet(cfg.input_channels, cfg.z_dim, cfg.agg_blocks,
-                          cfg.pred_steps, cfg.n_negatives, cfg.offset)
-        if len(gpu) > 1:
-            self.net = nn.DataParallel(self.net, device_ids=gpu)
-            torch.cuda.set_device(gpu[0])
-        self.net = self.net.cuda()
-        
-        self.all_domains = cfg.domains
     
-    def perform_train(self, train_loader, val_loader, test_loader, criterion, optimizer):
-        for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
-            self.train(train_loader, criterion, optimizer, epoch, self.cfg.epochs)
-            self.validate(val_loader, criterion)
+    def run(self, train_dataset, val_dataset, test_dataset):
+        num_gpus = len(self.gpu)
+        logs = mp.Manager().list([])
+        self.logger.info("Executing CPC")
+        self.logger.info("Logs are skipped during training")
+        if num_gpus > 1:
+            mp.spawn(self.main_worker,
+                     args=(num_gpus, train_dataset, val_dataset, test_dataset, logs),
+                     nprocs=num_gpus)
+        else:
+            self.main_worker(0, 1, train_dataset, val_dataset, test_dataset, logs)
+        
+        for log in logs:
+            self.logger.info(log)
+
+    def main_worker(self, rank, world_size, train_dataset, val_dataset, test_dataset, logs):
+        # Model initialization
+        if self.cfg.mode == 'pretrain':
+            net = CPCNet(self.cfg.input_channels, self.cfg.z_dim, self.cfg.enc_blocks, self.cfg.kernel_sizes, self.cfg.strides,
+                         self.cfg.agg_blocks, self.cfg.pred_steps, self.cfg.n_negatives, self.cfg.offset)
+        elif self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
+            net = CPCClassifier(self.cfg.input_channels, self.cfg.z_dim, self.cfg.enc_blocks, self.cfg.kernel_sizes, self.cfg.strides,
+                                self.cfg.agg_blocks, self.cfg.pooling, self.cfg.num_cls, self.cfg.mlp)
+        
+        # DDP setting
+        if world_size > 1:
+            dist.init_process_group(backend='nccl',
+                                    init_method=self.cfg.dist_url,
+                                    world_size=world_size,
+                                    rank=rank)
+            torch.cuda.set_device(rank)
+            net.cuda()
+            net = nn.parallel.DistributedDataParallel(net, device_ids=[rank], find_unused_parameters=True)
             
-            ckpt_dir = self.cfg.ckpt_dir
-            ckpt_filename = 'checkpoint_{:04d}.pth.tar'.format(epoch)
-            ckpt_filename = os.path.join(ckpt_dir, ckpt_filename)
-            state_dict = self.net.state_dict()
-            self.save_checkpoint(ckpt_filename, epoch, state_dict, optimizer)
+            train_sampler = DistributedSampler(train_dataset)
+            if len(val_dataset) > 0:
+                val_sampler = DistributedSampler(val_dataset)
+            test_sampler = DistributedSampler(test_dataset)
+            train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size//world_size,
+                                      shuffle=False, sampler=train_sampler, num_workers=self.cfg.num_workers, drop_last=True)
+            if len(val_dataset) > 0:
+                val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size//world_size,
+                                        shuffle=False, sampler=val_sampler, num_workers=self.cfg.num_workers, drop_last=True)
+            test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size//world_size,
+                                      shuffle=False, sampler=test_sampler, num_workers=self.cfg.num_workers, drop_last=True)
+            if rank == 0:
+                log = "DDP is used for training - training {} instances for each worker".format(len(list(train_sampler)))
+                logs.append(log)
+                print(log)
+        # Single GPU setting
+        else:
+            torch.cuda.set_device(rank)
+            net.cuda()
+            train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size,
+                                      shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
+            if len(val_dataset) > 0:
+                val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size,
+                                        shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
+            test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size,
+                                      shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
+            if rank == 0:
+                log = "Single GPU is used for training - training {} instances for each worker".format(len(train_dataset))
+                logs.append(log)
+                print(log)
         
-        self.validate(test_loader, criterion)
+        self.all_domains = self.split_per_domain(train_dataset)
+        
+        # Define criterion
+        if self.cfg.criterion == 'crossentropy':
+            criterion = nn.CrossEntropyLoss().cuda()
+        
+        # For finetuning and evaluation, load pretrained model
+        if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
+            if os.path.isfile(self.cfg.pretrained):
+                if rank == 0:
+                    log = "Loading pretrained model from checkpoint - {}".format(self.cfg.pretrained)
+                    logs.append(log)
+                    print(log)
+                loc = 'cuda:{}'.format(rank)
+                state = torch.load(self.cfg.pretrained, map_location=loc)['state_dict']
+                
+                for k, v in list(state.items()):
+                    if world_size > 1:
+                        k = 'module.' + k
+                    if k in net.state_dict().keys():
+                        state[k] = v
+                
+                msg = net.load_state_dict(state, strict=False)
+                if rank == 0:
+                    log = "Missing keys: {}".format(msg.missing_keys)
+                    logs.append(log)
+                    print(log)
+            else:
+                if rank == 0:
+                    log = "No checkpoint found at '{}'".format(self.cfg.pretrained)
+                    logs.append(log)
+                    print(log)
+            
+            # Freezing the encoder
+            if self.cfg.freeze:
+                if rank == 0:
+                    log = "Freezing the encoder"
+                    logs.append(log)
+                    print(log)
+                for name, param in net.named_parameters():
+                    if not 'classifier' in name:
+                        param.requires_grad = False
+                    else:
+                        param.requires_grad = True
+        
+        parameters = list(filter(lambda p: p.requires_grad, net.parameters()))
+        if self.cfg.optimizer == 'sgd':
+            optimizer = torch.optim.SGD(parameters, self.cfg.lr,
+                                        momentum=self.cfg.momentum,
+                                        weight_decay=self.cfg.wd)
+        elif self.cfg.optimizer == 'adam':
+            optimizer = torch.optim.Adam(parameters, self.cfg.lr,
+                                         weight_decay=self.cfg.wd)
+        
+        # Load checkpoint if exists
+        if os.path.isfile(self.cfg.resume):
+            if rank == 0:
+                log = "Loading state_dict from checkpoint - {}".format(self.cfg.resume)
+                logs.append(log)
+                print(log)
+            loc = 'cuda:{}'.format(rank)
+            state = torch.load(self.cfg.resume, map_location=loc)
+            
+            for k, v in list(state['state_dict'].items()):
+                if world_size > 1:
+                    k = 'module.' + k
+                if k in net.state_dict().keys():
+                    state['state_dict'][k] = v
+            
+            net.load_state_dict(state['state_dict'])
+            optimizer.load_state_dict(state['optimizer'])
+            self.cfg.start_epoch = state['epoch']
+        
+        if self.cfg.mode != 'eval':
+            for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
+                if world_size > 1:
+                    train_sampler.set_epoch(epoch)
+                    if len(val_dataset) > 0:
+                        val_sampler.set_epoch(epoch)
+                    test_sampler.set_epoch(epoch)
+                
+                if self.cfg.mode == 'pretrain':
+                    self.pretrain(rank, net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
+                elif self.cfg.mode == 'finetune':
+                    self.finetune(rank, net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
+                    if len(val_dataset) > 0:
+                        self.validate(rank, net, val_loader, criterion, logs)
+                
+                if rank == 0 and (epoch+1) % self.cfg.save_freq == 0:
+                    ckpt_dir = self.cfg.ckpt_dir
+                    ckpt_filename = 'checkpoint_{:04d}.pth.tar'.format(epoch)
+                    ckpt_filename = os.path.join(ckpt_dir, ckpt_filename)
+                    state_dict = net.state_dict()
+                    if world_size > 1:
+                        for k, v in list(state_dict.items()):
+                            if 'module.' in k:
+                                state_dict[k.replace('module.', '')] = v
+                                del state_dict[k]
+                    self.save_checkpoint(ckpt_filename, epoch, state_dict, optimizer)
+        
+        if self.cfg.mode != 'pretrain':
+            self.validate(rank, net, test_loader, criterion, logs)
     
-    def train(self, train_loader, criterion, optimizer, epoch, num_epochs):
-        # switch to train mode
-        self.net.train()
+    def split_per_domain(self, dataset):
+        indices_per_domain = defaultdict(list)
+        for i, d in enumerate(dataset):
+            indices_per_domain[d[2].item()].append(i)
+        return indices_per_domain
+    
+    def pretrain(self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs):
+        net.train()
         
         for batch_idx, data in enumerate(train_loader):
             features = data[0].cuda()
@@ -268,29 +445,78 @@ class CPCLearner:
                     if dom_idx.dim() == 0: dom_idx = dom_idx.unsqueeze(0)
                     if torch.numel(dom_idx):
                         dom_features = features[dom_idx]
-                        logits, targets = self.net(dom_features)
+                        logits, targets = net(dom_features)
                         all_logits.append(logits)
                         all_targets.append(targets)
                 logits = torch.cat(all_logits, dim=0)
                 targets = torch.cat(all_targets, dim=0)
             else:
-                logits, targets = self.net(features)
+                logits, targets = net(features)
                 
             loss = criterion(logits, targets)
 
-            if batch_idx % self.cfg.log_freq == 0:
-                acc1, acc5 = self.accuracy(logits, targets, topk=(1, 5))
-                log = f'Epoch [{epoch+1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) '
-                log += f'Loss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
-                self.logger.info(log)
+            if rank == 0:
+                if batch_idx % self.cfg.log_freq == 0:
+                    acc1, acc5 = self.accuracy(logits, targets, topk=(1, 5))
+                    log = f'Epoch [{epoch+1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) '
+                    log += f'Loss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+                    logs.append(log)
+                    print(log)
 
             # compute gradient and do SGD step
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
     
-    def validate(self, val_loader, criterion):
-        pass
+    def finetune(self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs):
+        if self.cfg.freeze: net.eval()
+        else: net.train()
+        
+        for batch_idx, data in enumerate(train_loader):
+            features = data[0].cuda()
+            targets = data[1].cuda()
+            
+            logits = net(features)
+            loss = criterion(logits, targets)
+            
+            if rank == 0:
+                if batch_idx % self.cfg.log_freq == 0:
+                    acc1, acc5 = self.accuracy(logits, targets, topk=(1, 5))
+                    log = f'Epoch [{epoch+1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) '
+                    log += f'Loss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+                    logs.append(log)
+                    print(log)
+            
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+    
+    def validate(self, rank, net, val_loader, criterion, logs):
+        net.eval()
+        
+        total_targets = []
+        total_logits = []
+        total_loss = 0
+        for batch_idx, data in enumerate(val_loader):
+            features = data[0].cuda()
+            targets = data[1].cuda()
+            
+            logits = net(features)
+            total_loss += criterion(logits, targets)
+            total_targets.append(targets)
+            total_logits.append(logits)
+        
+        total_targets = torch.cat(total_targets, dim=0)
+        total_logits = torch.cat(total_logits, dim=0)
+        acc1, acc5 = self.accuracy(total_logits, total_targets, topk=(1, 5))
+        f1, recall, precision = self.scores(total_logits, total_targets)
+        total_loss /= len(val_loader)
+        
+        if rank == 0:
+            log = f'Validation Loss: {total_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+            log += f', F1: {f1.item():.2f}, Recall: {recall.item():.2f}, Precision: {precision.item():.2f}'
+            logs.append(log)
+            print(log)
     
     def save_checkpoint(self, filename, epoch, state_dict, optimizer):
         directory = os.path.dirname(filename)
@@ -317,10 +543,23 @@ class CPCLearner:
             for k in topk:
                 correct_k = correct[:k].reshape(-1).float().sum(0, keepdim=True)
                 res.append(correct_k.mul_(100.0 / batch_size))
+            
             return res
 
-    def load_state_dict(self, state_dict):
-        self.net.load_state_dict(state_dict)
+    def scores(self, output, target):
+        with torch.no_grad():
+            batch_size = target.size(0)
+
+            _, pred = output.max(1)
+            correct = pred.eq(target)
+
+            # Compute f1-score, recall, and precision for top-1 prediction
+            tp = torch.logical_and(correct, target).sum()
+            fp = pred.sum() - tp
+            fn = target.sum() - tp
+            precision = tp / (tp + fp + 1e-12)
+            recall = tp / (tp + fn + 1e-12)
+            f1 = (2 * precision * recall) / (precision + recall + 1e-12)
+
+            return f1, recall, precision
     
-    def parameters(self):
-        return list(filter(lambda p: p.requires_grad, self.net.parameters()))

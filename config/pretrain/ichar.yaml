@@ -1,46 +1,39 @@
-seed: null
-gpu: null
-data:
-  train_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/pretrain/train.pkl
-  test_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/pretrain/test.pkl
-  val_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA4697-jhryu/pretrain/val.pkl
-  name: hhar
-multiprocessing:
-  multiprocessing_distributed: false
-  workers: 32
-  world_size: 1
-  rank: 0
-  dist_url: tcp://localhost:10001
-  dist_backend: nccl
-train:
-  task_per_domain: true
-  num_task: 5
-  task_size: 90
-  task_steps: 10
-  # 0.001
-  task_lr: 0.001
-  # momentum: 0.9
-  optimizer: adam
-  criterion: crossentropy
-  # resume: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/test/checkpoint_2000.pth.tar
-  resume: ''
-  epochs: 5000
-  start_epoch: 0
-  batch_size: 256
-  # 0.001
-  lr: 0.001
-  fix_pred_lr: false
-  weight_decay: 0
-  print_freq: 1
-  save_dir: /mnt/sting/hjyoon/projects/augcontrast/models/pretrained/ichar_meta
-  cos: false
-  schedule: []
-model:
-  type: cpc
-  input_channels: 3
-  z_dim: 256
-  num_blocks: 5
-  num_filters: 256
-  pred_steps: 12
-  n_negatives: 15
-  offset: 16
+### Default config
+mode: pretrain
+seed: 0
+gpu: [2]
+num_workers: 8
+dist_url: tcp://localhost:10001
+
+### Dataset config
+dataset_name: ichar
+train_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_PH0034-ykha/pretrain/train.pkl
+test_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_PH0034-ykha/pretrain/test.pkl
+val_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_PH0034-ykha/pretrain/val.pkl
+input_channels: 3
+num_cls: 9
+
+### Training config
+optimizer: adam
+criterion: crossentropy
+start_epoch: 0
+epochs: 100
+batch_size: 90
+lr: 0.001
+momentum: 0.0
+wd: 0.0
+
+### Logs and checkpoints
+resume: ''
+ckpt_dir: /mnt/sting/hjyoon/projects/augcontrast/models/simclr_preliminary/simclr
+log_freq: 20
+save_freq: 10
+
+### Model config
+pretext: simclr
+z_dim: 96
+out_dim: 50
+T: 0.1
+mlp: true
+freeze: false
+neg_per_domain: false

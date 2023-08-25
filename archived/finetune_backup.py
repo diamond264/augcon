@@ -31,7 +31,7 @@ import core.builder
 import core.transforms
 import core.relnet
 import core.resnet
-import core.net.CPC
+import core.CPC
 
 from data_loader.HHARDataset import HHARDataset
 

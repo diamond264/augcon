@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import torch.utils.data
 import pandas as pd
 import os
@@ -8,33 +10,31 @@ from tqdm import tqdm
 from collections import defaultdict
 # import itertools
 
-class ProcessHHAR():
-    def __init__(self, file, class_type, seq_len=256,
-                 split_ratio=0.8, drop_size_threshold=500,
+class ProcessICSR():
+    def __init__(self, file, class_type, seq_len=32000,
+                 drop_size_threshold=100,
                  shots=[10, 5, 2, 1],
-                 finetune_test_size=300, finetune_val_size=100):
+                 finetune_test_size=100, finetune_val_size=100):
         self.metadata = {
-            'user': ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'],
-            'model': ['nexus4', 's3', 's3mini', 'lgwatch', 'gear'],
-            'device': ['lgwatch_1', 'lgwatch_2',
-                        'gear_1', 'gear_2'
-                        'nexus4_1', 'nexus4_2',
-                        's3_1', 's3_2', 's3mini_1', 's3mini_2'], # *** Devices are not considered
-            'gt': ['bike', 'sit', 'stand', 'walk', 'stairsup', 'stairsdown']
+            'domain': ['PH0007-jskim', 'PH0012-thanh', 'PH0014-wjlee',
+                       'PH0034-ykha', 'PH0038-iygoo', 'PH0041-hmkim',
+                       'PH0045-sjlee', 'WA0002-bkkim', 'WA0003-hskim',
+                       'WA4697-jhryu'],
+            'word': ['yes', 'no', 'up', 'down',
+                     'left', 'right', 'on', 'off',
+                     'stop', 'go', 'forward',  'backward',
+                     'follow', 'learn']
         }
         
         self.finetune_test_size = finetune_test_size
         self.finetune_val_size = finetune_val_size
         
         self.seq_len = seq_len
-        self.OVERLAPPING_WIN_LEN = self.seq_len // 2
         self.WIN_LEN = self.seq_len
         
-        self.domain_types = ['user', 'model', 'gt']
+        self.domain_type = 'domain'
         self.class_type = class_type
-        self.domain_types.remove(self.class_type)
         
-        self.split_ratio = split_ratio
         self.shots = shots
         self.shots.sort(reverse=True)
         
@@ -46,34 +46,26 @@ class ProcessHHAR():
         print(f'Valid domains (size {len(self.valid_domains)}):')
         print(self.valid_domains)
         
-        data = (self.features, self.class_labels, self.domain_labels)
-        self.pt_data, self.ft_data = self.split_pt_ft(data)
+        self.data = (self.features, self.class_labels, self.domain_labels)
     
-    def set_domain(self, user=None, model=None, gt=None):
-        self.user = user
-        self.model = model
-        self.gt = gt
+    def set_domain(self, domain=None):
+        self.domain_ = domain
         
         domain_dic = {
-            'user': self.class_to_number('user', self.user) if self.user else None,
-            'model': self.class_to_number('model', self.model) if self.model else None,
-            'gt': self.class_to_number('gt', self.gt) if self.gt else None
+            'domain': self.class_to_number('domain', self.domain_) if self.domain_ else None
         }
-        self.domain = tuple([domain_dic[dom] for dom in self.domain_types])
+        self.domain = domain_dic[self.domain_type]
         print(f'Set target domain: {self.domain}')
         
         if not self.domain in self.valid_domains:
-            self.user = None
-            self.model = None
-            self.gt = None
+            self.domain_ = None
             self.domain = None
             print("[ERR] not a valid domain")
     
     def drop_minorities(self, drop_size_threshold):
         domains = []
-        for dom_1 in self.metadata[self.domain_types[0]]:
-            for dom_2 in self.metadata[self.domain_types[1]]:
-                domains.append((dom_1, dom_2))
+        for dom in self.metadata[self.domain_type]:
+            domains.append(dom)
         
         print(f'searching domains with too small data... (<{drop_size_threshold})')
         idx_per_domain = {}
@@ -91,27 +83,17 @@ class ProcessHHAR():
         valid_idxs = []
         for domain, size in size_per_domain.items():
             if size < drop_size_threshold:
-                domain_1, domain_2 = domain
-                d1_sum_size = 0
-                d2_sum_size = 0
-                for d, s in size_per_domain.items():
-                    if d[0] == domain_1:
-                        d1_sum_size += s
-                    if d[1] == domain_2:
-                        d2_sum_size += s
-                if d1_sum_size > d2_sum_size:
-                    invalid_domain = domain_2
-                else:
-                    invalid_domain = domain_1
-                invalid_domains.append(invalid_domain)
+                invalid_domains.append(domain)
         
+        print('dropping domains with too small data...')
         for domain, idxs in idx_per_domain.items():
-            if domain[0] in invalid_domains or domain[1] in invalid_domains:
+            print(f'domain {domain}: {len(idxs)}')
+            if domain in invalid_domains:
+                print('==> dropped')
                 continue
             valid_domains.append(domain)
             valid_idxs.extend(idxs)
         
-        print('dropping domains with too small data...')
         valid_features = [self.features[i] for i in valid_idxs]
         valid_class_labels = [self.class_labels[i] for i in valid_idxs]
         valid_domain_labels = [self.domain_labels[i] for i in valid_idxs]
@@ -130,7 +112,7 @@ class ProcessHHAR():
         for idx, domain in tqdm(enumerate(domain_labels)):
             if domain == self.domain:
                 target_idxs.append(idx)
-            elif domain[0] != self.domain[0] and domain[1] != self.domain[1]:
+            else:
                 source_idxs.append(idx)
         
         source_data = ([features[i] for i in source_idxs],
@@ -142,17 +124,16 @@ class ProcessHHAR():
         return source_data, target_data
     
     def process(self, pretrain_dir='', finetune_dir='',):
-        pt_source_data, pt_target_data = self.split_source_target(self.pt_data)
+        pt_source_data, ft_target_data = self.split_pt_ft(self.data)
         print(f'Loaded source domain pre-training data({len(pt_source_data[0])})')
-        ft_source_data, ft_target_dta = self.split_source_target(self.ft_data)
-        print(f'Loaded target domain fine-tuning data({len(ft_target_dta[0])})')
+        print(f'Loaded target domain fine-tuning data({len(ft_target_data[0])})')
         
         pt_features, pt_class_labels, pt_domain_labels = pt_source_data
         pt_idxs = list(range(len(pt_features)))
         random.shuffle(pt_idxs)
-        train_idxs = pt_idxs[:int(0.8*len(pt_idxs))]
-        test_idxs = pt_idxs[int(0.8*len(pt_idxs)):int(0.9*len(pt_idxs))]
-        val_idxs = pt_idxs[int(0.9*len(pt_idxs)):]
+        train_idxs = pt_idxs[:int(0.9*len(pt_idxs))]
+        test_idxs = pt_idxs[int(0.9*len(pt_idxs)):int(0.95*len(pt_idxs))]
+        val_idxs = pt_idxs[int(0.95*len(pt_idxs)):]
         
         features = [pt_features[i] for i in train_idxs]
         class_labels = [pt_class_labels[i] for i in train_idxs]
@@ -210,7 +191,7 @@ class ProcessHHAR():
         #     self.save(features, class_labels, domain_labels, finetune_source_val_path)
         # print(f'Saved fine-tuning data of target domain')
         
-        target_features, target_class_labels, target_domain_labels = ft_target_dta
+        target_features, target_class_labels, target_domain_labels = ft_target_data
         idx_per_target_classes = {}
         for idx, class_label in enumerate(target_class_labels):
             if class_label in idx_per_target_classes.keys():
@@ -254,7 +235,7 @@ class ProcessHHAR():
         
         np_features = np.array(features)
         np_class_labels = np.array(class_labels)
-        np_domain_labels = np.array([self.domain_set_to_number(self.domain_types, d) for d in domain_labels])
+        np_domain_labels = np.array(domain_labels)
         
         dataset = torch.utils.data.TensorDataset(
             torch.from_numpy(np_features).float(),
@@ -268,22 +249,23 @@ class ProcessHHAR():
     def split_pt_ft(self, data):
         print('splitting pre-training data and fine-tuning data')
         features, class_labels, domain_labels = data
-        idxs = list(range(len(features)))
-        random.shuffle(idxs)
-        idxs_1 = idxs[:int(len(idxs)*self.split_ratio)]
-        idxs_2 = idxs[int(len(idxs)*self.split_ratio):]
         
-        data_1 = (
-            [features[i] for i in idxs_1],
-            [class_labels[i] for i in idxs_1],
-            [domain_labels[i] for i in idxs_1]
+        target_idxs = np.where(np.array(domain_labels) == self.domain)[0]
+        random.shuffle(target_idxs)
+        source_idxs = np.where(np.array(domain_labels) != self.domain)[0]
+        random.shuffle(source_idxs)
+        
+        data_pt = (
+            [features[i] for i in source_idxs],
+            [class_labels[i] for i in source_idxs],
+            [domain_labels[i] for i in source_idxs]
         )
-        data_2 = (
-            [features[i] for i in idxs_2],
-            [class_labels[i] for i in idxs_2],
-            [domain_labels[i] for i in idxs_2]
+        data_ft = (
+            [features[i] for i in target_idxs],
+            [class_labels[i] for i in target_idxs],
+            [domain_labels[i] for i in target_idxs]
         )
-        return data_1, data_2
+        return data_pt, data_ft
 
     def split_window(self, df):
         features = []
@@ -291,25 +273,20 @@ class ProcessHHAR():
         domain_labels = []
 
         print('splitting windows...')
-        for idx in tqdm(range(max(len(df) // self.OVERLAPPING_WIN_LEN - 1, 0))):
-            user = df.iloc[idx * self.OVERLAPPING_WIN_LEN, 9]
-            model = df.iloc[idx * self.OVERLAPPING_WIN_LEN, 10]
-            gt = df.iloc[idx * self.OVERLAPPING_WIN_LEN, 12]
-            user = self.class_to_number('user', user)
-            model = self.class_to_number('model', model)
-            gt = self.class_to_number('gt', gt)
+        for idx in tqdm(range(max(len(df) // self.WIN_LEN - 1, 0))):
+            domain_ = df.iloc[idx * self.WIN_LEN, 2]
+            word = df.iloc[idx * self.WIN_LEN, 1]
+            domain_ = self.class_to_number('domain', domain_)
+            word = self.class_to_number('word', word)
             
-            if self.class_type == 'user':
-                class_label = user
-                domain = (model, gt)
-            elif self.class_type == 'model':
-                class_label = model
-                domain = (user, gt)
-            elif self.class_type == 'gt':
-                class_label = gt
-                domain = (user, model)
+            if self.class_type == 'domain':
+                class_label = domain_
+                domain = word
+            elif self.class_type == 'word':
+                class_label = word
+                domain = domain_
 
-            feature = df.iloc[idx * self.OVERLAPPING_WIN_LEN:(idx + 2) * self.OVERLAPPING_WIN_LEN, 3:6].values
+            feature = df.iloc[idx * self.WIN_LEN:(idx + 1) * self.WIN_LEN, 0:1].values
             feature = feature.T
 
             features.append(feature)
@@ -328,35 +305,34 @@ class ProcessHHAR():
             assert 0, f'no such label in class info'
             return -1
     
-    def domain_set_to_number(self, domain_types, domain):
-        domain_1 = self.metadata[domain_types[0]]
-        domain_2 = self.metadata[domain_types[1]]
-        domains = []
-        for d1 in domain_1:
-            d1_num = self.class_to_number(domain_types[0], d1)
-            for d2 in domain_2:
-                d2_num = self.class_to_number(domain_types[1], d2)
-                domains.append((d1_num, d2_num))
-        dic = {v: i for i, v in enumerate(domains)}
-        if domain in dic.keys():
-            return dic[domain]
-        else:
-            print(domain)
-            assert 0, f'no such domain in domain info'
-            return -1
+    # def domain_set_to_number(self, domain_type, domain_):
+    #     domain = self.metadata[domain_type]
+    #     domains = []
+    #     for d in domain:
+    #         d_num = self.class_to_number(domain_type, d)
+    #         domains.append(d_num)
+    #     dic = {v: i for i, v in enumerate(domains)}
+    #     if domain in dic.keys():
+    #         return dic[domain_]
+    #     else:
+    #         print(domain_)
+    #         assert 0, f'no such domain in domain info'
+    #         return -1
 
 
 if __name__ == '__main__':
-    file_path = '/mnt/sting/hjyoon/projects/cross/HHAR/ActivityRecognitionExp/hhar_minmax_scaling_all.csv'
-    base_out_dir = '/mnt/sting/hjyoon/projects/cross/HHAR/augcon'
+    file_path = '/mnt/sting/hjyoon/projects/cross/ICSR/icsr_minmax_scaling_all.csv'
+    base_out_dir = '/mnt/sting/hjyoon/projects/cross/ICSR/augcon'
     
-    class_type = 'gt'
-    users = ['a', 'b', 'c', 'd', 'f']
-    models = ['nexus4', 's3', 's3mini', 'lgwatch']
-    dataset = ProcessHHAR(file_path, 'gt')
-    for user in users:
-        for model in models:
-            pretrain_dir = os.path.join(base_out_dir, f'target_user_{user}_model_{model}', 'pretrain')
-            finetune_dir = os.path.join(base_out_dir, f'target_user_{user}_model_{model}', 'finetune')
-            dataset.set_domain(user=user, model=model)
-            dataset.process(pretrain_dir=pretrain_dir, finetune_dir=finetune_dir)
+    class_type = 'word'
+    domains = ['PH0007-jskim', 'PH0012-thanh', 'PH0014-wjlee',
+               'PH0034-ykha', 'PH0038-iygoo', 'PH0041-hmkim',
+               'PH0045-sjlee', 'WA0002-bkkim', 'WA0003-hskim',
+               'WA4697-jhryu']
+    
+    dataset = ProcessICSR(file_path, 'word')
+    for domain in domains:
+        pretrain_dir = os.path.join(base_out_dir, f'target_domain_{domain}', 'pretrain')
+        finetune_dir = os.path.join(base_out_dir, f'target_domain_{domain}', 'finetune')
+        dataset.set_domain(domain=domain)
+        dataset.process(pretrain_dir=pretrain_dir, finetune_dir=finetune_dir)
