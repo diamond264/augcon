@@ -20,7 +20,15 @@ def run(config_dir, python_script):
     
     configs = glob(os.path.join(config_dir, '*.yaml'))
     processes = []
-    for gpu, config in enumerate(configs):
+    for _, config in enumerate(configs):
+        with open(config, 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                if 'gpu' in line:
+                    gpu = int(line.split(':')[-1].strip().split('[')[-1].split(']')[0])
+                    print(gpu)
+                    assert(0)
+                    break
         config_list = [config]
         processes.append(mp.Process(target=execute_script, args=(gpu, python_script, config_list)))
     
