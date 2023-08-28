@@ -15,6 +15,7 @@ class Logger:
             filemode="w",
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         )
+        logging.getLogger('PIL').setLevel(logging.WARNING)
         
         Logger.logger = logging.getLogger("AUGCON")
         sh = logging.StreamHandler()
