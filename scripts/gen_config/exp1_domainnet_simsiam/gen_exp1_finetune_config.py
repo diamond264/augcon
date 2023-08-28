@@ -8,7 +8,7 @@ config_path = '/home/hjyoon/projects/augcon/config/image_preliminary/finetune'
 def run():
     gpu = 0
     domains = ["clipart", "infograph", "painting", "quickdraw", "real", "sketch"]
-    for source in domains+["none"]:
+    for source in domains:
         for target in domains:
             config = f'''### Default config
 mode: finetune
@@ -20,39 +20,48 @@ dist_url: tcp://localhost:10002
 ### Dataset config
 dtype: 2d
 dataset_name: domainnet
-train_dataset_path: /mnt/sting/hjyoon/projects/aaa/domainnet/data/finetune/10shot
+train_dataset_path: /mnt/sting/hjyoon/projects/aaa/domainnet/data/finetune
 val_dataset_path: /mnt/sting/hjyoon/projects/aaa/domainnet/data/test
 test_dataset_path: /mnt/sting/hjyoon/projects/aaa/domainnet/data/test
 domains: ["{target}"]
 # ["clipart", "infograph", "painting", "quickdraw", "real", "sketch"]
-augmentations: ["blur"]
-input_channels: 3
-num_cls: 224
+n_way: 5
+k_shot: 5
 
 ### Training config
-optimizer: adam
+episodes: 1
+optimizer: sgd
 criterion: crossentropy
 start_epoch: 0
 epochs: 40
-batch_size: 64
-lr: 0.005
-momentum: 0.0
+batch_size: 4
+lr: 0.01
+momentum: 0.9
 wd: 0.0001
+domain_adaptation: false
 
 ### Logs and checkpoints
 resume: ''
-pretrained: ./temp/pretrain_except_{source}/checkpoint_0099.pth.tar
+pretrained: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_except_{source}/checkpoint_0099.pth.tar
 # pretrained: ''
 ckpt_dir: ./temp/finetune
-log_freq: 4
-save_freq: 10
+log_freq: 20
+save_freq: 40
+log_steps: true
 
 ### Model config
-pretext: simsiam
+pretext: metasimsiam
 backbone: resnet18
-mlp: false
+out_dim: 2048
+pred_dim: 512
+pretrain_mlp: true
+finetune_mlp: false
 freeze: true
-no_vars: true'''
+
+inner_steps: 10
+inner_batch_size: 128
+meta_lr: 0.00001
+epsilone: 0.1'''
             gpu += 1
             if gpu >= 8: gpu = 0
             file_path = os.path.join(config_path, f'pt_wo_{source}', f'SimSiam_DomainNet_ft_{target}.yaml')
