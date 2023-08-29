@@ -344,12 +344,12 @@ class ReptileSimSiamLearner:
             losses.append(loss)
             self.write_log(rank, logs, f'Task({task_idx}) Loss: {loss.item():.4f}')
             
-            weight_updates = {name: weight_updates[name]+net.state_dict()[name]-old_weights[name] 
+            weight_updates = {name: weight_updates[name]+(net.state_dict()[name]-old_weights[name])
                               for name in old_weights}
             net.load_state_dict(old_weights)
         
         net.load_state_dict({name :
-            old_weights[name]+weight_updates[name]*self.cfg.epsilone/num_tasks
+            old_weights[name]+weight_updates[name]*self.cfg.epsilone/self.cfg.inner_steps
             for name in old_weights})
 
         if task_idx % self.cfg.log_freq == 0 and rank == 0:
