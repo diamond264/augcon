@@ -8,6 +8,7 @@ config_path = '/home/hjyoon/projects/augcon/config/image_preliminary/finetune'
 def run():
     gpu = 0
     domains = ["clipart", "infograph", "painting", "quickdraw", "real", "sketch"]
+    epoch = '0079'
     for source in domains:
         for target in domains:
             config = f'''### Default config
@@ -42,7 +43,7 @@ domain_adaptation: false
 
 ### Logs and checkpoints
 resume: ''
-pretrained: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_except_{source}/checkpoint_0099.pth.tar
+pretrained: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_except/{source}/checkpoint_{epoch}.pth.tar
 # pretrained: ''
 ckpt_dir: ./temp/finetune
 log_freq: 20
@@ -101,7 +102,7 @@ domain_adaptation: false
 
 ### Logs and checkpoints
 resume: ''
-pretrained: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_single_source/{source}2/checkpoint_0099.pth.tar
+pretrained: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_single_source/{source}2/checkpoint_{epoch}.pth.tar
 # pretrained: ''
 ckpt_dir: ./temp/finetune
 log_freq: 20

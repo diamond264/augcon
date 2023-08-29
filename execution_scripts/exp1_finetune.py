@@ -18,19 +18,23 @@ def run(config_dir, python_script):
     if not os.path.exists(config_dir) or not os.path.exists(python_script):
         raise FileNotFoundError(f'{config_dir} or {python_script} does not exist')
     
-    configs = glob(os.path.join(config_dir, '*.yaml'))
+    configs = defaultdict(list)
+    domains = ["clipart", "infograph", "painting", "quickdraw", "real", "sketch"]
+    for domain in domains:
+        w_configs = glob(os.path.join(config_dir, f'pt_w_{domain}/SimSiam_DomainNet_ft_{domain}.yaml'))
+        wo_configs = glob(os.path.join(config_dir, f'pt_wo_{domain}/SimSiam_DomainNet_ft_{domain}.yaml'))
+        for config in w_configs+wo_configs:
+            with open(config, 'r') as f:
+                lines = f.readlines()
+                for line in lines:
+                    if 'gpu' in line:
+                        gpu = int(line.split(':')[-1].strip().split('[')[-1].split(']')[0])
+                        configs[gpu].append(config)
+                        break
+    
     processes = []
-    for _, config in enumerate(configs):
-        with open(config, 'r') as f:
-            lines = f.readlines()
-            for line in lines:
-                if 'gpu' in line:
-                    gpu = int(line.split(':')[-1].strip().split('[')[-1].split(']')[0])
-                    print(gpu)
-                    assert(0)
-                    break
-        config_list = [config]
-        processes.append(mp.Process(target=execute_script, args=(gpu, python_script, config_list)))
+    for gpu, config in configs.items():
+        processes.append(mp.Process(target=execute_script, args=(gpu, python_script, config)))
     
     for process in processes:
         process.start()
