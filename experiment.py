@@ -16,6 +16,7 @@ from util.logger import Logger
 
 from data_loader.default_data_loader import DefaultDataLoader
 from data_loader.DomainNetDataset import DomainNetDataset
+from data_loader.DigitFiveDataset import DigitFiveDataset
 from data_loader.EmptyDataset import EmptyDataset
 
 from core.CPC import CPCLearner
@@ -111,6 +112,15 @@ class Experiment:
                     label_dict = train_dataset.get_label_dict()
                     val_dataset = DomainNetDataset(self.cfg, self.logger, self.cfg.val_dataset_path, type='val', label_dict=label_dict)
                     test_dataset = DomainNetDataset(self.cfg, self.logger, self.cfg.test_dataset_path, type='test', label_dict=label_dict)
+                elif self.cfg.dataset_name == 'digit5':
+                    #fixme: change to digit5
+                    train_dataset = DigitFiveDataset(self.cfg, self.logger, self.cfg.train_dataset_path, type='train')
+                    label_dict = train_dataset.get_label_dict()
+                    val_dataset = DigitFiveDataset(self.cfg, self.logger, self.cfg.val_dataset_path, type='val',
+                                                   label_dict=label_dict)
+                    test_dataset = DigitFiveDataset(self.cfg, self.logger, self.cfg.test_dataset_path, type='test',
+                                                    label_dict=label_dict)
+
             
             # For debugging
             # if len(train_dataset) > 180000:
