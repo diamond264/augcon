@@ -35,14 +35,12 @@ class SimSiamNet(nn.Module):
         self.encoder = None
         if backbone == 'resnet18':
             self.encoder = ResNet18(num_classes=out_dim, mlp=mlp)
-            if mlp:
-                self.encoder.fc[6].bias.requires_grad = False
-                self.encoder.fc = nn.Sequential(self.encoder.fc, nn.BatchNorm1d(out_dim, affine=False))
         elif backbone == 'cnn':
             self.encoder = CNN(num_classes=out_dim, mlp=mlp)
-            if mlp:
-                self.encoder.fc[6].bias.requires_grad = False
-                self.encoder.fc = nn.Sequential(self.encoder.fc, nn.BatchNorm1d(out_dim, affine=False))
+
+        if mlp:
+            self.encoder.fc[6].bias.requires_grad = False
+            self.encoder.fc = nn.Sequential(self.encoder.fc, nn.BatchNorm1d(out_dim, affine=False))
         
         self.predictor = Predictor(dim=out_dim, pred_dim=pred_dim)
 
@@ -222,6 +220,8 @@ class SimSiamLearner:
                 elif self.cfg.mode == 'finetune':
                     self.finetune(rank, net, train_loader, criterion,
                                   optimizer, epoch, self.cfg.epochs, logs)
+                    if (epoch+1) % 10 == 0:
+                        self.validate_finetune(rank, net, test_loader, criterion, logs)
                     # if len(val_dataset) > 0:
                     #     self.validate_finetune(rank, net, val_loader, criterion, logs)
                 
