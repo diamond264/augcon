@@ -121,6 +121,7 @@ class DigitFiveDataset(torch.utils.data.Dataset):
                     continue
             else:
                 k_shot = len(indices)
+                k_shot = 50
             indices = np.random.choice(indices, k_shot, replace=False)
             # For debugging purposes
             # indices = indices[:k_shot]
