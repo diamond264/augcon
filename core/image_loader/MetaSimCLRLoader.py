@@ -10,9 +10,8 @@ class MetaSimCLRLoader:
     def __init__(self, pre_transform, post_transform, cascade=False):
         self.pre_transform = pre_transform
         self.post_transform = post_transform
-        
+
         size = self.pre_transform.transforms[0].size[0]
-        
         random_crop = augs.get_random_crop(size = size)
         color_distortion = augs.get_color_distortion()
         gaussian_blur = augs.get_gaussian_blur(size = size)
