@@ -14,6 +14,7 @@ import torch.multiprocessing as mp
 # from datautils.SimCLR_dataset import subject_collate
 from torch.utils.data import DataLoader, Dataset, DistributedSampler
 from net.resnet import ResNet18, ResNet18_meta
+from net.convnetDigit5 import CNN
 
 class Predictor(nn.Module):
     def __init__(self, dim, pred_dim=1):
@@ -37,6 +38,11 @@ class SimSiamNet(nn.Module):
             if mlp:
                 self.encoder.fc[6].bias.requires_grad = False
                 self.encoder.fc = nn.Sequential(self.encoder.fc, nn.BatchNorm1d(out_dim, affine=False))
+        elif backbone == 'cnn':
+            self.encoder = CNN(num_classes=out_dim, mlp=mlp)
+            if mlp:
+                self.encoder.fc[6].bias.requires_grad = False
+                self.encoder.fc = nn.Sequential(self.encoder.fc, nn.BatchNorm1d(out_dim, affine=False))
         
         self.predictor = Predictor(dim=out_dim, pred_dim=pred_dim)
 
@@ -45,7 +51,7 @@ class SimSiamNet(nn.Module):
         p = self.predictor(z)
         aug_z = self.encoder(aug_feature)
         aug_p = self.predictor(aug_z)
-        
+
         return p, aug_p, z.detach(), aug_z.detach()
 
 
@@ -55,6 +61,8 @@ class SimSiamClassifier(nn.Module):
         self.encoder = None
         if backbone == 'resnet18':
             self.encoder = ResNet18(num_classes=num_cls, mlp=mlp)
+        elif backbone == 'cnn':
+            self.encoder = CNN(num_classes=num_cls, mlp=mlp)
         
     def forward(self, x):
         x = self.encoder(x)
@@ -144,7 +152,7 @@ class SimSiamLearner:
                 loc = 'cuda:{}'.format(rank)
                 state = torch.load(self.cfg.pretrained, map_location=loc)['state_dict']
                 self.write_log(rank, logs, "Loading pretrained model from checkpoint - {}".format(self.cfg.pretrained))
-                
+
                 # To handle the case where the model is trained in multi-gpu environment
                 new_state = {}
                 for k, v in list(state.items()):
