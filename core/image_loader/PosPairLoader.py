@@ -1,15 +1,13 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
-from PIL import ImageFilter
-import torchvision.transforms.functional as TF
-import random
 from torchvision.transforms import transforms
 import core.image_loader.transforms as augs
 
-class SimCLRLoader:
+class PosPairLoader:
     """Take two random crops of one image as the query and key."""
-    def __init__(self, pre_transform, post_transform, cascade=False):
+    def __init__(self, pre_transform, post_transform, cascade=False, return_original=False):
         self.pre_transform = pre_transform
         self.post_transform = post_transform
+        self.return_original = return_original
 
         size = self.pre_transform.transforms[0].size[0]
         
@@ -24,9 +22,15 @@ class SimCLRLoader:
 
     def __call__(self, x):
         x = self.pre_transform(x)
+        
         q = self.augmentations(x)
-        q = self.post_transform(q)
         k = self.augmentations(x)
+        
+        q = self.post_transform(q)
         k = self.post_transform(k)
         
-        return [q, k]
+        if self.return_original:
+            x = self.post_transform(x)
+            return [x, q, k]
+        else:
+            return [q, k]

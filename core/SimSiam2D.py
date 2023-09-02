@@ -69,7 +69,7 @@ class SimSiamClassifier(nn.Module):
         return x
 
 
-class SimSiamLearner:
+class SimSiam2DLearner:
     def __init__(self, cfg, gpu, logger):
         self.cfg = cfg
         self.gpu = gpu
@@ -280,7 +280,7 @@ class SimSiamLearner:
                 length = z1.shape[0]
                 KNN_classifier = KNN(n_neighbors=5)
                 KNN_classifier.fit(z1.detach().cpu().numpy()[:length], y=data[1].numpy()[:length])
-                KNN_pred = KNNCls.predict(z1.detach().cpu().numpy()[length:])
+                KNN_pred = KNN_classifier.predict(z1.detach().cpu().numpy()[length:])
                 KNN_acc = np.mean(KNN_pred == data[1].numpy()[length:])*100
             
             std = np.mean(stds)
