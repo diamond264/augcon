@@ -66,7 +66,7 @@ class SimSiamClassifier(nn.Module):
         return x
 
 
-class ReptileSimSiamLearner:
+class ReptileSimSiam2DLearner:
     def __init__(self, cfg, gpu, logger):
         self.cfg = cfg
         self.gpu = gpu
@@ -160,9 +160,7 @@ class ReptileSimSiamLearner:
                 self.write_log(rank, logs, "No checkpoint found at '{}'".format(self.cfg.pretrained))
             
             def get_features(batch):
-                x1 = []
-                x2 = []
-                y = []
+                x1, x2, y = [], [], []
                 for x in batch:
                     x1.append(x[0][1])
                     x2.append(x[0][2])
@@ -332,9 +330,7 @@ class ReptileSimSiamLearner:
         num_tasks = len(supports)
         
         def get_features(batch):
-            x1 = []
-            x2 = []
-            y = []
+            x1, x2, y = [], [], []
             for x in batch:
                 x1.append(x[0][0])
                 x2.append(x[0][1])
@@ -389,10 +385,7 @@ class ReptileSimSiamLearner:
     def meta_eval(self, rank, net, val_loader, criterion, logs):
         net.eval()
         with torch.no_grad():
-            val_z1s = []
-            val_z2s = []
-            val_ys = []
-            losses = []
+            val_z1s, val_z2s, val_ys, losses = [], [], [], []
             for inner_step, (val_x1, val_x2, val_y) in enumerate(val_loader):
                 val_p1, val_p2, val_z1, val_z2 = net(val_x1, val_x2)
                 val_z1s.append(val_z1)
@@ -437,9 +430,6 @@ class ReptileSimSiamLearner:
             return total_loss.item()
     
     def finetune(self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs):
-        # if self.cfg.freeze: net.eval()
-        # else: net.train()
-        # net.encoder.fc.train()
         net.eval()
         
         for batch_idx, data in enumerate(train_loader):

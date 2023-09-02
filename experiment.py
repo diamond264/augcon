@@ -19,17 +19,21 @@ from data_loader.DomainNetDataset import DomainNetDataset
 from data_loader.DigitFiveDataset import DigitFiveDataset
 from data_loader.EmptyDataset import EmptyDataset
 
+# 1D pretext tasks
 from core.CPC import CPCLearner
-# from core.SimCLR import SimCLRLearner
+from core.SimCLR1D import SimCLR1DLearner
 
+# 1D meta pretext tasks
 from core.MetaCPC import MetaCPCLearner
-from core.MetaSimCLR import MetaSimCLRLearner
-from core.ReptileSimSiam2D import ReptileSimSiamLearner
+from core.MetaSimCLR1D import MetaSimCLR1DLearner
 
-from core.SimCLR2D import SimCLRLearner
-from core.SimSiam2D import SimSiamLearner
+# 2D pretext tasks
+from core.SimCLR2D import SimCLR2DLearner
+from core.SimSiam2D import SimSiam2DLearner
 
-from core.MetaSimSiam2D import MetaSimSiamLearner
+# 2D meta pretext tasks
+from core.MetaSimSiam2D import MetaSimSiam2DLearner
+from core.ReptileSimSiam2D import ReptileSimSiam2DLearner
 
 
 class Experiment:
@@ -81,21 +85,18 @@ class Experiment:
                 learner = CPCLearner(self.cfg, self.gpu, self.logger)
             elif self.cfg.pretext == 'metacpc':
                 learner = MetaCPCLearner(self.cfg, self.gpu, self.logger)
-            # elif self.cfg.pretext == 'simclr' and self.cfg.dtype=='1d':
-            #     learner = SimCLRLearner(self.cfg, self.gpu, self.logger)
+            elif self.cfg.pretext == 'simclr':
+                learner = SimCLR1DLearner(self.cfg, self.gpu, self.logger)
             else:
                 self.logger.warning('Pretext task not supported')
         # For 2D data (images)
         elif self.cfg.dtype == '2d':
             if self.cfg.pretext == 'simclr':
-                learner = SimCLRLearner(self.cfg, self.gpu, self.logger)
+                learner = SimCLR2DLearner(self.cfg, self.gpu, self.logger)
             elif self.cfg.pretext == 'simsiam':
-                learner = SimSiamLearner(self.cfg, self.gpu, self.logger)
-            elif self.cfg.pretext == 'metasimclr':
-                learner = MetaSimCLRLearner(self.cfg, self.gpu, self.logger)
+                learner = SimSiam2DLearner(self.cfg, self.gpu, self.logger)
             elif self.cfg.pretext == 'metasimsiam':
-                # learner = MetaSimSiamLearner(self.cfg, self.gpu, self.logger)
-                learner = ReptileSimSiamLearner(self.cfg, self.gpu, self.logger)
+                learner = ReptileSimSiam2DLearner(self.cfg, self.gpu, self.logger)
             else:
                 self.logger.warning('Pretext task not supported')
         
@@ -103,28 +104,22 @@ class Experiment:
         if self.cfg.mode == 'finetune': episodes = self.cfg.episodes
         else: episodes = 1
         for episode in range(episodes):
+            self.logger.info(f'================= Episode {episode} =================')
             if self.cfg.dtype == '1d':
                 default_data_loader = DefaultDataLoader(self.cfg, self.logger)
                 train_dataset, val_dataset, test_dataset = default_data_loader.get_datasets()
             elif self.cfg.dtype == '2d':
                 if self.cfg.dataset_name == 'domainnet':
-                    train_dataset = DomainNetDataset(self.cfg, self.logger, self.cfg.train_dataset_path, type='train')
+                    train_dataset = DomainNetDataset(self.cfg, self.logger, type='train')
                     label_dict = train_dataset.get_label_dict()
-                    val_dataset = DomainNetDataset(self.cfg, self.logger, self.cfg.val_dataset_path, type='val', label_dict=label_dict)
-                    test_dataset = DomainNetDataset(self.cfg, self.logger, self.cfg.test_dataset_path, type='test', label_dict=label_dict)
+                    val_dataset = DomainNetDataset(self.cfg, self.logger, type='val', label_dict=label_dict)
+                    test_dataset = DomainNetDataset(self.cfg, self.logger, type='test', label_dict=label_dict)
                 elif self.cfg.dataset_name == 'digit5':
                     #fixme: change to digit5
-                    train_dataset = DigitFiveDataset(self.cfg, self.logger, self.cfg.train_dataset_path, type='train')
+                    train_dataset = DigitFiveDataset(self.cfg, self.logger, type='train')
                     label_dict = train_dataset.get_label_dict()
-                    val_dataset = DigitFiveDataset(self.cfg, self.logger, self.cfg.val_dataset_path, type='val',
-                                                   label_dict=label_dict)
-                    test_dataset = DigitFiveDataset(self.cfg, self.logger, self.cfg.test_dataset_path, type='test',
-                                                    label_dict=label_dict)
-
-            
-            # For debugging
-            # if len(train_dataset) > 180000:
-            #     train_dataset = Subset(train_dataset, np.random.choice(len(train_dataset), 180000, replace=False))
+                    val_dataset = DigitFiveDataset(self.cfg, self.logger, type='val', label_dict=label_dict)
+                    test_dataset = DigitFiveDataset(self.cfg, self.logger, type='test', label_dict=label_dict)
             
             # Start training
             learner.run(train_dataset, val_dataset, test_dataset)

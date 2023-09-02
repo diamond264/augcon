@@ -141,7 +141,7 @@ class MetaSimSiamClassifier(nn.Module):
         return x
 
 
-class MetaSimSiamLearner:
+class MetaSimSiam2DLearner:
     def __init__(self, cfg, gpu, logger):
         self.cfg = cfg
         self.gpu = gpu

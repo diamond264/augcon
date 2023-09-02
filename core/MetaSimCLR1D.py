@@ -273,7 +273,7 @@ class SimCLRClassifier(nn.Module):
         return pred
 
 
-class MetaSimCLRLearner:
+class MetaSimCLR1DLearner:
     def __init__(self, cfg, gpu, logger):
         self.cfg = cfg
         self.gpu = gpu
