@@ -48,11 +48,10 @@ class DomainNetDataset(torch.utils.data.Dataset):
         self.domain_labels = []
         self.indices_by_domain = defaultdict(list)
         self.logger.info(f"Loading dataset from {self.file_path}")
-        self.loader = self.get_loader()
         self.preprocessing()
         self.logger.info(f"Preprocessing took {time.time() - st} seconds")
 
-    def get_loader(self):
+    def get_loader(self, rand_aug=False):
         # return x
         loader = transforms.Compose([
             self.pre_transform,
@@ -60,8 +59,9 @@ class DomainNetDataset(torch.utils.data.Dataset):
         ])
         # return k, q
         if self.cfg.mode == 'pretrain':
-            loader = PosPairLoader(pre_transform=self.pre_transform,
-                                      post_transform=self.post_transform)
+            loader = PosPairLoader(pre_transform=self.pre_transform, 
+                                   post_transform=self.post_transform,
+                                   rand_aug=rand_aug)
         # return x, k, q
         elif self.cfg.mode == 'finetune' and not self.type == 'test':
             if 'meta' in self.cfg.pretext:
@@ -80,7 +80,8 @@ class DomainNetDataset(torch.utils.data.Dataset):
         
         cnt = 0
         for i, domain in enumerate(self.cfg.domains):
-            dataset = ImageFolder(os.path.join(self.file_path, domain), self.loader)
+            loader = self.get_loader(self.cfg.rand_aug)
+            dataset = ImageFolder(os.path.join(self.file_path, domain), loader)
             
             if self.cfg.mode == 'finetune':
                 dataset = self.filter_nway_kshot(dataset, self.cfg.n_way, self.cfg.k_shot)
@@ -126,7 +127,7 @@ class DomainNetDataset(torch.utils.data.Dataset):
                 
                 random.shuffle(ks)
                 new_dataset = []
-                new_dataset = [([xs[i], qs[i], ks[i]], new_label) for i in range(xs)]
+                new_dataset = [([xs[i], qs[i], ks[i]], new_label) for i in range(len(xs))]
             else:
                 new_dataset = [(feature, new_label) for feature, _ in new_dataset]
             filtered_dataset = ConcatDataset([filtered_dataset, new_dataset])

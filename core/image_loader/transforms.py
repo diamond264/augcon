@@ -44,20 +44,28 @@ class GaussianBlur(object):
 
         return img
 
-def get_gaussian_blur(size=224):
+def get_gaussian_blur(size=224, s=1, prob=1):
+    assert(s<=1.2 and s>=0.8)
+    assert(prob<=1 and prob>=0.5)
     gaussian_blur = transforms.Compose([
-        GaussianBlur(kernel_size=int(0.1 * size))
+        GaussianBlur(kernel_size=int(0.1*s * size))
     ])
+    gaussian_blur = transforms.RandomApply([gaussian_blur], p=prob)
     return gaussian_blur
 
-def get_random_crop(size=224):
+def get_random_crop(size=224, s=1, prob=1):
+    assert(s<=2 and s>=1)
+    assert(prob<=1 and prob>=0.5)
     random_crop = transforms.Compose([
-        transforms.RandomResizedCrop(size=size, scale=(0.2, 1.0)),
+        transforms.RandomResizedCrop(size=size, scale=(0.2*s, 1.0)),
         transforms.RandomHorizontalFlip()
     ])
+    random_crop = transforms.RandomApply([random_crop], p=prob)
     return random_crop
 
-def get_color_distortion(s=1.0):
+def get_color_distortion(s=1, prob=1):
+    assert(s<=2 and s>=1)
+    assert(prob<=1 and prob>=0.5)
     color_jitter = transforms.ColorJitter(0.4*s, 0.4*s, 0.4*s, 0.1*s)
     rnd_color_jitter = transforms.RandomApply([color_jitter], p=0.8)
     rnd_gray = transforms.RandomGrayscale(p=0.2)
@@ -65,4 +73,5 @@ def get_color_distortion(s=1.0):
         rnd_color_jitter,
         rnd_gray
     ])
+    color_distort = transforms.RandomApply([color_distort], p=prob)
     return color_distort
