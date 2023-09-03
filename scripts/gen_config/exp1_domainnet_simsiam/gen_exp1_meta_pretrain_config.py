@@ -60,9 +60,9 @@ multi_cond_num_task: 0
 log_steps: True
 epsilone: 0.15
 meta_lr: 0.00005'''
-        
-        if flag == 0: flag = 1
-        elif flag == 1: flag = 0
+
+        gpu += 1
+        if gpu == 8: gpu = 0
         file_path = os.path.join(config_path, f'SimSiam_DomainNet_pretrain_meta_except_{domain}.yaml')
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with open(file_path, 'w') as f:
