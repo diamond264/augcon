@@ -72,7 +72,7 @@ class SimSiamClassifier(nn.Module):
         return x
 
 
-class ReptileSimSiamLearner:
+class ReptileSimSiam2DLearner:
     def __init__(self, cfg, gpu, logger):
         self.cfg = cfg
         self.gpu = gpu
@@ -175,7 +175,8 @@ class ReptileSimSiamLearner:
                     y.append(x[1])
                 return torch.stack(x1).cuda(), torch.stack(x2).cuda(), y
             
-            batch_indices = [torch.randint(len(meta_train_dataset), size=(self.cfg.inner_batch_size,)) for _ in range(self.cfg.inner_steps)]
+            # batch_indices = [torch.randint(len(meta_train_dataset), size=(self.cfg.inner_batch_size,)) for _ in range(self.cfg.inner_steps)]
+            batch_indices = [list(range(len(meta_train_dataset))) for _ in range(self.cfg.inner_steps)]
             support_loader = DataLoader(meta_train_dataset, batch_sampler=batch_indices, collate_fn=get_features)
             
             if self.cfg.domain_adaptation:
@@ -246,17 +247,24 @@ class ReptileSimSiamLearner:
         else:
             if self.cfg.mode == 'pretrain':
                 self.write_log(rank, logs, "Getting indices by domain...")
+                if world_size > 1:
+                    meta_train_indices = meta_train_dataset.indices
+                else:
+                    meta_train_indices = list(range(len(meta_train_dataset)))
+                meta_train_indices = sorted(meta_train_indices)
                 indices_by_domain = train_dataset.get_indices_by_domain()
                 sampled_indices_by_domain = defaultdict(list)
                 for k, v in indices_by_domain.items():
+                    v_min = v[0]
+                    v_max = v[-1]
                     indices = []
-                    for idx in v:
-                        if idx in meta_train_dataset.indices:
-                            indices.append(idx)
+                    for idx in meta_train_indices:
+                        if idx < v_min or idx > v_max: break
+                        indices.append(idx)
+                    meta_train_indices = meta_train_indices[len(indices):]
                     sampled_indices_by_domain[k] = indices
                 
             self.write_log(rank, logs, "Start pre-training")
-            optimizer_state = None
             for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
                 if world_size > 1:
                     train_sampler.set_epoch(epoch)
@@ -343,7 +351,8 @@ class ReptileSimSiamLearner:
         losses = []
         for task_idx in range(num_tasks):
             support = supports[task_idx]
-            batch_indices = [torch.randint(len(support), size=(self.cfg.inner_batch_size,)) for _ in range(self.cfg.inner_steps)]
+            # batch_indices = [torch.randint(len(support), size=(self.cfg.inner_batch_size,)) for _ in range(self.cfg.inner_steps)]
+            batch_indices = [list(range(len(support))) for _ in range(self.cfg.inner_steps)]
             support_loader = DataLoader(support, batch_sampler=batch_indices, collate_fn=get_features)
             
             loss = self.meta_train(rank, net, support_loader, criterion, logs)
@@ -373,12 +382,12 @@ class ReptileSimSiamLearner:
             optimizer.step()
             
             if self.cfg.log_steps:
-                KNNCls = KNN(n_neighbors=3)
-                KNNCls.fit(z1.detach().cpu().numpy(), y=y)
-                KNN_pred = KNNCls.predict(z2.detach().cpu().numpy())
-                KNN_acc = np.mean(KNN_pred == y)*100
+                # KNNCls = KNN(n_neighbors=3)
+                # KNNCls.fit(z1.detach().cpu().numpy(), y=y)
+                # KNN_pred = KNNCls.predict(z2.detach().cpu().numpy())
+                # KNN_acc = np.mean(KNN_pred == y)*100
                 std = torch.std(torch.cat((z1, z2), dim=0))
-                self.write_log(rank, logs, f'\tStep [{inner_step}/{self.cfg.inner_steps}] Loss: {loss.item():.4f}\tStd: {std.item():.4f}\tKNN Acc: {KNN_acc:.2f}%')
+                self.write_log(rank, logs, f'\tStep [{inner_step}/{self.cfg.inner_steps}] Loss: {loss.item():.4f}\tStd: {std.item():.4f}')#\tKNN Acc: {KNN_acc:.2f}%')
         
         return loss
     

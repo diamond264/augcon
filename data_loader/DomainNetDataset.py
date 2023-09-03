@@ -11,74 +11,78 @@ from torchvision import transforms
 from torchvision.datasets import ImageFolder
 from torch.utils.data import Dataset, ConcatDataset
 
-from core.image_loader.SimCLRLoader import SimCLRLoader
-from core.image_loader.MetaSimCLRLoader import MetaSimCLRLoader
+from core.image_loader.PosPairLoader import PosPairLoader
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
+_IMAGENET_SIZE = (224, 224)
 _IMAGENET_MEAN = [0.485, 0.456, 0.406]
 _IMAGENET_STDDEV = [0.229, 0.224, 0.225]
 
 class DomainNetDataset(torch.utils.data.Dataset):
-    def __init__(self, cfg, logger, file_path, type='train', label_dict=None):
+    def __init__(self, cfg, logger, type='train', label_dict=None):
         st = time.time()
         self.cfg = cfg
         self.logger = logger
-        self.file_path = file_path
         self.type = type
         self.label_dict = label_dict
+        
+        if self.type == 'train':
+            self.file_path = self.cfg.train_dataset_path
+        elif self.type == 'test':
+            self.file_path = self.cfg.test_dataset_path
+        elif self.type == 'val':
+            self.file_path = self.cfg.val_dataset_path
+        else: assert(0)
 
         self.pre_transform = transforms.Compose([
-            transforms.Resize((224, 224))
+            transforms.Resize(_IMAGENET_SIZE)
         ])
         self.post_transform = transforms.Compose([
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                 std=[0.229, 0.224, 0.225])
+            transforms.Normalize(mean=_IMAGENET_MEAN,
+                                 std=_IMAGENET_STDDEV)
         ])
 
         self.dataset = []
         self.domains = []
         self.domain_labels = []
         self.indices_by_domain = defaultdict(list)
-        self.logger.info(f"Loading dataset from {file_path}")
-        self.loader = self.get_loader()
+        self.logger.info(f"Loading dataset from {self.file_path}")
         self.preprocessing()
         self.logger.info(f"Preprocessing took {time.time() - st} seconds")
 
-    def get_loader(self):
+    def get_loader(self, rand_aug=False):
+        # return x
         loader = transforms.Compose([
             self.pre_transform,
             self.post_transform
         ])
+        # return k, q
         if self.cfg.mode == 'pretrain':
-            if self.cfg.pretext == 'simclr' or \
-               self.cfg.pretext == 'simsiam' or \
-               self.cfg.pretext == 'metasimsiam':
-                loader = SimCLRLoader(pre_transform=self.pre_transform,
-                                      post_transform=self.post_transform)
+            loader = PosPairLoader(pre_transform=self.pre_transform, 
+                                   post_transform=self.post_transform,
+                                   rand_aug=rand_aug)
+        # return x, k, q
         elif self.cfg.mode == 'finetune' and not self.type == 'test':
-            if self.cfg.pretext == 'metasimsiam':
-                loader = MetaSimCLRLoader(pre_transform=self.pre_transform,
-                                          post_transform=self.post_transform)
+            if 'meta' in self.cfg.pretext:
+                loader = PosPairLoader(pre_transform=self.pre_transform, 
+                                       post_transform=self.post_transform, 
+                                       return_original=True)
         return loader
     
     def get_label_dict(self):
         return self.label_dict
 
     def preprocessing(self):
-        cnt = 0
         if self.cfg.mode == 'finetune' and len(self.cfg.domains) > 1:
             print("Finetuning on multiple domains is not supported yet")
             assert(0)
         
+        cnt = 0
         for i, domain in enumerate(self.cfg.domains):
-            dataset = ImageFolder(os.path.join(self.file_path, domain), self.loader)
+            loader = self.get_loader(self.cfg.rand_aug)
+            dataset = ImageFolder(os.path.join(self.file_path, domain), loader)
             
-            # ##### FOR TESTING PURPOSES #####
-            # limit = 15000
-            # if len(dataset) > limit and self.cfg.mode == 'pretrain':
-            #     dataset = torch.utils.data.Subset(dataset, np.random.choice(len(dataset), limit, replace=False))
-            # ################################
             if self.cfg.mode == 'finetune':
                 dataset = self.filter_nway_kshot(dataset, self.cfg.n_way, self.cfg.k_shot)
             
@@ -95,27 +99,37 @@ class DomainNetDataset(torch.utils.data.Dataset):
         if self.label_dict == None:
             all_labels = np.array(dataset.classes)
             filtered_labels = np.random.choice(all_labels, n_way, replace=False)
-            # For debugging purposes
-            # filtered_labels = all_labels[-n_way:]
             self.label_dict = {label: i for i, label in enumerate(filtered_labels)}
-        print(self.label_dict.keys())
+        print(f'selected labels: {self.label_dict}')
+        
         filtered_dataset = []
         for label in self.label_dict.keys():
-            label_to_num = {label: i for i, label in enumerate(dataset.classes)}
-            num_to_label = {i: label for i, label in enumerate(dataset.classes)}
+            label_to_num = {l: i for i, l in enumerate(dataset.classes)}
+            num_to_label = {i: l for i, l in enumerate(dataset.classes)}
             label_num = label_to_num[label]
+            
             indices = np.array(dataset.targets)
             indices = np.where(indices == label_num)[0]
             if self.type == 'train':
-                if len(indices) < k_shot:
-                    continue
-            else:
-                k_shot = len(indices)
+                if len(indices) < k_shot: continue
+            else: k_shot = len(indices)
             indices = np.random.choice(indices, k_shot, replace=False)
-            # For debugging purposes
-            # indices = indices[:k_shot]
+            
             new_dataset = torch.utils.data.Subset(dataset, indices)
-            new_dataset = [(feature, self.label_dict[num_to_label[label]]) for feature, label in new_dataset]
+            new_label = self.label_dict[label]
+            
+            if self.cfg.supervised_adaptation and self.type != 'test':
+                xs, qs, ks = [], [], []
+                for feature, _ in new_dataset:
+                    xs.append(feature[0])
+                    qs.append(feature[1])
+                    ks.append(feature[2])
+                
+                random.shuffle(ks)
+                new_dataset = []
+                new_dataset = [([xs[i], qs[i], ks[i]], new_label) for i in range(len(xs))]
+            else:
+                new_dataset = [(feature, new_label) for feature, _ in new_dataset]
             filtered_dataset = ConcatDataset([filtered_dataset, new_dataset])
             
         return filtered_dataset

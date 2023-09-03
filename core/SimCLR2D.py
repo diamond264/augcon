@@ -73,7 +73,7 @@ class SimCLRClassifier(nn.Module):
         return x
 
 
-class SimCLRLearner:
+class SimCLR2DLearner:
     def __init__(self, cfg, gpu, logger):
         self.cfg = cfg
         self.gpu = gpu
