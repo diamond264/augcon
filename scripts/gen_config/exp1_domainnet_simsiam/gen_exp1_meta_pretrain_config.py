@@ -3,7 +3,7 @@
 import os
 from glob import glob
 
-config_path = '/home/hjyoon/projects/augcon/config/image_preliminary/pretrain'
+config_path = '/home/hjyoon/projects/augcon/config/image_preliminary/pretrain_meta'
 
 def run():
     gpu = 0
