@@ -18,6 +18,9 @@ _DIGIT5_RESIZE = (32, 32)
 _DIGIT5_MEAN = [0.5, 0.5, 0.5]
 _DIGIT5_STDDEV = [0.5, 0.5, 0.5]
 
+_TRAIN_NUM = int(25000 * 0.7)
+_TEST_NUM = 9000
+
 class DigitFiveDataset(torch.utils.data.Dataset):
     def __init__(self, cfg, logger, type='train', label_dict=None):
         st = time.time()
@@ -83,11 +86,15 @@ class DigitFiveDataset(torch.utils.data.Dataset):
             dataset = ImageFolder(os.path.join(self.file_path, domain), self.loader)
 
             if self.cfg.down_sample:
-                if domain != "usps":
+                if self.type == "train" and len(dataset) > _TRAIN_NUM:
                     # For downsampling
-                    len_cur_domain = len(dataset)
-                    downsample_rate = 2
-                    target_len = int(len_cur_domain / downsample_rate)
+                    target_len = _TRAIN_NUM
+                    random_indices = torch.randperm(len(dataset))[:target_len]
+                    dataset = torch.utils.data.Subset(dataset, random_indices)
+
+                elif self.type == "test" and len(dataset) > _TEST_NUM:
+                    # For downsampling
+                    target_len = _TEST_NUM
                     random_indices = torch.randperm(len(dataset))[:target_len]
                     dataset = torch.utils.data.Subset(dataset, random_indices)
 
