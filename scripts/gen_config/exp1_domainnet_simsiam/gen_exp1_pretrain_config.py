@@ -34,16 +34,16 @@ optimizer: sgd
 criterion: crossentropy
 start_epoch: 0
 epochs: 100
-batch_size: 512
-lr: 0.05
+batch_size: 1024
+lr: 0.01
 momentum: 0.9
 wd: 0.0001
 
 ### Logs and checkpoints
 resume: ''
-ckpt_dir: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_single_source/{domain}_05
+ckpt_dir: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_single_source/{domain}_01
 log_freq: 50
-save_freq: 20
+save_freq: 10
 
 ### Model config
 pretext: simsiam
@@ -78,14 +78,14 @@ optimizer: sgd
 criterion: crossentropy
 start_epoch: 0
 epochs: 100
-batch_size: 512
-lr: 0.05
+batch_size: 1024
+lr: 0.01
 momentum: 0.9
 wd: 0.0001
 
 ### Logs and checkpoints
 resume: ''
-ckpt_dir: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_except/{domain}_05
+ckpt_dir: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_except/{domain}_01
 log_freq: 50
 save_freq: 20
 

@@ -8,7 +8,7 @@ config_path = '/home/hjyoon/projects/augcon/config/image_preliminary/finetune'
 def run():
     gpu = 0
     domains = ["clipart", "infograph", "painting", "quickdraw", "real", "sketch"]
-    epoch = '0079'
+    epoch = '0039'
     for source in domains:
         for target in domains:
             config = f'''### Default config
@@ -27,23 +27,25 @@ test_dataset_path: /mnt/sting/hjyoon/projects/aaa/domainnet/data/test
 domains: ["{target}"]
 # ["clipart", "infograph", "painting", "quickdraw", "real", "sketch"]
 n_way: 5
-k_shot: 5
+k_shot: 10
 
 ### Training config
 episodes: 1
 optimizer: sgd
 criterion: crossentropy
 start_epoch: 0
-epochs: 40
+epochs: 50
 batch_size: 4
-lr: 0.01
+lr: 0.001
 momentum: 0.9
 wd: 0.0001
 domain_adaptation: false
+supervised_adaptation: false
 
 ### Logs and checkpoints
 resume: ''
-pretrained: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_except/{source}/checkpoint_{epoch}.pth.tar
+# pretrained: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_except/{source}/checkpoint_{epoch}.pth.tar
+pretrained: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_except/{source}_05/checkpoint_{epoch}.pth.tar
 # pretrained: ''
 ckpt_dir: ./temp/finetune
 log_freq: 20
@@ -59,12 +61,13 @@ pretrain_mlp: true
 finetune_mlp: false
 freeze: true
 
+rand_aug: false
 inner_steps: 10
 inner_batch_size: 128
 meta_lr: 0.00001
 epsilone: 0.1'''
-            gpu += 1
-            if gpu >= 8: gpu = 0
+            # gpu += 1
+            # if gpu >= 8: gpu = 0
             file_path = os.path.join(config_path, f'pt_wo_{source}', f'SimSiam_DomainNet_ft_{target}.yaml')
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
             with open(file_path, 'w') as f:
@@ -86,23 +89,25 @@ test_dataset_path: /mnt/sting/hjyoon/projects/aaa/domainnet/data/test
 domains: ["{target}"]
 # ["clipart", "infograph", "painting", "quickdraw", "real", "sketch"]
 n_way: 5
-k_shot: 5
+k_shot: 10
 
 ### Training config
 episodes: 1
 optimizer: sgd
 criterion: crossentropy
 start_epoch: 0
-epochs: 40
+epochs: 50
 batch_size: 4
-lr: 0.01
+lr: 0.001
 momentum: 0.9
 wd: 0.0001
 domain_adaptation: false
+supervised_adaptation: false
 
 ### Logs and checkpoints
 resume: ''
-pretrained: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_single_source/{source}2/checkpoint_{epoch}.pth.tar
+# pretrained: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_single_source/{source}2/checkpoint_{epoch}.pth.tar
+pretrained: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_single_source/{source}_05/checkpoint_{epoch}.pth.tar
 # pretrained: ''
 ckpt_dir: ./temp/finetune
 log_freq: 20
@@ -118,6 +123,7 @@ pretrain_mlp: true
 finetune_mlp: false
 freeze: true
 
+rand_aug: false
 inner_steps: 10
 inner_batch_size: 128
 meta_lr: 0.00001
