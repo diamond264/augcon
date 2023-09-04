@@ -87,7 +87,7 @@ wd: 0.0001
 resume: ''
 ckpt_dir: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_except/{domain}_01
 log_freq: 50
-save_freq: 20
+save_freq: 10
 
 ### Model config
 pretext: simsiam
