@@ -51,7 +51,7 @@ out_dim: 2048
 pred_dim: 512
 pretrain_mlp: true
 
-rand_aug: true
+rand_aug: false
 task_size: 20
 inner_steps: 10
 inner_batch_size: 10
