@@ -10,6 +10,7 @@ def run():
     domains = ["clipart", "infograph", "painting", "quickdraw", "real", "sketch"]
     meta_epoch = '0399'
     epoch = '0039'
+    lr = '0.003'
     for source in domains:
         for target in domains:
             config = f'''### Default config
@@ -37,7 +38,7 @@ criterion: crossentropy
 start_epoch: 0
 epochs: 50
 batch_size: 4
-lr: 0.001
+lr: {lr}
 momentum: 0.9
 wd: 0.0001
 domain_adaptation: true
@@ -97,7 +98,7 @@ criterion: crossentropy
 start_epoch: 0
 epochs: 50
 batch_size: 4
-lr: 0.001
+lr: {lr}
 momentum: 0.9
 wd: 0.0001
 domain_adaptation: false
@@ -106,7 +107,7 @@ supervised_adaptation: false
 ### Logs and checkpoints
 resume: ''
 # pretrained: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_except/{source}/checkpoint_{epoch}.pth.tar
-pretrained: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_except/{source}_01/checkpoint_{epoch}.pth.tar
+pretrained: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_except/{source}_05/checkpoint_{epoch}.pth.tar
 # pretrained: ''
 ckpt_dir: ./temp/finetune
 log_freq: 20
@@ -159,7 +160,7 @@ criterion: crossentropy
 start_epoch: 0
 epochs: 50
 batch_size: 4
-lr: 0.001
+lr: {lr}
 momentum: 0.9
 wd: 0.0001
 domain_adaptation: false
@@ -168,7 +169,7 @@ supervised_adaptation: false
 ### Logs and checkpoints
 resume: ''
 # pretrained: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_single_source/{source}2/checkpoint_{epoch}.pth.tar
-pretrained: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_single_source/{source}_01/checkpoint_{epoch}.pth.tar
+pretrained: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_single_source/{source}_05/checkpoint_{epoch}.pth.tar
 # pretrained: ''
 ckpt_dir: ./temp/finetune
 log_freq: 20
