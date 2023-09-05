@@ -34,21 +34,21 @@ optimizer: sgd
 criterion: crossentropy
 start_epoch: 0
 epochs: 100
-batch_size: 1024
-lr: 0.01
+batch_size: 512
+lr: 0.005
 momentum: 0.9
 wd: 0.0001
 
 ### Logs and checkpoints
 resume: ''
-ckpt_dir: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_single_source/{domain}_01
+ckpt_dir: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_single_source/{domain}_resnet50_005
 log_freq: 50
 save_freq: 10
 
 ### Model config
 rand_aug: false
 pretext: simsiam
-backbone: resnet18
+backbone: resnet50
 out_dim: 2048
 pred_dim: 512
 pretrain_mlp: true'''
@@ -79,21 +79,21 @@ optimizer: sgd
 criterion: crossentropy
 start_epoch: 0
 epochs: 100
-batch_size: 1024
-lr: 0.01
+batch_size: 512
+lr: 0.005
 momentum: 0.9
 wd: 0.0001
 
 ### Logs and checkpoints
 resume: ''
-ckpt_dir: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_except/{domain}_01
+ckpt_dir: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_except/{domain}_resnet50_005
 log_freq: 50
 save_freq: 10
 
 ### Model config
 rand_aug: false
 pretext: simsiam
-backbone: resnet18
+backbone: resnet50
 out_dim: 2048
 pred_dim: 512
 pretrain_mlp: true'''
