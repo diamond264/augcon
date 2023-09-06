@@ -10,6 +10,8 @@ def run():
     domains = ["clipart", "infograph", "painting", "quickdraw", "real", "sketch"]
     gpus = [[0,1,2,3], [4,5,6,7]]
     urls = ['tcp://localhost:10001', 'tcp://localhost:10002']
+    gpu = [0,1,2,3,4,5,6,7]
+    url = 'tcp://localhost:10001'
     flag = 0
     for domain in domains:
         except_dom = domains.copy()
@@ -17,9 +19,9 @@ def run():
         config = f'''### Default config
 mode: pretrain
 seed: 0
-gpu: {gpus[flag]}
+gpu: {gpu}
 num_workers: 8
-dist_url: {urls[flag]}
+dist_url: {url}
 
 ### Dataset config
 dtype: 2d
@@ -35,13 +37,14 @@ criterion: crossentropy
 start_epoch: 0
 epochs: 100
 batch_size: 512
-lr: 0.005
+lr: 0.001
 momentum: 0.9
 wd: 0.0001
 
 ### Logs and checkpoints
 resume: ''
-ckpt_dir: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_single_source/{domain}_resnet50_005
+pretrained: clip
+ckpt_dir: /mnt/sting/hjyoon/projects/aaa/models/simsiam_ClipInit_ResNet50_001/domainnet/pretrain_single_source/{domain}
 log_freq: 50
 save_freq: 10
 
@@ -49,7 +52,7 @@ save_freq: 10
 rand_aug: false
 pretext: simsiam
 backbone: resnet50
-out_dim: 2048
+out_dim: 1024
 pred_dim: 512
 pretrain_mlp: true'''
         # if flag == 0: flag = 1
@@ -62,9 +65,9 @@ pretrain_mlp: true'''
         config = f'''### Default config
 mode: pretrain
 seed: 0
-gpu: {gpus[flag]}
+gpu: {gpu}
 num_workers: 8
-dist_url: {urls[flag]}
+dist_url: {url}
 
 ### Dataset config
 dtype: 2d
@@ -80,13 +83,14 @@ criterion: crossentropy
 start_epoch: 0
 epochs: 100
 batch_size: 512
-lr: 0.005
+lr: 0.001
 momentum: 0.9
 wd: 0.0001
 
 ### Logs and checkpoints
 resume: ''
-ckpt_dir: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_except/{domain}_resnet50_005
+pretrain: clip
+ckpt_dir: /mnt/sting/hjyoon/projects/aaa/models/simsiam_ClipInit_ResNet50_001/domainnet/pretrain_except/{domain}
 log_freq: 50
 save_freq: 10
 
@@ -94,7 +98,7 @@ save_freq: 10
 rand_aug: false
 pretext: simsiam
 backbone: resnet50
-out_dim: 2048
+out_dim: 1024
 pred_dim: 512
 pretrain_mlp: true'''
         if flag == 0: flag = 1
