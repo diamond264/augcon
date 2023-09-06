@@ -243,7 +243,6 @@ class SimSiam2DLearner:
                         val_sampler.set_epoch(epoch)
                 
                 if self.cfg.mode == 'pretrain':
-                    time.sleep(500)
                     self.pretrain(rank, net, train_loader, criterion,
                                   optimizer, epoch, self.cfg.epochs, logs)
                     
