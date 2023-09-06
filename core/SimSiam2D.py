@@ -312,8 +312,8 @@ class SimSiam2DLearner:
     def pretrain(self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs):
         if self.cfg.pretrained == 'clip':
             net.eval()
-            net.adapter.train()
-            net.fc.train()
+            net.module.adapter.train()
+            net.module.fc.train()
         else:
             net.train()
         
