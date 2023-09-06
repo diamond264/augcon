@@ -89,7 +89,7 @@ wd: 0.0001
 
 ### Logs and checkpoints
 resume: ''
-pretrain: clip
+pretrained: clip
 ckpt_dir: /mnt/sting/hjyoon/projects/aaa/models/simsiam_ClipInit_ResNet50_001/domainnet/pretrain_except/{domain}
 log_freq: 50
 save_freq: 10
