@@ -18,7 +18,7 @@ import torch.multiprocessing as mp
 from torch.autograd import Variable
 from torch.utils.data import DataLoader, DistributedSampler, Subset
 
-from net.resnet import ResNet18, ResNet18_meta
+from net.resnet import ResNet18, ResNet50, ResNet18_meta
 from net.convnetDigit5 import CNN
 
 class Predictor(nn.Module):
@@ -40,6 +40,8 @@ class SimSiamNet(nn.Module):
         self.encoder = None
         if backbone == 'resnet18':
             self.encoder = ResNet18(num_classes=out_dim, mlp=mlp)
+        elif backbone == 'resnet50':
+            self.encoder = ResNet50(num_classes=out_dim, mlp=mlp)
         elif backbone == 'cnn':
             self.encoder = CNN(num_classes=out_dim, mlp=mlp)
 
@@ -64,6 +66,8 @@ class SimSiamClassifier(nn.Module):
         self.encoder = None
         if backbone == 'resnet18':
             self.encoder = ResNet18(num_classes=num_cls, mlp=mlp)
+        if backbone == 'resnet50':
+            self.encoder = ResNet50(num_classes=num_cls, mlp=mlp)
         elif backbone == 'cnn':
             self.encoder = CNN(num_classes=num_cls, mlp=mlp)
         

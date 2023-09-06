@@ -1,6 +1,8 @@
 import os
+import time
 import numpy as np
 import sklearn.metrics as metrics
+import clip
 
 from sklearn.neighbors import KNeighborsClassifier as KNN
 
@@ -13,7 +15,7 @@ import torch.multiprocessing as mp
 
 # from datautils.SimCLR_dataset import subject_collate
 from torch.utils.data import DataLoader, Dataset, DistributedSampler
-from net.resnet import ResNet18, ResNet50, ResNet18_meta
+from net.resnet import ResNet18, ModifiedResNet50, ResNet18_meta
 from net.convnetDigit5 import CNN
 
 class Predictor(nn.Module):
@@ -36,7 +38,7 @@ class SimSiamNet(nn.Module):
         if backbone == 'resnet18':
             self.encoder = ResNet18(num_classes=out_dim, mlp=mlp)
         elif backbone == 'resnet50':
-            self.encoder = ResNet50(num_classes=out_dim, mlp=mlp)
+            self.encoder = ModifiedResNet50(num_classes=out_dim, mlp=mlp)
         elif backbone == 'cnn':
             self.encoder = CNN(num_classes=out_dim, mlp=mlp)
 
@@ -61,6 +63,8 @@ class SimSiamClassifier(nn.Module):
         self.encoder = None
         if backbone == 'resnet18':
             self.encoder = ResNet18(num_classes=num_cls, mlp=mlp)
+        elif backbone == 'resnet50':
+            self.encoder = ModifiedResNet50(num_classes=num_cls, mlp=mlp)
         elif backbone == 'cnn':
             self.encoder = CNN(num_classes=num_cls, mlp=mlp)
         
@@ -146,6 +150,29 @@ class SimSiam2DLearner:
         elif self.cfg.mode == 'finetune' or self.cfg.mode == 'eval_finetune':
             criterion = nn.CrossEntropyLoss().cuda()
         
+        # For pretraining, load pretrained model
+        if self.cfg.mode == 'pretrain':
+            if self.cfg.pretrained == 'clip':
+                device = "cuda" if torch.cuda.is_available() else "cpu"
+                if self.cfg.backbone == 'resnet50':
+                    self.write_log(rank, logs, "Loading pretrained model from CLIP - RN50")
+                    clip_model, _ = clip.load("RN50", device=device)
+                    clip_state = clip_model.visual.state_dict()
+                    
+                    new_state = {}
+                    for k, v in clip_state.items():
+                        k = 'encoder.' + k
+                        if world_size > 1:
+                            k = 'module.' + k
+                        if not k in net.state_dict().keys():
+                            self.write_log(rank, logs, f'Unrecognized key in CLIP: {k}')
+                        if not 'fc' in k:
+                            new_state[k] = v
+                        
+                    msg = net.load_state_dict(new_state, strict=False)
+                    self.write_log(rank, logs, f'Missing keys: {msg.missing_keys}')
+                    del clip_state, clip_model
+        
         # For finetuning, load pretrained model
         if self.cfg.mode == 'finetune':
             if os.path.isfile(self.cfg.pretrained):
@@ -216,6 +243,7 @@ class SimSiam2DLearner:
                         val_sampler.set_epoch(epoch)
                 
                 if self.cfg.mode == 'pretrain':
+                    time.sleep(500)
                     self.pretrain(rank, net, train_loader, criterion,
                                   optimizer, epoch, self.cfg.epochs, logs)
                     
