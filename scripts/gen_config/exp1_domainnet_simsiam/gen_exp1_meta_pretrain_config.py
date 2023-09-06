@@ -40,14 +40,15 @@ wd: 0.0001
 
 ### Logs and checkpoints
 resume: ''
-ckpt_dir: /mnt/sting/hjyoon/projects/aaa/models/domainnet/pretrain_meta_except/{domain}
+pretrained: clip
+ckpt_dir: /mnt/sting/hjyoon/projects/aaa/models/simsiam_ClipInit_ResNet50_001/domainnet/pretrain_meta_except/{domain}
 log_freq: 50
 save_freq: 100
 
 ### Model config
 pretext: metasimsiam
-backbone: resnet18
-out_dim: 2048
+backbone: resnet50
+out_dim: 1024
 pred_dim: 512
 pretrain_mlp: true
 
