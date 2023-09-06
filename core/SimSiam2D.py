@@ -187,6 +187,11 @@ class SimSiam2DLearner:
                     msg = net.load_state_dict(new_state, strict=False)
                     self.write_log(rank, logs, f'Missing keys: {msg.missing_keys}')
                     del clip_state, clip_model
+                
+                if self.cfg.adapter:
+                    for name, param in net.named_parameters():
+                        if 'adapter' in name or 'fc' in name: param.requires_grad = True
+                        else: param.requires_grad = False
         
         # For finetuning, load pretrained model
         if self.cfg.mode == 'finetune':
@@ -231,11 +236,6 @@ class SimSiam2DLearner:
                 for name, param in net.named_parameters():
                     if not 'fc' in name: param.requires_grad = False
                     else: param.requires_grad = True
-        
-        if self.cfg.adapter:
-            for name, param in net.named_parameters():
-                if 'adapter' in name or 'fc' in name: param.requires_grad = True
-                else: param.requires_grad = False
         
         # Define optimizer
         parameters = list(filter(lambda p: p.requires_grad, net.parameters()))
@@ -310,7 +310,12 @@ class SimSiam2DLearner:
                 self.validate_finetune(rank, net, test_loader, criterion, logs)
     
     def pretrain(self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs):
-        net.train()
+        if self.cfg.pretrained == 'clip':
+            net.eval()
+            net.adapter.train()
+            net.fc.train()
+        else:
+            net.train()
         
         for batch_idx, data in enumerate(train_loader):
             features = data[0][0].cuda()
