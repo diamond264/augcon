@@ -17,6 +17,7 @@ from util.logger import Logger
 from data_loader.default_data_loader import DefaultDataLoader
 from data_loader.DomainNetDataset import DomainNetDataset
 from data_loader.DigitFiveDataset import DigitFiveDataset
+from data_loader.PACSDataset import PACSDataset
 from data_loader.EmptyDataset import EmptyDataset
 
 # 1D pretext tasks
@@ -120,6 +121,11 @@ class Experiment:
                     label_dict = train_dataset.get_label_dict()
                     val_dataset = DigitFiveDataset(self.cfg, self.logger, type='val', label_dict=label_dict)
                     test_dataset = DigitFiveDataset(self.cfg, self.logger, type='test', label_dict=label_dict)
+                elif self.cfg.dataset_name == 'pacs':
+                    train_dataset = PACSDataset(self.cfg, self.logger, type='train')
+                    label_dict = train_dataset.get_label_dict()
+                    val_dataset = PACSDataset(self.cfg, self.logger, type='val', label_dict=label_dict)
+                    test_dataset = PACSDataset(self.cfg, self.logger, type='test', label_dict=label_dict)
             
             # Start training
             learner.run(train_dataset, val_dataset, test_dataset)
