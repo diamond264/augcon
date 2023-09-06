@@ -124,9 +124,40 @@ class BasicBlock_meta(nn.Module):
     
     def parameters(self):
         return self.vars
-
-
+    
+    
 class Bottleneck(nn.Module):
+    expansion = 4
+    
+    def __init__(self, in_planes, planes, stride=1):
+        super(Bottleneck, self).__init__()
+        self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(planes)
+        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3,
+                               stride=stride, padding=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(planes)
+        self.conv3 = nn.Conv2d(planes, self.expansion *
+                               planes, kernel_size=1, bias=False)
+        self.bn3 = nn.BatchNorm2d(self.expansion*planes)
+
+        self.shortcut = nn.Sequential()
+        if stride != 1 or in_planes != self.expansion*planes:
+            self.shortcut = nn.Sequential(
+                nn.Conv2d(in_planes, self.expansion*planes,
+                          kernel_size=1, stride=stride, bias=False),
+                nn.BatchNorm2d(self.expansion*planes)
+            )
+
+    def forward(self, x):
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = F.relu(self.bn2(self.conv2(out)))
+        out = self.bn3(self.conv3(out))
+        out += self.shortcut(x)
+        out = F.relu(out)
+        return out
+
+
+class ModifiedBottleneck(nn.Module):
     expansion = 4
 
     def __init__(self, inplanes, planes, stride=1):
@@ -405,10 +436,11 @@ class ModifiedResNet(nn.Module):
     - Performs anti-aliasing strided convolutions, where an avgpool is prepended to convolutions with stride > 1
     - The final pooling layer is a QKV attention instead of an average pool
     """
-    def __init__(self, block, layers, output_dim=10, mlp=False, input_resolution=224, width=64):
+    def __init__(self, block, layers, output_dim=10, mlp=False, adapter=False, input_resolution=224, width=64):
         super().__init__()
         self.output_dim = output_dim
         self.input_resolution = input_resolution
+        self.use_adapter= adapter
 
         # the 3-layer stem
         self.conv1 = nn.Conv2d(3, width // 2, kernel_size=3, stride=2, padding=1, bias=False)
@@ -433,6 +465,14 @@ class ModifiedResNet(nn.Module):
         heads = width//2
         attn_out_dim = 1024
         self.attnpool = AttentionPool2d(input_resolution // 32, embed_dim, heads, attn_out_dim)
+        
+        if self.use_adapter:
+            self.adapter = nn.Sequential(
+                nn.Linear(attn_out_dim, attn_out_dim // 4, bias=False),
+                nn.ReLU(inplace=True),
+                nn.Linear(attn_out_dim // 4, attn_out_dim, bias=False),
+                nn.ReLU(inplace=True)
+            )
         
         self.fc = nn.Linear(attn_out_dim, output_dim)
         if mlp:
@@ -470,8 +510,13 @@ class ModifiedResNet(nn.Module):
         x = self.layer3(x)
         x = self.layer4(x)
         x = self.attnpool(x)
+        
+        if self.use_adapter:
+            ratio = 0.2
+            adapted_x = self.adapter(x)
+            x = ratio * adapted_x + (1 - ratio) * x
+            
         x = self.fc(x)
-
         return x
 
 
@@ -491,8 +536,8 @@ def ResNet50(num_classes=10, mlp=True):
     return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, mlp)
 
 
-def ModifiedResNet50(num_classes=10, mlp=True):
-    return ModifiedResNet(Bottleneck, [3, 4, 6, 3], num_classes, mlp)
+def ModifiedResNet50(num_classes=10, mlp=True, adapter=False):
+    return ModifiedResNet(ModifiedBottleneck, [3, 4, 6, 3], num_classes, mlp, adapter)
 
 
 def ResNet101(num_classes=10):

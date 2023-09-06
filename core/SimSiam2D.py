@@ -31,14 +31,29 @@ class Predictor(nn.Module):
         return x
 
 
+class Adapter(nn.Module):
+    def __init__(self, c_in, reduction=4):
+        super(Adapter, self).__init__()
+        self.adapter = nn.Sequential(
+            nn.Linear(c_in, c_in // reduction, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Linear(c_in // reduction, c_in, bias=False),
+            nn.ReLU(inplace=True)
+        )
+
+    def forward(self, x):
+        x = self.adapter(x)
+        return x
+
+
 class SimSiamNet(nn.Module):
-    def __init__(self, backbone='resnet18', out_dim=128, pred_dim=64, mlp=True):
+    def __init__(self, backbone='resnet18', out_dim=128, pred_dim=64, mlp=True, adapter=False):
         super(SimSiamNet, self).__init__()
         self.encoder = None
         if backbone == 'resnet18':
             self.encoder = ResNet18(num_classes=out_dim, mlp=mlp)
         elif backbone == 'resnet50':
-            self.encoder = ModifiedResNet50(num_classes=out_dim, mlp=mlp)
+            self.encoder = ModifiedResNet50(num_classes=out_dim, mlp=mlp, adapter=adapter)
         elif backbone == 'cnn':
             self.encoder = CNN(num_classes=out_dim, mlp=mlp)
 
@@ -58,13 +73,13 @@ class SimSiamNet(nn.Module):
 
 
 class SimSiamClassifier(nn.Module):
-    def __init__(self, backbone, num_cls, mlp=True):
+    def __init__(self, backbone, num_cls, mlp=True, adapter=False):
         super(SimSiamClassifier, self).__init__()
         self.encoder = None
         if backbone == 'resnet18':
             self.encoder = ResNet18(num_classes=num_cls, mlp=mlp)
         elif backbone == 'resnet50':
-            self.encoder = ModifiedResNet50(num_classes=num_cls, mlp=mlp)
+            self.encoder = ModifiedResNet50(num_classes=num_cls, mlp=mlp, adapter=adapter)
         elif backbone == 'cnn':
             self.encoder = CNN(num_classes=num_cls, mlp=mlp)
         
@@ -102,9 +117,9 @@ class SimSiam2DLearner:
     def main_worker(self, rank, world_size, train_dataset, val_dataset, test_dataset, logs):
         # Model initialization
         if self.cfg.mode == 'pretrain' or self.cfg.mode == 'eval_pretrain':
-            net = SimSiamNet(self.cfg.backbone, self.cfg.out_dim, self.cfg.pred_dim, self.cfg.pretrain_mlp)
+            net = SimSiamNet(self.cfg.backbone, self.cfg.out_dim, self.cfg.pred_dim, self.cfg.pretrain_mlp, self.cfg.adapter)
         elif self.cfg.mode == 'finetune' or self.cfg.mode == 'eval_finetune':
-            net = SimSiamClassifier(self.cfg.backbone, self.cfg.n_way, self.cfg.finetune_mlp)
+            net = SimSiamClassifier(self.cfg.backbone, self.cfg.n_way, self.cfg.finetune_mlp, self.cfg.adapter)
         
         # Setting Distributed Data Parallel configuration
         if world_size > 1:
@@ -216,6 +231,11 @@ class SimSiam2DLearner:
                 for name, param in net.named_parameters():
                     if not 'fc' in name: param.requires_grad = False
                     else: param.requires_grad = True
+        
+        if self.cfg.adapter:
+            for name, param in net.named_parameters():
+                if not 'adapter' in name or 'fc' in name: param.requires_grad = False
+                else: param.requires_grad = True
         
         # Define optimizer
         parameters = list(filter(lambda p: p.requires_grad, net.parameters()))

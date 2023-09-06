@@ -19,7 +19,7 @@ import torch.multiprocessing as mp
 from torch.autograd import Variable
 from torch.utils.data import DataLoader, DistributedSampler, Subset
 
-from net.resnet import ResNet18, ModifiedResNet50, ResNet18_meta
+from net.resnet import ResNet18, ModifiedResNet50, ResNet18_meta, ResNet50
 from net.convnetDigit5 import CNN
 
 class Predictor(nn.Module):
@@ -36,13 +36,13 @@ class Predictor(nn.Module):
 
 
 class SimSiamNet(nn.Module):
-    def __init__(self, backbone='resnet18', out_dim=128, pred_dim=64, mlp=True):
+    def __init__(self, backbone='resnet18', out_dim=128, pred_dim=64, mlp=True, adapter=False):
         super(SimSiamNet, self).__init__()
         self.encoder = None
         if backbone == 'resnet18':
             self.encoder = ResNet18(num_classes=out_dim, mlp=mlp)
         elif backbone == 'resnet50':
-            self.encoder = ModifiedResNet50(num_classes=out_dim, mlp=mlp)
+            self.encoder = ModifiedResNet50(num_classes=out_dim, mlp=mlp, adapter=adapter)
         elif backbone == 'cnn':
             self.encoder = CNN(num_classes=out_dim, mlp=mlp)
 
@@ -62,13 +62,13 @@ class SimSiamNet(nn.Module):
 
 
 class SimSiamClassifier(nn.Module):
-    def __init__(self, backbone, num_cls, mlp=True):
+    def __init__(self, backbone, num_cls, mlp=True, adapter=False):
         super(SimSiamClassifier, self).__init__()
         self.encoder = None
         if backbone == 'resnet18':
             self.encoder = ResNet18(num_classes=num_cls, mlp=mlp)
         if backbone == 'resnet50':
-            self.encoder = ModifiedResNet50(num_classes=num_cls, mlp=mlp)
+            self.encoder = ModifiedResNet50(num_classes=num_cls, mlp=mlp, adapter=adapter)
         elif backbone == 'cnn':
             self.encoder = CNN(num_classes=num_cls, mlp=mlp)
         
@@ -107,10 +107,10 @@ class ReptileSimSiam2DLearner:
         torch.cuda.set_device(rank)
         
         # Model initialization
-        net = SimSiamNet(self.cfg.backbone, self.cfg.out_dim, self.cfg.pred_dim, self.cfg.pretrain_mlp)
+        net = SimSiamNet(self.cfg.backbone, self.cfg.out_dim, self.cfg.pred_dim, self.cfg.pretrain_mlp, self.cfg.adapter)
         net.cuda()
         if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval_finetune':
-            cls_net = SimSiamClassifier(self.cfg.backbone, self.cfg.n_way, self.cfg.finetune_mlp)
+            cls_net = SimSiamClassifier(self.cfg.backbone, self.cfg.n_way, self.cfg.finetune_mlp, self.cfg.adapter)
             cls_net.cuda()
         
         # Setting Distributed Data Parallel configuration
