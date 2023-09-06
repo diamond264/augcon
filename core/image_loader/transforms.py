@@ -57,7 +57,7 @@ def get_random_crop(size=224, s=1, prob=1):
     assert(s<=2 and s>=1)
     assert(prob<=1 and prob>=0.5)
     random_crop = transforms.Compose([
-        transforms.RandomResizedCrop(size=size, scale=(0.6*s, 1.0)),
+        transforms.RandomResizedCrop(size=size, scale=(0.2*s, 1.0)),
         transforms.RandomHorizontalFlip()
     ])
     random_crop = transforms.RandomApply([random_crop], p=prob)
@@ -66,7 +66,7 @@ def get_random_crop(size=224, s=1, prob=1):
 def get_color_distortion(s=1, prob=1):
     assert(s<=2 and s>=1)
     assert(prob<=1 and prob>=0.5)
-    color_jitter = transforms.ColorJitter(0.2*s, 0.2*s, 0.2*s, 0.05*s)
+    color_jitter = transforms.ColorJitter(0.4*s, 0.4*s, 0.4*s, 0.1*s)
     rnd_color_jitter = transforms.RandomApply([color_jitter], p=0.8)
     rnd_gray = transforms.RandomGrayscale(p=0.2)
     color_distort = transforms.Compose([
