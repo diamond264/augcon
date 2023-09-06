@@ -234,8 +234,8 @@ class SimSiam2DLearner:
         
         if self.cfg.adapter:
             for name, param in net.named_parameters():
-                if not 'adapter' in name or 'fc' in name: param.requires_grad = False
-                else: param.requires_grad = True
+                if 'adapter' in name or 'fc' in name: param.requires_grad = True
+                else: param.requires_grad = False
         
         # Define optimizer
         parameters = list(filter(lambda p: p.requires_grad, net.parameters()))
