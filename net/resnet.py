@@ -512,7 +512,7 @@ class ModifiedResNet(nn.Module):
         x = self.attnpool(x)
         
         if self.use_adapter:
-            ratio = 0.5
+            ratio = 0.2
             adapted_x = self.adapter(x)
             x = ratio * adapted_x + (1 - ratio) * x
             
