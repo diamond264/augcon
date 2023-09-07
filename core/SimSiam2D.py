@@ -314,6 +314,7 @@ class SimSiam2DLearner:
             net.eval()
             net.module.encoder.adapter.train()
             net.module.encoder.fc.train()
+            net.module.predictor.train()
         else:
             net.train()
         
