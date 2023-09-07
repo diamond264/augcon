@@ -190,7 +190,7 @@ class SimSiam2DLearner:
                 
                 if self.cfg.adapter:
                     for name, param in net.named_parameters():
-                        if 'adapter' in name or 'fc' in name: param.requires_grad = True
+                        if 'adapter' in name or 'fc' in name or 'predictor' in name: param.requires_grad = True
                         else: param.requires_grad = False
         
         # For finetuning, load pretrained model
