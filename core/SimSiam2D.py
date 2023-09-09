@@ -125,6 +125,7 @@ class SimSiam2DLearner:
         if world_size > 1:
             dist.init_process_group(backend='nccl', init_method=self.cfg.dist_url,
                                     world_size=world_size, rank=rank)
+            torch.distributed.barrier()
             torch.cuda.set_device(rank)
             net = torch.nn.SyncBatchNorm.convert_sync_batchnorm(net)
             net.cuda()
