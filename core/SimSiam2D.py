@@ -15,7 +15,7 @@ import torch.multiprocessing as mp
 
 # from datautils.SimCLR_dataset import subject_collate
 from torch.utils.data import DataLoader, Dataset, DistributedSampler
-from net.resnet import ResNet18, ModifiedResNet50, ResNet18_meta
+from net.resnet import ResNet18, ModifiedResNet50
 from net.convnetDigit5 import CNN
 
 class Predictor(nn.Module):
@@ -80,9 +80,11 @@ class SimSiamClassifier(nn.Module):
             self.encoder = ResNet18(num_classes=num_cls, mlp=mlp)
         elif backbone == 'resnet50':
             self.encoder = ModifiedResNet50(num_classes=num_cls, mlp=mlp, adapter=adapter)
+        elif backbone == 'imagenet_resenet50':
+            self.encoder = models.resnet50()
         elif backbone == 'cnn':
             self.encoder = CNN(num_classes=num_cls, mlp=mlp)
-        
+
     def forward(self, x):
         x = self.encoder(x)
         return x
@@ -120,7 +122,7 @@ class SimSiam2DLearner:
             net = SimSiamNet(self.cfg.backbone, self.cfg.out_dim, self.cfg.pred_dim, self.cfg.pretrain_mlp, self.cfg.adapter)
         elif self.cfg.mode == 'finetune' or self.cfg.mode == 'eval_finetune':
             net = SimSiamClassifier(self.cfg.backbone, self.cfg.n_way, self.cfg.finetune_mlp, self.cfg.adapter)
-        
+
         # Setting Distributed Data Parallel configuration
         if world_size > 1:
             dist.init_process_group(backend='nccl', init_method=self.cfg.dist_url,
@@ -215,15 +217,16 @@ class SimSiam2DLearner:
                     msg = net.load_state_dict(new_state, strict=False)
                     self.write_log(rank, logs, f'Missing keys: {msg.missing_keys}')
                     del clip_state, clip_model
+
             elif os.path.isfile(self.cfg.pretrained):
                 loc = 'cuda:{}'.format(rank)
                 state = torch.load(self.cfg.pretrained, map_location=loc)['state_dict']
                 self.write_log(rank, logs, "Loading pretrained model from checkpoint - {}".format(self.cfg.pretrained))
-
                 # To handle the case where the model is trained in multi-gpu environment
                 new_state = {}
                 for k, v in list(state.items()):
                     if world_size > 1: k = 'module.' + k
+                    elif 'module' in k and 'imagenet' in self.cfg.pretrained: k = k[7:]
                     if k in net.state_dict().keys() and not 'fc' in k: new_state[k] = v
                 msg = net.load_state_dict(new_state, strict=False)
                 self.write_log(rank, logs, "Missing keys: {}".format(msg.missing_keys))
