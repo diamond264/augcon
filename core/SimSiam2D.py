@@ -233,7 +233,7 @@ class SimSiam2DLearner:
                 self.write_log(rank, logs, "Missing keys: {}".format(msg.missing_keys))
             else:
                 self.write_log(rank, logs, "No checkpoint found at '{}'".format(self.cfg.pretrained))
-            
+
             # Freezing the encoder
             if self.cfg.freeze:
                 self.write_log(rank, logs, "Freezing the encoder")
@@ -380,9 +380,9 @@ class SimSiam2DLearner:
             loss = criterion(logits, targets)
             
             if rank == 0:
-                acc1, acc5 = self.accuracy(logits, targets, topk=(1, 5))
+                acc1, _ = self.accuracy(logits, targets, topk=(1, 1))
                 log = f'Epoch [{epoch+1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) '
-                log += f'\tLoss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+                log += f'\tLoss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}'
                 self.write_log(rank, logs, log)
             
             optimizer.zero_grad()
@@ -410,11 +410,11 @@ class SimSiam2DLearner:
             if len(total_targets) > 0:
                 total_targets = torch.cat(total_targets, dim=0)
                 total_logits = torch.cat(total_logits, dim=0)
-                acc1, acc5 = self.accuracy(total_logits, total_targets, topk=(1, 5))
+                acc1, _ = self.accuracy(total_logits, total_targets, topk=(1, 1))
                 f1, recall, precision = self.scores(total_logits, total_targets)
             total_loss /= len(val_loader)
             
-            log = f'[Finetune] Validation Loss: {total_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+            log = f'[Finetune] Validation Loss: {total_loss.item():.4f}, Acc(1): {acc1.item():.2f}'
             log += f', F1: {f1.item():.2f}, Recall: {recall.item():.2f}, Precision: {precision.item():.2f}'
             self.write_log(rank, logs, log)
     
