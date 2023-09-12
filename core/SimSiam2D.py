@@ -80,8 +80,8 @@ class SimSiamClassifier(nn.Module):
             self.encoder = ResNet18(num_classes=num_cls, mlp=mlp)
         elif backbone == 'resnet50':
             self.encoder = ModifiedResNet50(num_classes=num_cls, mlp=mlp, adapter=adapter)
-        elif backbone == 'imagenet_resenet50':
-            self.encoder = models.resnet50()
+        elif backbone == 'imagenet_resnet50':
+            self.encoder = models.resnet50(num_classes=num_cls)
         elif backbone == 'cnn':
             self.encoder = CNN(num_classes=num_cls, mlp=mlp)
 

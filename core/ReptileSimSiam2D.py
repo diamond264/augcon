@@ -45,12 +45,30 @@ class SimSiamNet(nn.Module):
             self.encoder = ModifiedResNet50(num_classes=out_dim, mlp=mlp, adapter=adapter)
         elif backbone == 'cnn':
             self.encoder = CNN(num_classes=out_dim, mlp=mlp)
-
-        if mlp:
+        elif backbone == 'imagenet_resnet50':
+            self.encoder = models.resnet50(num_classes=out_dim)
+            if mlp:
+                prev_dim = self.encoder.fc.weight.shape[1]
+                self.encoder.fc = nn.Sequential(nn.Linear(prev_dim, prev_dim, bias=False),
+                                                nn.BatchNorm1d(prev_dim),
+                                                nn.ReLU(inplace=True), # first layer
+                                                nn.Linear(prev_dim, prev_dim, bias=False),
+                                                nn.BatchNorm1d(prev_dim),
+                                                nn.ReLU(inplace=True), # second layer
+                                                self.encoder.fc,
+                                                nn.BatchNorm1d(out_dim, affine=False)) # output layer
+            self.encoder.fc[6].bias.requires_grad = False # hack: not use bias as it is followed by BN
+        if mlp and backbone != 'imagenet_resnet50':
             self.encoder.fc[6].bias.requires_grad = False
             self.encoder.fc = nn.Sequential(self.encoder.fc, nn.BatchNorm1d(out_dim, affine=False))
         
-        self.predictor = Predictor(dim=out_dim, pred_dim=pred_dim)
+        if backbone == 'imagenet_resnet50':
+            self.predictor = nn.Sequential(nn.Linear(out_dim, pred_dim, bias=False),
+                                        nn.BatchNorm1d(pred_dim),
+                                        nn.ReLU(inplace=True), # hidden layer
+                                        nn.Linear(pred_dim, out_dim)) # output layer
+        else:
+            self.predictor = Predictor(dim=out_dim, pred_dim=pred_dim)
 
     def forward(self, x1, x2):
         z1 = self.encoder(x1)
@@ -67,8 +85,10 @@ class SimSiamClassifier(nn.Module):
         self.encoder = None
         if backbone == 'resnet18':
             self.encoder = ResNet18(num_classes=num_cls, mlp=mlp)
-        if backbone == 'resnet50':
+        elif backbone == 'resnet50':
             self.encoder = ModifiedResNet50(num_classes=num_cls, mlp=mlp, adapter=adapter)
+        elif backbone == 'imagenet_resnet50':
+            self.encoder = models.resnet50(num_classes=num_cls)
         elif backbone == 'cnn':
             self.encoder = CNN(num_classes=num_cls, mlp=mlp)
         
@@ -207,7 +227,14 @@ class ReptileSimSiam2DLearner:
             elif os.path.isfile(self.cfg.pretrained):
                 loc = 'cuda:{}'.format(rank)
                 state = torch.load(self.cfg.pretrained, map_location=loc)['state_dict']
-                msg = net.load_state_dict(state, strict=False)
+                
+                new_state = {}
+                for k, v in state.items():
+                    if k.startswith('module.'):
+                        k = k.replace('module.', '')
+                    new_state[k] = v
+                    
+                msg = net.load_state_dict(new_state, strict=True)
                 self.write_log(rank, logs, "Loading pretrained model from checkpoint - {}".format(self.cfg.pretrained))
                 self.write_log(rank, logs, f"missing keys: {msg.missing_keys}")
             else:
