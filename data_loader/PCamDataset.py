@@ -69,18 +69,18 @@ class PCamDataset(torch.utils.data.Dataset):
     def get_targets(self):
         targets = []
         print(f"Waiting for getting targets in type : {self.type}")
-        for i in tqdm(range(len(self.dataset))):
+        for i in tqdm(range(len(self.data))):
             if self.cfg.mode == 'pretrain':
                 pass
             elif self.cfg.mode == 'finetune' and not self.type == 'test':
                 if 'meta' in self.cfg.pretext:
-                    cur_target = self.dataset[i][0][2]
+                    cur_target = self.data[i][0][2]
                     targets.append(cur_target)
                 else:
-                    cur_target = self.dataset[i][1]
+                    cur_target = self.data[i][1]
                     targets.append(cur_target)
             else:
-                cur_target = self.dataset[i][1]
+                cur_target = self.data[i][1]
                 targets.append(cur_target)
         return targets
 
