@@ -402,11 +402,11 @@ class ReptileSimSiam2DLearner:
         return supports
     
     def get_optimizer(self, net, state=None):
-        optimizer = torch.optim.Adam(net.parameters(), lr=self.cfg.meta_lr, betas=(0, 0.999))
-        if self.cfg.optimizer == 'sgd':
-            optimizer = torch.optim.SGD(net.parameters(), self.cfg.lr,
-                                        momentum=self.cfg.momentum,
-                                        weight_decay=self.cfg.wd)
+        optimizer = torch.optim.Adam(net.parameters(), lr=self.cfg.meta_lr)
+        # if self.cfg.optimizer == 'sgd':
+        #     optimizer = torch.optim.SGD(net.parameters(), self.cfg.lr,
+        #                                 momentum=self.cfg.momentum,
+        #                                 weight_decay=self.cfg.wd)
         if state is not None:
             optimizer.load_state_dict(state)
         return optimizer
