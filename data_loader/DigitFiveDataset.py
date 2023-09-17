@@ -85,18 +85,19 @@ class DigitFiveDataset(torch.utils.data.Dataset):
         for i, domain in enumerate(self.cfg.domains):
             dataset = ImageFolder(os.path.join(self.file_path, domain), self.loader)
 
-            if self.cfg.down_sample:
-                if self.type == "train" and len(dataset) > _TRAIN_NUM:
-                    # For downsampling
-                    target_len = _TRAIN_NUM
-                    random_indices = torch.randperm(len(dataset))[:target_len]
-                    dataset = torch.utils.data.Subset(dataset, random_indices)
-
-                elif self.type == "test" and len(dataset) > _TEST_NUM:
-                    # For downsampling
-                    target_len = _TEST_NUM
-                    random_indices = torch.randperm(len(dataset))[:target_len]
-                    dataset = torch.utils.data.Subset(dataset, random_indices)
+            # #fixme: It was for downsampling when we use it has training data (DA)
+            # if self.cfg.down_sample:
+            #     if self.type == "train" and len(dataset) > _TRAIN_NUM:
+            #         # For downsampling
+            #         target_len = _TRAIN_NUM
+            #         random_indices = torch.randperm(len(dataset))[:target_len]
+            #         dataset = torch.utils.data.Subset(dataset, random_indices)
+            #
+            #     elif self.type == "test" and len(dataset) > _TEST_NUM:
+            #         # For downsampling
+            #         target_len = _TEST_NUM
+            #         random_indices = torch.randperm(len(dataset))[:target_len]
+            #         dataset = torch.utils.data.Subset(dataset, random_indices)
 
             if self.cfg.mode == 'finetune':
                 dataset = self.filter_nway_kshot(dataset, self.cfg.n_way, self.cfg.k_shot)
