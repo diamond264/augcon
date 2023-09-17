@@ -226,8 +226,7 @@ class SimSiam2DLearner:
                 # To handle the case where the model is trained in multi-gpu environment
                 new_state = {}
                 for k, v in list(state.items()):
-                    if world_size > 1: k = 'module.' + k
-                    elif 'module' in k and 'imagenet' in self.cfg.pretrained: k = k[7:]
+                    k = k.replace('module.', '')
                     if k in net.state_dict().keys() and not 'fc' in k: new_state[k] = v
                 msg = net.load_state_dict(new_state, strict=False)
                 self.write_log(rank, logs, "Missing keys: {}".format(msg.missing_keys))

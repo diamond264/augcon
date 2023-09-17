@@ -258,8 +258,6 @@ class ReptileSimSiam2DLearner:
                 self.write_log(rank, logs, "Performing domain adaptation")
                 if world_size > 1:
                     train_sampler.set_epoch(0)
-                net.train()
-                net.zero_grad()
                 self.meta_train(rank, net, support_loader, simsiam_criterion, logs)
             
             # batch_indices = [torch.randint(len(val_dataset), size=(self.cfg.inner_batch_size,)) for _ in range(self.cfg.inner_steps)]
@@ -339,7 +337,7 @@ class ReptileSimSiam2DLearner:
                     meta_train_indices = meta_train_indices[len(indices):]
                     sampled_indices_by_domain[k] = indices
                 
-            self.write_log(rank, logs, "Start pre-training")
+            self.write_log(rank, logs, "Start training")
             for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
                 if world_size > 1:
                     train_sampler.set_epoch(epoch)
