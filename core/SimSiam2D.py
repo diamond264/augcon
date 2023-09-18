@@ -56,20 +56,38 @@ class SimSiamNet(nn.Module):
             self.encoder = ModifiedResNet50(num_classes=out_dim, mlp=mlp, adapter=adapter)
         elif backbone == 'cnn':
             self.encoder = CNN(num_classes=out_dim, mlp=mlp)
-
-        if mlp:
+        elif backbone == 'imagenet_resnet50':
+            self.encoder = models.resnet50(num_classes=out_dim, zero_init_residual=True)
+            if mlp:
+                prev_dim = self.encoder.fc.weight.shape[1]
+                self.encoder.fc = nn.Sequential(nn.Linear(prev_dim, prev_dim, bias=False),
+                                                nn.BatchNorm1d(prev_dim),
+                                                nn.ReLU(inplace=True), # first layer
+                                                nn.Linear(prev_dim, prev_dim, bias=False),
+                                                nn.BatchNorm1d(prev_dim),
+                                                nn.ReLU(inplace=True), # second layer
+                                                self.encoder.fc,
+                                                nn.BatchNorm1d(out_dim, affine=False)) # output layer
+            self.encoder.fc[6].bias.requires_grad = False # hack: not use bias as it is followed by BN
+        if mlp and backbone != 'imagenet_resnet50':
             self.encoder.fc[6].bias.requires_grad = False
             self.encoder.fc = nn.Sequential(self.encoder.fc, nn.BatchNorm1d(out_dim, affine=False))
         
-        self.predictor = Predictor(dim=out_dim, pred_dim=pred_dim)
+        if backbone == 'imagenet_resnet50':
+            self.predictor = nn.Sequential(nn.Linear(out_dim, pred_dim, bias=False),
+                                        nn.BatchNorm1d(pred_dim),
+                                        nn.ReLU(inplace=True), # hidden layer
+                                        nn.Linear(pred_dim, out_dim)) # output layer
+        else:
+            self.predictor = Predictor(dim=out_dim, pred_dim=pred_dim)
 
-    def forward(self, feature, aug_feature):
-        z = self.encoder(feature)
-        p = self.predictor(z)
-        aug_z = self.encoder(aug_feature)
-        aug_p = self.predictor(aug_z)
-
-        return p, aug_p, z.detach(), aug_z.detach()
+    def forward(self, x1, x2):
+        z1 = self.encoder(x1)
+        p1 = self.predictor(z1)
+        z2 = self.encoder(x2)
+        p2 = self.predictor(z2)
+        
+        return p1, p2, z1.detach(), z2.detach()
 
 
 class SimSiamClassifier(nn.Module):
@@ -119,9 +137,9 @@ class SimSiam2DLearner:
     def main_worker(self, rank, world_size, train_dataset, val_dataset, test_dataset, logs):
         # Model initialization
         if self.cfg.mode == 'pretrain' or self.cfg.mode == 'eval_pretrain':
-            net = SimSiamNet(self.cfg.backbone, self.cfg.out_dim, self.cfg.pred_dim, self.cfg.pretrain_mlp, self.cfg.adapter)
+            net = SimSiamNet(self.cfg.backbone, self.cfg.out_dim, self.cfg.pred_dim, self.cfg.pretrain_mlp)
         elif self.cfg.mode == 'finetune' or self.cfg.mode == 'eval_finetune':
-            net = SimSiamClassifier(self.cfg.backbone, self.cfg.n_way, self.cfg.finetune_mlp, self.cfg.adapter)
+            net = SimSiamClassifier(self.cfg.backbone, self.cfg.n_way, self.cfg.finetune_mlp)
 
         # Setting Distributed Data Parallel configuration
         if world_size > 1:
@@ -313,13 +331,7 @@ class SimSiam2DLearner:
                 self.validate_finetune(rank, net, test_loader, criterion, logs)
     
     def pretrain(self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs):
-        if self.cfg.pretrained == 'clip':
-            net.eval()
-            net.module.encoder.adapter.train()
-            net.module.encoder.fc.train()
-            net.module.predictor.train()
-        else:
-            net.train()
+        net.train()
         
         for batch_idx, data in enumerate(train_loader):
             features = data[0][0].cuda()
@@ -372,7 +384,7 @@ class SimSiam2DLearner:
         net.eval()
         
         for batch_idx, data in enumerate(train_loader):
-            features = data[0].cuda()
+            features = data[0][0].cuda()
             targets = data[1].cuda()
             
             logits = net(features)

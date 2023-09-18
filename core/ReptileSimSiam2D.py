@@ -46,7 +46,7 @@ class SimSiamNet(nn.Module):
         elif backbone == 'cnn':
             self.encoder = CNN(num_classes=out_dim, mlp=mlp)
         elif backbone == 'imagenet_resnet50':
-            self.encoder = models.resnet50(num_classes=out_dim)
+            self.encoder = models.resnet50(num_classes=out_dim, zero_init_residual=True)
             if mlp:
                 prev_dim = self.encoder.fc.weight.shape[1]
                 self.encoder.fc = nn.Sequential(nn.Linear(prev_dim, prev_dim, bias=False),
@@ -127,10 +127,10 @@ class ReptileSimSiam2DLearner:
         torch.cuda.set_device(rank)
         
         # Model initialization
-        net = SimSiamNet(self.cfg.backbone, self.cfg.out_dim, self.cfg.pred_dim, self.cfg.pretrain_mlp, self.cfg.adapter)
+        net = SimSiamNet(self.cfg.backbone, self.cfg.out_dim, self.cfg.pred_dim, self.cfg.pretrain_mlp)
         net.cuda()
         if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval_finetune':
-            cls_net = SimSiamClassifier(self.cfg.backbone, self.cfg.n_way, self.cfg.finetune_mlp, self.cfg.adapter)
+            cls_net = SimSiamClassifier(self.cfg.backbone, self.cfg.n_way, self.cfg.finetune_mlp)
             cls_net.cuda()
         
         # Setting Distributed Data Parallel configuration
@@ -410,21 +410,22 @@ class ReptileSimSiam2DLearner:
         return optimizer
     
     def pretrain(self, rank, net, supports, criterion, epoch, num_epochs, logs):
-        net.train()
         num_tasks = len(supports)
         
         def get_features(batch):
-            x1 = []
-            x2 = []
-            y = []
+            x1, x2, y = [], [], []
             for x in batch:
                 x1.append(x[0][0])
                 x2.append(x[0][1])
                 y.append(x[1])
             return torch.stack(x1).cuda(), torch.stack(x2).cuda(), y
         
-        old_weights = deepcopy(net.state_dict())
+        old_weights = {}
+        for name in net.state_dict():
+            if 'running_mean' in name or 'running_var' in name or 'num_batches_tracked' in name: continue
+            old_weights[name] = net.state_dict()[name]
         weight_updates = {name: 0 for name in old_weights}
+        
         losses = []
         for task_idx in range(num_tasks):
             support = supports[task_idx]
@@ -434,22 +435,24 @@ class ReptileSimSiam2DLearner:
             
             loss = self.meta_train(rank, net, support_loader, criterion, logs)
             losses.append(loss)
-            self.write_log(rank, logs, f'Task({task_idx}) Loss: {loss.item():.4f}')
-            
-            weight_updates = {name: weight_updates[name]+(net.state_dict()[name]-old_weights[name])
-                              for name in old_weights}
-            net.load_state_dict(old_weights)
+            self.write_log(rank, logs, f'Task({task_idx}) Loss: {loss:.4f}')
+             
+            weight_updates = {name: weight_updates[name]+(net.state_dict()[name]-old_weights[name]) for name in old_weights}
+            net.load_state_dict(old_weights, strict=False)
         
+        frac_done = epoch/self.cfg.epochs
+        epsilone = frac_done * self.cfg.epsilone_final + (1-frac_done) * self.cfg.epsilone_start
         net.load_state_dict({name :
-            old_weights[name]+weight_updates[name]*self.cfg.epsilone/self.cfg.inner_steps
-            for name in old_weights})
+            old_weights[name]+weight_updates[name]*epsilone/num_tasks
+            for name in old_weights}, strict=False)
 
         if task_idx % self.cfg.log_freq == 0 and rank == 0:
             self.write_log(rank, logs, f'Epoch [{epoch+1}/{num_epochs}] Loss: {sum(losses)/len(losses):.4f}')
     
     def meta_train(self, rank, net, support_loader, criterion, logs):
         net.train()
-        net.zero_grad()
+        # net.eval()
+        # net.zero_grad()
         optimizer = self.get_optimizer(net)
         for inner_step, (s_x1, s_x2, y) in enumerate(support_loader):
             p1, p2, z1, z2 = net(s_x1, s_x2)
@@ -459,14 +462,14 @@ class ReptileSimSiam2DLearner:
             optimizer.step()
             
             if self.cfg.log_steps:
-                # KNNCls = KNN(n_neighbors=3)
-                # KNNCls.fit(z1.detach().cpu().numpy(), y=y)
-                # KNN_pred = KNNCls.predict(z2.detach().cpu().numpy())
-                # KNN_acc = np.mean(KNN_pred == y)*100
+                KNNCls = KNN(n_neighbors=3)
+                KNNCls.fit(z1.detach().cpu().numpy(), y=y)
+                KNN_pred = KNNCls.predict(z2.detach().cpu().numpy())
+                KNN_acc = np.mean(KNN_pred == y)*100
                 std = torch.std(torch.cat((z1, z2), dim=0))
-                self.write_log(rank, logs, f'\tStep [{inner_step}/{self.cfg.inner_steps}] Loss: {loss.item():.4f}\tStd: {std.item():.4f}')#\tKNN Acc: {KNN_acc:.2f}%')
+                self.write_log(rank, logs, f'\tStep [{inner_step}/{self.cfg.inner_steps}] Loss: {loss.item():.4f}\tStd: {std.item():.4f}\tKNN Acc: {KNN_acc:.2f}%')
         
-        return loss
+        return loss.item()
     
     def meta_eval(self, rank, net, val_loader, criterion, logs):
         net.eval()

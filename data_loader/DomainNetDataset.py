@@ -35,7 +35,8 @@ class DomainNetDataset(torch.utils.data.Dataset):
         else: assert(0)
 
         self.pre_transform = transforms.Compose([
-            transforms.Resize(_IMAGENET_SIZE)
+            # transforms.Resize(_IMAGENET_SIZE)
+            transforms.RandomResizedCrop(_IMAGENET_SIZE)
         ])
         self.post_transform = transforms.Compose([
             transforms.ToTensor(),
@@ -64,7 +65,7 @@ class DomainNetDataset(torch.utils.data.Dataset):
                                    rand_aug=rand_aug)
         # return x, k, q
         elif self.cfg.mode == 'finetune' and not self.type == 'test':
-            if 'meta' in self.cfg.pretext:
+            if 'meta' in self.cfg.pretext or True:
                 loader = PosPairLoader(pre_transform=self.pre_transform, 
                                        post_transform=self.post_transform, 
                                        return_original=True)
