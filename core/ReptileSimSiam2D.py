@@ -22,6 +22,8 @@ from torch.utils.data import DataLoader, DistributedSampler, Subset
 from net.resnet import ResNet18, ModifiedResNet50, ResNet18_meta, ResNet50
 from net.convnetDigit5 import CNN
 
+from tqdm import tqdm
+
 class Predictor(nn.Module):
     def __init__(self, dim, pred_dim=1):
         super(Predictor, self).__init__()
@@ -33,7 +35,6 @@ class Predictor(nn.Module):
     def forward(self, x):
         x = self.layer(x)
         return x
-
 
 class SimSiamNet(nn.Module):
     def __init__(self, backbone='resnet18', out_dim=128, pred_dim=64, mlp=True, adapter=False):
@@ -338,7 +339,7 @@ class ReptileSimSiam2DLearner:
                     sampled_indices_by_domain[k] = indices
                 
             self.write_log(rank, logs, "Start training")
-            for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
+            for epoch in tqdm(range(self.cfg.start_epoch, self.cfg.epochs)):
                 if world_size > 1:
                     train_sampler.set_epoch(epoch)
                     if len(val_dataset) > 0:
