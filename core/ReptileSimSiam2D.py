@@ -47,22 +47,22 @@ class SimSiamNet(nn.Module):
             self.encoder = CNN(num_classes=out_dim, mlp=mlp)
         elif backbone == 'imagenet_resnet50':
             self.encoder = models.resnet50(num_classes=out_dim, zero_init_residual=True)
-            if mlp:
-                prev_dim = self.encoder.fc.weight.shape[1]
-                self.encoder.fc = nn.Sequential(nn.Linear(prev_dim, prev_dim, bias=False),
-                                                nn.BatchNorm1d(prev_dim),
-                                                nn.ReLU(inplace=True), # first layer
-                                                nn.Linear(prev_dim, prev_dim, bias=False),
-                                                nn.BatchNorm1d(prev_dim),
-                                                nn.ReLU(inplace=True), # second layer
-                                                self.encoder.fc,
-                                                nn.BatchNorm1d(out_dim, affine=False)) # output layer
-            self.encoder.fc[6].bias.requires_grad = False # hack: not use bias as it is followed by BN
-        if mlp and backbone != 'imagenet_resnet50':
+        elif backbone == 'imagenet_resnet18':
+            self.encoder = models.resnet18(num_classes=out_dim, zero_init_residual=True)
+        if mlp and backbone.startswith('imagenet_resnet'):
+            prev_dim = self.encoder.fc.weight.shape[1]
+            self.encoder.fc = nn.Sequential(nn.Linear(prev_dim, prev_dim, bias=False),
+                                            nn.BatchNorm1d(prev_dim),
+                                            nn.ReLU(inplace=True), # first layer
+                                            nn.Linear(prev_dim, prev_dim, bias=False),
+                                            nn.BatchNorm1d(prev_dim),
+                                            nn.ReLU(inplace=True), # second layer
+                                            self.encoder.fc,
+                                            nn.BatchNorm1d(out_dim, affine=False)) # output layer
             self.encoder.fc[6].bias.requires_grad = False
             self.encoder.fc = nn.Sequential(self.encoder.fc, nn.BatchNorm1d(out_dim, affine=False))
         
-        if backbone == 'imagenet_resnet50':
+        if backbone.startswith('imagenet_resnet'):
             self.predictor = nn.Sequential(nn.Linear(out_dim, pred_dim, bias=False),
                                         nn.BatchNorm1d(pred_dim),
                                         nn.ReLU(inplace=True), # hidden layer
@@ -89,6 +89,8 @@ class SimSiamClassifier(nn.Module):
             self.encoder = ModifiedResNet50(num_classes=num_cls, mlp=mlp, adapter=adapter)
         elif backbone == 'imagenet_resnet50':
             self.encoder = models.resnet50(num_classes=num_cls)
+        elif backbone == 'imagenet_resnet18':
+            self.encoder = models.resnet18(num_classes=num_cls)
         elif backbone == 'cnn':
             self.encoder = CNN(num_classes=num_cls, mlp=mlp)
         

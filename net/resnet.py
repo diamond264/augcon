@@ -535,6 +535,9 @@ def ResNet34(num_classes=10):
 def ResNet50(num_classes=10, mlp=True):
     return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, mlp)
 
+def ResNet50_meta(num_classes=10, mlp=True):
+    return ResNet_meta(Bottleneck, [3, 4, 6, 3], num_classes, mlp)
+
 
 def ModifiedResNet50(num_classes=10, mlp=True, adapter=False):
     return ModifiedResNet(ModifiedBottleneck, [3, 4, 6, 3], num_classes, mlp, adapter)

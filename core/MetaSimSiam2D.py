@@ -13,7 +13,7 @@ import torch.multiprocessing as mp
 
 from torch.utils.data import DataLoader, Dataset, DistributedSampler, Subset
 
-from net.resnet import ResNet18, ResNet18_meta
+from net.resnet import ResNet18, ResNet18_meta, ResNet50_meta
 
 class MetaPredictor(nn.Module):
     def __init__(self, dim, pred_dim=1):
@@ -83,6 +83,16 @@ class MetaSimSiamNet(nn.Module):
                 running_var = nn.Parameter(torch.ones_like(bn.running_var), requires_grad=False)
                 num_batches_tracked = nn.Parameter(torch.zeros_like(bn.num_batches_tracked), requires_grad=False)
                 self.vars.extend([running_mean, running_var, num_batches_tracked])
+        elif backbone == 'resnet50':
+            encoder = ResNet50_meta(num_classes=out_dim, mlp=mlp)
+            self.vars.extend(encoder.parameters())
+            if mlp:
+                self.vars[-1].requires_grad = False
+                bn = nn.BatchNorm1d(out_dim, affine=False)
+                running_mean = nn.Parameter(torch.zeros_like(bn.running_mean), requires_grad=False)
+                running_var = nn.Parameter(torch.ones_like(bn.running_var), requires_grad=False)
+                num_batches_tracked = nn.Parameter(torch.zeros_like(bn.num_batches_tracked), requires_grad=False)
+                self.vars.extend([running_mean, running_var, num_batches_tracked])
         
         predictor = MetaPredictor(dim=out_dim, pred_dim=pred_dim)
         self.vars.extend(predictor.parameters())
@@ -94,6 +104,20 @@ class MetaSimSiamNet(nn.Module):
         
         if self.backbone == 'resnet18':
             encoder = ResNet18_meta(num_classes=self.out_dim, mlp=self.mlp)
+            enc_vars = vars[:len(encoder.parameters())]
+            var_idx += len(encoder.parameters())
+            if self.mlp:
+                enc_vars[-1] = None
+                z1 = encoder(x1, vars=enc_vars, bn_training=True)
+                z2 = encoder(x2, vars=enc_vars, bn_training=True)
+                z1 = F.batch_norm(z1, vars[var_idx], vars[var_idx+1], training=True)
+                z2 = F.batch_norm(z2, vars[var_idx], vars[var_idx+1], training=True)
+                var_idx += 3
+            else:
+                z1 = encoder(x1, vars=enc_vars, bn_training=True)
+                z2 = encoder(x2, vars=enc_vars, bn_training=True)
+        elif self.backbone == 'resnet50':
+            encoder = ResNet50_meta(num_classes=self.out_dim, mlp=self.mlp)
             enc_vars = vars[:len(encoder.parameters())]
             var_idx += len(encoder.parameters())
             if self.mlp:

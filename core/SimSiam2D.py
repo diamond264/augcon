@@ -209,10 +209,10 @@ class SimSiam2DLearner:
                     self.write_log(rank, logs, f'Missing keys: {msg.missing_keys}')
                     del clip_state, clip_model
                 
-                if self.cfg.adapter:
-                    for name, param in net.named_parameters():
-                        if 'adapter' in name or 'fc' in name or 'predictor' in name: param.requires_grad = True
-                        else: param.requires_grad = False
+                # if self.cfg.adapter:
+                #     for name, param in net.named_parameters():
+                #         if 'adapter' in name or 'fc' in name or 'predictor' in name: param.requires_grad = True
+                #         else: param.requires_grad = False
         
         # For finetuning, load pretrained model
         if self.cfg.mode == 'finetune':
