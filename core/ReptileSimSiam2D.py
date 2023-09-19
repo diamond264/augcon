@@ -467,7 +467,7 @@ class ReptileSimSiam2DLearner:
                 KNNCls.fit(z1.detach().cpu().numpy(), y=y)
                 KNN_pred = KNNCls.predict(z2.detach().cpu().numpy())
                 KNN_acc = np.mean(KNN_pred == y)*100
-                std = torch.std(torch.cat((z1, z2), dim=0))
+                std = torch.std(torch.cat((F.normalize(z1, dim=1), F.normalize(z1, dim=1)), dim=0))
                 self.write_log(rank, logs, f'\tStep [{inner_step}/{self.cfg.inner_steps}] Loss: {loss.item():.4f}\tStd: {std.item():.4f}\tKNN Acc: {KNN_acc:.2f}%')
         
         return loss.item()
