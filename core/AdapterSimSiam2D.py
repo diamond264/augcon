@@ -413,9 +413,9 @@ class AdapterSimSiam2DLearner:
                 param.requires_grad = False
         parameters = list(filter(lambda p: p.requires_grad, net.parameters()))
         # print the parameter names to be trained
-        optimizer = torch.optim.Adam(parameters, lr=self.cfg.meta_lr)
+        # optimizer = torch.optim.Adam(parameters, lr=self.cfg.meta_lr)
         # if self.cfg.optimizer == 'sgd':
-        optimizer = torch.optim.SGD(net.parameters(), self.cfg.meta_lr,
+        optimizer = torch.optim.SGD(parameters, self.cfg.meta_lr,
                                     momentum=self.cfg.momentum,
                                     weight_decay=self.cfg.wd)
         if state is not None:
