@@ -253,15 +253,11 @@ class ReptileSimSiam2DLearner:
             
             # batch_indices = [torch.randint(len(meta_train_dataset), size=(self.cfg.inner_batch_size,)) for _ in range(self.cfg.inner_steps)]
             batch_indices = [list(range(len(meta_train_dataset))) for _ in range(self.cfg.inner_steps)]
-<<<<<<< HEAD
             # support_loader = DataLoader(meta_train_dataset, batch_sampler=batch_indices, collate_fn=get_features)
             support_loader = DataLoader(meta_train_dataset, batch_size=len(meta_train_dataset), collate_fn=get_features)
             
             val_loader = DataLoader(val_dataset, batch_size=len(val_dataset), collate_fn=get_features, shuffle=True)
             self.meta_eval(rank, net, val_loader, simsiam_criterion, logs)
-=======
-            support_loader = DataLoader(meta_train_dataset, batch_size = len(meta_train_dataset), collate_fn=get_features, shuffle=True)
->>>>>>> a9596cb12d59d677cb659df4d98796edec3a5609
             
             if self.cfg.domain_adaptation:
                 self.write_log(rank, logs, "Performing domain adaptation")
@@ -439,12 +435,8 @@ class ReptileSimSiam2DLearner:
             support = supports[task_idx]
             # batch_indices = [torch.randint(len(support), size=(self.cfg.inner_batch_size,)) for _ in range(self.cfg.inner_steps)]
             batch_indices = [list(range(len(support))) for _ in range(self.cfg.inner_steps)]
-<<<<<<< HEAD
             # support_loader = DataLoader(support, batch_sampler=batch_indices, collate_fn=get_features)
             support_loader = DataLoader(support, batch_size=len(support), collate_fn=get_features)
-=======
-            support_loader = DataLoader(support, batch_size = len(support), collate_fn=get_features, shuffle=True)
->>>>>>> a9596cb12d59d677cb659df4d98796edec3a5609
             
             loss = self.meta_train(rank, net, support_loader, criterion, logs)
             losses.append(loss)
@@ -467,7 +459,6 @@ class ReptileSimSiam2DLearner:
         # net.eval()
         net.zero_grad()
         optimizer = self.get_optimizer(net)
-<<<<<<< HEAD
         s_x1, s_x2, y = next(iter(support_loader))
         for inner_step in range(self.cfg.inner_steps):
             p1, p2, z1, z2 = net(s_x1, s_x2)
@@ -483,24 +474,7 @@ class ReptileSimSiam2DLearner:
                 KNN_acc = np.mean(KNN_pred == y)*100
                 std = torch.std(torch.cat((F.normalize(z1, dim=1), F.normalize(z1, dim=1)), dim=0))
                 self.write_log(rank, logs, f'\tStep [{inner_step}/{self.cfg.inner_steps}] Loss: {loss.item():.4f}\tStd: {std.item():.4f}\tKNN Acc: {KNN_acc:.2f}%')
-=======
-        for inner_step in range(self.cfg.inner_steps):
-            for _, (s_x1, s_x2, y) in enumerate(support_loader):
-                p1, p2, z1, z2 = net(s_x1, s_x2)
-                loss = -(criterion(p1, z2).mean() + criterion(p2, z1).mean()) * 0.5
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-                
-                if self.cfg.log_steps:
-                    KNNCls = KNN(n_neighbors=3)
-                    KNNCls.fit(z1.detach().cpu().numpy(), y=y)
-                    KNN_pred = KNNCls.predict(z2.detach().cpu().numpy())
-                    KNN_acc = np.mean(KNN_pred == y)*100
-                    std = torch.std(torch.cat((F.normalize(z1, dim=1), F.normalize(z1, dim=1)), dim=0))
-                    self.write_log(rank, logs, f'\tStep [{inner_step + 1}/{self.cfg.inner_steps}] Loss: {loss.item():.4f}\tStd: {std.item():.4f}\tKNN Acc: {KNN_acc:.2f}%')
-        
->>>>>>> a9596cb12d59d677cb659df4d98796edec3a5609
+
         return loss.item()
     
     def meta_eval(self, rank, net, val_loader, criterion, logs):
