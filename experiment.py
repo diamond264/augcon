@@ -20,6 +20,7 @@ from data_loader.DigitFiveDataset import DigitFiveDataset
 from data_loader.PACSDataset import PACSDataset
 from data_loader.Country211Dataset import Country211Dataset
 from data_loader.PCamDataset import PCamDataset
+from data_loader.ImageNetDataset import ImageNetDataset
 from data_loader.EmptyDataset import EmptyDataset
 
 # 1D pretext tasks
@@ -144,6 +145,11 @@ class Experiment:
                     label_dict = train_dataset.get_label_dict()
                     val_dataset = PCamDataset(self.cfg, self.logger, type='val', label_dict=label_dict)
                     test_dataset = PCamDataset(self.cfg, self.logger, type='test', label_dict=label_dict)
+                elif 'imagenet' in self.cfg.dataset_name: # both for imagenet & imagenet_mini
+                    train_dataset = ImageNetDataset(self.cfg, self.logger, type='train')
+                    label_dict = train_dataset.get_label_dict()
+                    val_dataset = ImageNetDataset(self.cfg, self.logger, type='val', label_dict=label_dict)
+                    test_dataset = ImageNetDataset(self.cfg, self.logger, type='test', label_dict=label_dict)
 
             # Start training
             learner.run(train_dataset, val_dataset, test_dataset)

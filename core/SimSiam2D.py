@@ -340,7 +340,7 @@ class SimSiam2DLearner:
             p1, p2, z1, z2 = net(features, pos_features)
             loss = -(criterion(p1, z2).mean() + criterion(p2, z1).mean()) * 0.5
             
-            std = torch.std(torch.cat((z1, z2), dim=0))
+            std = torch.std(torch.cat((F.normalize(z1, dim=1), F.normalize(z1, dim=1)), dim=0))
             if batch_idx % self.cfg.log_freq == 0:
                 log = f'Epoch [{epoch+1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) '
                 log += f'Loss: {loss.item():.4f}\tStd: {std.item():.4f}'

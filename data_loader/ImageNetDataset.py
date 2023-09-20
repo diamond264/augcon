@@ -9,41 +9,40 @@ from collections import defaultdict
 from PIL import ImageFile
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
-from torch.utils.data import Dataset, ConcatDataset, Subset
+from torch.utils.data import Dataset, ConcatDataset
 
 from core.image_loader.PosPairLoader import PosPairLoader
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
-_DIGIT5_RESIZE = (32, 32)
-_DIGIT5_MEAN = [0.5, 0.5, 0.5]
-_DIGIT5_STDDEV = [0.5, 0.5, 0.5]
+_ImageNet_SIZE = (224, 224)
+_ImageNet_MEAN = [0.485, 0.456, 0.406]
+_ImageNet_STDDEV = [0.229, 0.224, 0.225]
 
-_TRAIN_NUM = int(25000 * 0.7)
-_TEST_NUM = 9000
 
-class DigitFiveDataset(torch.utils.data.Dataset):
+class ImageNetDataset(torch.utils.data.Dataset):
     def __init__(self, cfg, logger, type='train', label_dict=None):
         st = time.time()
         self.cfg = cfg
         self.logger = logger
         self.type = type
         self.label_dict = label_dict
-        
+
         if self.type == 'train':
             self.file_path = self.cfg.train_dataset_path
         elif self.type == 'test':
             self.file_path = self.cfg.test_dataset_path
         elif self.type == 'val':
             self.file_path = self.cfg.val_dataset_path
-        else: assert(0)
+        else:
+            assert (0)
 
         self.pre_transform = transforms.Compose([
-            transforms.Resize(_DIGIT5_RESIZE)
+            transforms.Resize(_ImageNet_SIZE)
         ])
         self.post_transform = transforms.Compose([
             transforms.ToTensor(),
-            transforms.Normalize(mean=_DIGIT5_MEAN,
-                                 std=_DIGIT5_STDDEV)
+            transforms.Normalize(mean=_ImageNet_MEAN,
+                                 std=_ImageNet_STDDEV)
         ])
 
         self.dataset = []
@@ -51,11 +50,10 @@ class DigitFiveDataset(torch.utils.data.Dataset):
         self.domain_labels = []
         self.indices_by_domain = defaultdict(list)
         self.logger.info(f"Loading dataset from {self.file_path}")
-        self.loader = self.get_loader()
         self.preprocessing()
         self.logger.info(f"Preprocessing took {time.time() - st} seconds")
 
-    def get_loader(self):
+    def get_loader(self, rand_aug=False):
         # return x
         loader = transforms.Compose([
             self.pre_transform,
@@ -64,12 +62,13 @@ class DigitFiveDataset(torch.utils.data.Dataset):
         # return k, q
         if self.cfg.mode == 'pretrain':
             loader = PosPairLoader(pre_transform=self.pre_transform,
-                                      post_transform=self.post_transform)
+                                   post_transform=self.post_transform,
+                                   rand_aug=rand_aug)
         # return x, k, q
         elif self.cfg.mode == 'finetune' and not self.type == 'test':
             if 'meta' in self.cfg.pretext:
-                loader = PosPairLoader(pre_transform=self.pre_transform, 
-                                       post_transform=self.post_transform, 
+                loader = PosPairLoader(pre_transform=self.pre_transform,
+                                       post_transform=self.post_transform,
                                        return_original=True)
         return loader
 
@@ -82,32 +81,19 @@ class DigitFiveDataset(torch.utils.data.Dataset):
             assert (0)
 
         cnt = 0
-        for i, domain in enumerate(self.cfg.domains):
-            dataset = ImageFolder(os.path.join(self.file_path, domain), self.loader)
 
-            # #fixme: It was for downsampling when we use it has training data (DA)
-            if self.cfg.down_sample:
-                if self.type == "train" and len(dataset) > _TRAIN_NUM:
-                    # For downsampling
-                    target_len = _TRAIN_NUM
-                    random_indices = torch.randperm(len(dataset))[:target_len]
-                    dataset = torch.utils.data.Subset(dataset, random_indices)
+        loader = self.get_loader(self.cfg.rand_aug)
+        dataset = ImageFolder(self.file_path, loader)
 
-                elif self.type == "test" and len(dataset) > _TEST_NUM:
-                    # For downsampling
-                    target_len = _TEST_NUM
-                    random_indices = torch.randperm(len(dataset))[:target_len]
-                    dataset = torch.utils.data.Subset(dataset, random_indices)
+        if self.cfg.mode == 'finetune':
+            dataset = self.filter_nway_kshot(dataset, self.cfg.n_way, self.cfg.k_shot)
 
-            if self.cfg.mode == 'finetune':
-                dataset = self.filter_nway_kshot(dataset, self.cfg.n_way, self.cfg.k_shot)
+        self.dataset = ConcatDataset([self.dataset, dataset])
+        self.domain_labels.extend([0] * len(dataset))
+        self.domains.append(0)
+        self.indices_by_domain[0] = np.arange(len(dataset)) + cnt
+        cnt += len(dataset)
 
-            self.dataset = ConcatDataset([self.dataset, dataset])
-            self.domain_labels.extend([i] * len(dataset))
-            self.domains.append(i)
-            self.indices_by_domain[i] = np.arange(len(dataset)) + cnt
-            cnt += len(dataset)
-        
         self.domain_labels = np.array(self.domain_labels)
         self.domain_labels = torch.utils.data.TensorDataset(torch.from_numpy(self.domain_labels))
 
@@ -116,25 +102,41 @@ class DigitFiveDataset(torch.utils.data.Dataset):
             all_labels = np.array(dataset.classes)
             filtered_labels = np.random.choice(all_labels, n_way, replace=False)
             self.label_dict = {label: i for i, label in enumerate(filtered_labels)}
-        print(f'selected labels: {self.label_dict.keys()}')
-        
+        print(f'selected labels: {self.label_dict}')
+
         filtered_dataset = []
         for label in self.label_dict.keys():
             label_to_num = {l: i for i, l in enumerate(dataset.classes)}
             num_to_label = {i: l for i, l in enumerate(dataset.classes)}
             label_num = label_to_num[label]
-            
+
+
             indices = np.array(dataset.targets)
             indices = np.where(indices == label_num)[0]
             if self.type == 'train':
                 if len(indices) < k_shot: continue
-            else: k_shot = len(indices)
+            else:
+                k_shot = len(indices)
             indices = np.random.choice(indices, k_shot, replace=False)
-            
+
             new_dataset = torch.utils.data.Subset(dataset, indices)
-            new_dataset = [(feature, self.label_dict[num_to_label[label]]) for feature, label in new_dataset]
+            new_label = self.label_dict[label]
+
+            if self.cfg.supervised_adaptation and self.type != 'test':
+                xs, qs, ks = [], [], []
+                for feature, _ in new_dataset:
+                    xs.append(feature[0])
+                    qs.append(feature[1])
+                    ks.append(feature[2])
+
+                random.shuffle(ks)
+                new_dataset = []
+                new_dataset = [([xs[i], qs[i], ks[i]], new_label) for i in range(len(xs))]
+            else:
+                new_dataset = [(feature, new_label) for feature, _ in new_dataset]
+
             filtered_dataset = ConcatDataset([filtered_dataset, new_dataset])
-            
+
         return filtered_dataset
 
     def get_indices_by_domain(self):
