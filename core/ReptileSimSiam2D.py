@@ -253,7 +253,7 @@ class ReptileSimSiam2DLearner:
             
             # batch_indices = [torch.randint(len(meta_train_dataset), size=(self.cfg.inner_batch_size,)) for _ in range(self.cfg.inner_steps)]
             batch_indices = [list(range(len(meta_train_dataset))) for _ in range(self.cfg.inner_steps)]
-            support_loader = DataLoader(meta_train_dataset, batch_sampler=batch_indices, collate_fn=get_features)
+            support_loader = DataLoader(meta_train_dataset, batch_size = len(meta_train_dataset), collate_fn=get_features, shuffle=True)
             
             if self.cfg.domain_adaptation:
                 self.write_log(rank, logs, "Performing domain adaptation")
@@ -432,7 +432,7 @@ class ReptileSimSiam2DLearner:
             support = supports[task_idx]
             # batch_indices = [torch.randint(len(support), size=(self.cfg.inner_batch_size,)) for _ in range(self.cfg.inner_steps)]
             batch_indices = [list(range(len(support))) for _ in range(self.cfg.inner_steps)]
-            support_loader = DataLoader(support, batch_sampler=batch_indices, collate_fn=get_features)
+            support_loader = DataLoader(support, batch_size = len(support), collate_fn=get_features, shuffle=True)
             
             loss = self.meta_train(rank, net, support_loader, criterion, logs)
             losses.append(loss)
@@ -455,20 +455,21 @@ class ReptileSimSiam2DLearner:
         # net.eval()
         # net.zero_grad()
         optimizer = self.get_optimizer(net)
-        for inner_step, (s_x1, s_x2, y) in enumerate(support_loader):
-            p1, p2, z1, z2 = net(s_x1, s_x2)
-            loss = -(criterion(p1, z2).mean() + criterion(p2, z1).mean()) * 0.5
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-            
-            if self.cfg.log_steps:
-                KNNCls = KNN(n_neighbors=3)
-                KNNCls.fit(z1.detach().cpu().numpy(), y=y)
-                KNN_pred = KNNCls.predict(z2.detach().cpu().numpy())
-                KNN_acc = np.mean(KNN_pred == y)*100
-                std = torch.std(torch.cat((F.normalize(z1, dim=1), F.normalize(z1, dim=1)), dim=0))
-                self.write_log(rank, logs, f'\tStep [{inner_step}/{self.cfg.inner_steps}] Loss: {loss.item():.4f}\tStd: {std.item():.4f}\tKNN Acc: {KNN_acc:.2f}%')
+        for inner_step in range(self.cfg.inner_steps):
+            for _, (s_x1, s_x2, y) in enumerate(support_loader):
+                p1, p2, z1, z2 = net(s_x1, s_x2)
+                loss = -(criterion(p1, z2).mean() + criterion(p2, z1).mean()) * 0.5
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                
+                if self.cfg.log_steps:
+                    KNNCls = KNN(n_neighbors=3)
+                    KNNCls.fit(z1.detach().cpu().numpy(), y=y)
+                    KNN_pred = KNNCls.predict(z2.detach().cpu().numpy())
+                    KNN_acc = np.mean(KNN_pred == y)*100
+                    std = torch.std(torch.cat((F.normalize(z1, dim=1), F.normalize(z1, dim=1)), dim=0))
+                    self.write_log(rank, logs, f'\tStep [{inner_step + 1}/{self.cfg.inner_steps}] Loss: {loss.item():.4f}\tStd: {std.item():.4f}\tKNN Acc: {KNN_acc:.2f}%')
         
         return loss.item()
     
