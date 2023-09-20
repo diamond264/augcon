@@ -140,9 +140,9 @@ class Bottleneck(nn.Module):
                                planes, kernel_size=1, bias=False)
         self.bn3 = nn.BatchNorm2d(self.expansion*planes)
 
-        self.shortcut = nn.Sequential()
+        self.downsample = nn.Sequential()
         if stride != 1 or in_planes != self.expansion*planes:
-            self.shortcut = nn.Sequential(
+            self.downsample = nn.Sequential(
                 nn.Conv2d(in_planes, self.expansion*planes,
                           kernel_size=1, stride=stride, bias=False),
                 nn.BatchNorm2d(self.expansion*planes)
@@ -152,7 +152,7 @@ class Bottleneck(nn.Module):
         out = F.relu(self.bn1(self.conv1(x)))
         out = F.relu(self.bn2(self.conv2(out)))
         out = self.bn3(self.conv3(out))
-        out += self.shortcut(x)
+        out += self.downsample(x)
         out = F.relu(out)
         return out
 
@@ -206,7 +206,7 @@ class ModifiedBottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=10, mlp=True):
+    def __init__(self, block, num_blocks, num_classes=10, mlp=True, use_adapter=False, adapter_ratio=0):
         super(ResNet, self).__init__()
         self.in_planes = 64
         
@@ -220,8 +220,8 @@ class ResNet(nn.Module):
         self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(512*block.expansion, num_classes)
+        dim_mlp = self.fc.in_features
         if mlp:
-            dim_mlp = self.fc.in_features
             # self.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), self.fc)
             self.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp, bias=False),
                                         nn.BatchNorm1d(dim_mlp),
@@ -230,6 +230,16 @@ class ResNet(nn.Module):
                                         nn.BatchNorm1d(dim_mlp),
                                         nn.ReLU(inplace=True), # second layer
                                         self.fc)
+        
+        self.use_adapter = use_adapter
+        self.adapter_ratio = adapter_ratio
+        if self.use_adapter:
+            self.adapter = nn.Sequential(
+                nn.Linear(dim_mlp, dim_mlp // 4, bias=False),
+                nn.ReLU(inplace=True),
+                nn.Linear(dim_mlp // 4, dim_mlp, bias=False),
+                nn.ReLU(inplace=True)
+            )
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1]*(num_blocks-1)
@@ -248,6 +258,9 @@ class ResNet(nn.Module):
         out = self.layer4(out)
         out = self.avgpool(out)
         out = out.view(out.size(0), -1)
+        if self.use_adapter:
+            adapted_out = self.adapter(out)
+            out = self.adapter_ratio * adapted_out + (1 - self.adapter_ratio) * out
         out = self.fc(out)
         return out
 
@@ -532,8 +545,8 @@ def ResNet34(num_classes=10):
     return ResNet(BasicBlock, [3, 4, 6, 3], num_classes)
 
 
-def ResNet50(num_classes=10, mlp=True):
-    return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, mlp)
+def ResNet50(num_classes=10, mlp=True, use_adapter=False, adapter_ratio=0):
+    return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, mlp, use_adapter, adapter_ratio)
 
 def ResNet50_meta(num_classes=10, mlp=True):
     return ResNet_meta(Bottleneck, [3, 4, 6, 3], num_classes, mlp)

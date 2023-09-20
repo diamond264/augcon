@@ -2,7 +2,7 @@ import os
 import time
 import numpy as np
 import sklearn.metrics as metrics
-import clip
+# import clip
 
 from sklearn.neighbors import KNeighborsClassifier as KNN
 
@@ -187,27 +187,27 @@ class SimSiam2DLearner:
             criterion = nn.CrossEntropyLoss().cuda()
         
         # For pretraining, load pretrained model
-        if self.cfg.mode == 'pretrain':
-            if self.cfg.pretrained == 'clip':
-                device = "cuda" if torch.cuda.is_available() else "cpu"
-                if self.cfg.backbone == 'resnet50':
-                    self.write_log(rank, logs, "Loading pretrained model from CLIP - RN50")
-                    clip_model, _ = clip.load("RN50", device=device)
-                    clip_state = clip_model.visual.state_dict()
+        # if self.cfg.mode == 'pretrain':
+        #     if self.cfg.pretrained == 'clip':
+        #         device = "cuda" if torch.cuda.is_available() else "cpu"
+        #         if self.cfg.backbone == 'resnet50':
+        #             self.write_log(rank, logs, "Loading pretrained model from CLIP - RN50")
+        #             clip_model, _ = clip.load("RN50", device=device)
+        #             clip_state = clip_model.visual.state_dict()
                     
-                    new_state = {}
-                    for k, v in clip_state.items():
-                        k = 'encoder.' + k
-                        if world_size > 1:
-                            k = 'module.' + k
-                        if not k in net.state_dict().keys():
-                            self.write_log(rank, logs, f'Unrecognized key in CLIP: {k}')
-                        if not 'fc' in k:
-                            new_state[k] = v
+        #             new_state = {}
+        #             for k, v in clip_state.items():
+        #                 k = 'encoder.' + k
+        #                 if world_size > 1:
+        #                     k = 'module.' + k
+        #                 if not k in net.state_dict().keys():
+        #                     self.write_log(rank, logs, f'Unrecognized key in CLIP: {k}')
+        #                 if not 'fc' in k:
+        #                     new_state[k] = v
                         
-                    msg = net.load_state_dict(new_state, strict=False)
-                    self.write_log(rank, logs, f'Missing keys: {msg.missing_keys}')
-                    del clip_state, clip_model
+        #             msg = net.load_state_dict(new_state, strict=False)
+        #             self.write_log(rank, logs, f'Missing keys: {msg.missing_keys}')
+        #             del clip_state, clip_model
                 
                 # if self.cfg.adapter:
                 #     for name, param in net.named_parameters():
@@ -216,28 +216,28 @@ class SimSiam2DLearner:
         
         # For finetuning, load pretrained model
         if self.cfg.mode == 'finetune':
-            if self.cfg.pretrained == 'clip':
-                device = "cuda" if torch.cuda.is_available() else "cpu"
-                if self.cfg.backbone == 'resnet50':
-                    self.write_log(rank, logs, "Loading pretrained model from CLIP - RN50")
-                    clip_model, _ = clip.load("RN50", device=device)
-                    clip_state = clip_model.visual.state_dict()
+            # if self.cfg.pretrained == 'clip':
+            #     device = "cuda" if torch.cuda.is_available() else "cpu"
+            #     if self.cfg.backbone == 'resnet50':
+            #         self.write_log(rank, logs, "Loading pretrained model from CLIP - RN50")
+            #         clip_model, _ = clip.load("RN50", device=device)
+            #         clip_state = clip_model.visual.state_dict()
                     
-                    new_state = {}
-                    for k, v in clip_state.items():
-                        k = 'encoder.' + k
-                        if world_size > 1:
-                            k = 'module.' + k
-                        if not k in net.state_dict().keys():
-                            self.write_log(rank, logs, f'Unrecognized key in CLIP: {k}')
-                        if not 'fc' in k:
-                            new_state[k] = v
+            #         new_state = {}
+            #         for k, v in clip_state.items():
+            #             k = 'encoder.' + k
+            #             if world_size > 1:
+            #                 k = 'module.' + k
+            #             if not k in net.state_dict().keys():
+            #                 self.write_log(rank, logs, f'Unrecognized key in CLIP: {k}')
+            #             if not 'fc' in k:
+            #                 new_state[k] = v
                         
-                    msg = net.load_state_dict(new_state, strict=False)
-                    self.write_log(rank, logs, f'Missing keys: {msg.missing_keys}')
-                    del clip_state, clip_model
+            #         msg = net.load_state_dict(new_state, strict=False)
+            #         self.write_log(rank, logs, f'Missing keys: {msg.missing_keys}')
+            #         del clip_state, clip_model
 
-            elif os.path.isfile(self.cfg.pretrained):
+            if os.path.isfile(self.cfg.pretrained):
                 loc = 'cuda:{}'.format(rank)
                 state = torch.load(self.cfg.pretrained, map_location=loc)['state_dict']
                 self.write_log(rank, logs, "Loading pretrained model from checkpoint - {}".format(self.cfg.pretrained))

@@ -37,13 +37,14 @@ class Predictor(nn.Module):
         return x
 
 class SimSiamNet(nn.Module):
-    def __init__(self, backbone='resnet18', out_dim=128, pred_dim=64, mlp=True, adapter=False):
+    def __init__(self, backbone='resnet18', out_dim=128, pred_dim=64, mlp=True, use_adapter=False, adapter_ratio=0):
         super(SimSiamNet, self).__init__()
         self.encoder = None
         if backbone == 'resnet18':
             self.encoder = ResNet18(num_classes=out_dim, mlp=mlp)
         elif backbone == 'resnet50':
-            self.encoder = ModifiedResNet50(num_classes=out_dim, mlp=mlp, adapter=adapter)
+            # self.encoder = ModifiedResNet50(num_classes=out_dim, mlp=mlp, adapter=adapter)
+            self.encoder = ResNet50(num_classes=out_dim, mlp=mlp, use_adapter=use_adapter, adapter_ratio=adapter_ratio)
         elif backbone == 'cnn':
             self.encoder = CNN(num_classes=out_dim, mlp=mlp)
         elif backbone == 'imagenet_resnet50':
@@ -61,15 +62,15 @@ class SimSiamNet(nn.Module):
             self.encoder.fc[6].bias.requires_grad = False # hack: not use bias as it is followed by BN
         if mlp and backbone != 'imagenet_resnet50':
             self.encoder.fc[6].bias.requires_grad = False
-            self.encoder.fc = nn.Sequential(self.encoder.fc, nn.BatchNorm1d(out_dim, affine=False))
+            self.encoder.fc.append(nn.BatchNorm1d(out_dim, affine=False))
         
-        if backbone == 'imagenet_resnet50':
-            self.predictor = nn.Sequential(nn.Linear(out_dim, pred_dim, bias=False),
+        # if backbone == 'imagenet_resnet50':
+        self.predictor = nn.Sequential(nn.Linear(out_dim, pred_dim, bias=False),
                                         nn.BatchNorm1d(pred_dim),
                                         nn.ReLU(inplace=True), # hidden layer
                                         nn.Linear(pred_dim, out_dim)) # output layer
-        else:
-            self.predictor = Predictor(dim=out_dim, pred_dim=pred_dim)
+        # else:
+        #     self.predictor = Predictor(dim=out_dim, pred_dim=pred_dim)
 
     def forward(self, x1, x2):
         z1 = self.encoder(x1)
@@ -81,13 +82,14 @@ class SimSiamNet(nn.Module):
 
 
 class SimSiamClassifier(nn.Module):
-    def __init__(self, backbone, num_cls, mlp=True, adapter=False):
+    def __init__(self, backbone, num_cls, mlp=True, use_adapter=False, adapter_ratio=0):
         super(SimSiamClassifier, self).__init__()
         self.encoder = None
         if backbone == 'resnet18':
             self.encoder = ResNet18(num_classes=num_cls, mlp=mlp)
         elif backbone == 'resnet50':
-            self.encoder = ModifiedResNet50(num_classes=num_cls, mlp=mlp, adapter=adapter)
+            # self.encoder = ModifiedResNet50(num_classes=num_cls, mlp=mlp, adapter=adapter)
+            self.encoder = ResNet50(num_classes=num_cls, mlp=mlp, use_adapter=use_adapter, adapter_ratio=adapter_ratio)
         elif backbone == 'imagenet_resnet50':
             self.encoder = models.resnet50(num_classes=num_cls)
         elif backbone == 'cnn':
@@ -98,7 +100,7 @@ class SimSiamClassifier(nn.Module):
         return x
 
 
-class ReptileSimSiam2DLearner:
+class AdapterSimSiam2DLearner:
     def __init__(self, cfg, gpu, logger):
         self.cfg = cfg
         self.gpu = gpu
@@ -128,10 +130,10 @@ class ReptileSimSiam2DLearner:
         torch.cuda.set_device(rank)
         
         # Model initialization
-        net = SimSiamNet(self.cfg.backbone, self.cfg.out_dim, self.cfg.pred_dim, self.cfg.pretrain_mlp)
+        net = SimSiamNet(self.cfg.backbone, self.cfg.out_dim, self.cfg.pred_dim, self.cfg.pretrain_mlp, self.cfg.use_adapter, self.cfg.adapter_ratio)
         net.cuda()
         if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval_finetune':
-            cls_net = SimSiamClassifier(self.cfg.backbone, self.cfg.n_way, self.cfg.finetune_mlp)
+            cls_net = SimSiamClassifier(self.cfg.backbone, self.cfg.n_way, self.cfg.finetune_mlp, self.cfg.use_adapter, self.cfg.adapter_ratio)
             cls_net.cuda()
         
         # Setting Distributed Data Parallel configuration
@@ -235,7 +237,7 @@ class ReptileSimSiam2DLearner:
                         k = k.replace('module.', '')
                     new_state[k] = v
                     
-                msg = net.load_state_dict(new_state, strict=True)
+                msg = net.load_state_dict(new_state, strict=False)
                 self.write_log(rank, logs, "Loading pretrained model from checkpoint - {}".format(self.cfg.pretrained))
                 self.write_log(rank, logs, f"missing keys: {msg.missing_keys}")
             else:
@@ -280,7 +282,7 @@ class ReptileSimSiam2DLearner:
             if self.cfg.freeze:
                 self.write_log(rank, logs, "Freezing the encoder")
                 for name, param in net.named_parameters():
-                    if not 'fc' in name:
+                    if not ('fc' in name or 'adapter' in name):
                         param.requires_grad = False
                     else:
                         param.requires_grad = True
@@ -404,11 +406,18 @@ class ReptileSimSiam2DLearner:
         return supports
     
     def get_optimizer(self, net, state=None):
-        optimizer = torch.optim.Adam(net.parameters(), lr=self.cfg.meta_lr)
+        for name, param in net.named_parameters():
+            if 'adapter' in name:
+                param.requires_grad = True
+            else:
+                param.requires_grad = False
+        parameters = list(filter(lambda p: p.requires_grad, net.parameters()))
+        # print the parameter names to be trained
+        optimizer = torch.optim.Adam(parameters, lr=self.cfg.meta_lr)
         # if self.cfg.optimizer == 'sgd':
-        #     optimizer = torch.optim.SGD(net.parameters(), self.cfg.lr,
-        #                                 momentum=self.cfg.momentum,
-        #                                 weight_decay=self.cfg.wd)
+        optimizer = torch.optim.SGD(net.parameters(), self.cfg.meta_lr,
+                                    momentum=self.cfg.momentum,
+                                    weight_decay=self.cfg.wd)
         if state is not None:
             optimizer.load_state_dict(state)
         return optimizer
@@ -455,8 +464,7 @@ class ReptileSimSiam2DLearner:
             self.write_log(rank, logs, f'Epoch [{epoch+1}/{num_epochs}] Loss: {sum(losses)/len(losses):.4f}')
     
     def meta_train(self, rank, net, support_loader, criterion, logs):
-        net.train()
-        # net.eval()
+        net.eval()
         net.zero_grad()
         optimizer = self.get_optimizer(net)
         s_x1, s_x2, y = next(iter(support_loader))

@@ -37,6 +37,7 @@ from core.SimSiam2D import SimSiam2DLearner
 # 2D meta pretext tasks
 from core.MetaSimSiam2D import MetaSimSiam2DLearner
 from core.ReptileSimSiam2D import ReptileSimSiam2DLearner
+from core.AdapterSimSiam2D import AdapterSimSiam2DLearner
 
 
 class Experiment:
@@ -100,6 +101,8 @@ class Experiment:
                 learner = SimSiam2DLearner(self.cfg, self.gpu, self.logger)
             elif self.cfg.pretext == 'metasimsiam':
                 learner = ReptileSimSiam2DLearner(self.cfg, self.gpu, self.logger)
+            elif self.cfg.pretext == 'adaptersimsiam':
+                learner = AdapterSimSiam2DLearner(self.cfg, self.gpu, self.logger)
             else:
                 self.logger.warning('Pretext task not supported')
         
