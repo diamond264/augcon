@@ -67,7 +67,7 @@ class DigitFiveDataset(torch.utils.data.Dataset):
                                       post_transform=self.post_transform)
         # return x, k, q
         elif self.cfg.mode == 'finetune' and not self.type == 'test':
-            if 'meta' in self.cfg.pretext:
+            if 'meta' in self.cfg.pretext or True:
                 loader = PosPairLoader(pre_transform=self.pre_transform, 
                                        post_transform=self.post_transform, 
                                        return_original=True)

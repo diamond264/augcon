@@ -261,7 +261,8 @@ class AdapterSimSiam2DLearner:
             val_loader = DataLoader(val_dataset, batch_size=len(val_dataset), collate_fn=get_features, shuffle=True)
             self.meta_eval(rank, net, val_loader, simsiam_criterion, logs)
             
-            if self.cfg.domain_adaptation:
+            # if self.cfg.domain_adaptation:
+            if self.cfg.use_adapter:
                 self.write_log(rank, logs, "Performing domain adaptation")
                 if world_size > 1:
                     train_sampler.set_epoch(0)
@@ -274,7 +275,9 @@ class AdapterSimSiam2DLearner:
             for i, (k, v) in enumerate(cls_net.state_dict().items()):
                 if not 'fc' in k:
                     enc_dict[k] = net.state_dict()[k]
-            msg = cls_net.load_state_dict(enc_dict, strict=False)
+                else:
+                    enc_dict[k] = v
+            msg = cls_net.load_state_dict(enc_dict, strict=True)
             self.write_log(rank, logs, f"missing keys: {msg.missing_keys}")
             net = cls_net
             
@@ -282,7 +285,7 @@ class AdapterSimSiam2DLearner:
             if self.cfg.freeze:
                 self.write_log(rank, logs, "Freezing the encoder")
                 for name, param in net.named_parameters():
-                    if not ('fc' in name or 'adapter' in name):
+                    if not 'fc' in name:
                         param.requires_grad = False
                     else:
                         param.requires_grad = True
@@ -407,17 +410,19 @@ class AdapterSimSiam2DLearner:
     
     def get_optimizer(self, net, state=None):
         for name, param in net.named_parameters():
-            if 'adapter' in name:
+            if 'adapter' in name:# or 'predictor' in name or 'fc' in name:
                 param.requires_grad = True
+                print(name)
             else:
                 param.requires_grad = False
         parameters = list(filter(lambda p: p.requires_grad, net.parameters()))
+        print(len(parameters))
         # print the parameter names to be trained
-        # optimizer = torch.optim.Adam(parameters, lr=self.cfg.meta_lr)
+        optimizer = torch.optim.Adam(parameters, lr=self.cfg.meta_lr)
         # if self.cfg.optimizer == 'sgd':
-        optimizer = torch.optim.SGD(parameters, self.cfg.meta_lr,
-                                    momentum=self.cfg.momentum,
-                                    weight_decay=self.cfg.wd)
+        # optimizer = torch.optim.SGD(parameters, self.cfg.meta_lr,
+        #                             momentum=self.cfg.momentum,
+        #                             weight_decay=self.cfg.wd)
         if state is not None:
             optimizer.load_state_dict(state)
         return optimizer
