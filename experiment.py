@@ -38,7 +38,8 @@ from core.SimSiam2D import SimSiam2DLearner
 # 2D meta pretext tasks
 from core.MetaSimSiam2D import MetaSimSiam2DLearner
 from core.ReptileSimSiam2D import ReptileSimSiam2DLearner
-from core.AdapterSimSiam2D import AdapterSimSiam2DLearner
+# from core.AdapterSimSiam2D import AdapterSimSiam2DLearner
+from core.MetaAdaptSimSiam2D import AdapterSimSiam2DLearner
 
 
 class Experiment:

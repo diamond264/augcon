@@ -248,6 +248,12 @@ class ResNet(nn.Module):
             layers.append(block(self.in_planes, planes, stride))
             self.in_planes = planes * block.expansion
         return nn.Sequential(*layers)
+    
+    def set_adapter(self, use_adapter, adapter_ratio=None):
+        self.use_adapter = use_adapter
+        if adapter_ratio != None:
+            self.adapter_ratio = adapter_ratio
+        return
 
     def forward(self, x):
         out = F.relu(self.bn1(self.conv1(x)))
@@ -263,6 +269,88 @@ class ResNet(nn.Module):
             out = self.adapter_ratio * adapted_out + (1 - self.adapter_ratio) * out
         out = self.fc(out)
         return out
+
+
+class ResNet_meta_adapt(nn.Module):
+    def __init__(self, block, num_blocks, num_classes=10, mlp=True, use_adapter=False, adapter_ratio=0):
+        super(ResNet_meta_adapt, self).__init__()
+        self.in_planes = 64
+        
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=7,
+                               stride=2, padding=3, bias=False)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
+        self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
+        self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
+        self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(512*block.expansion, num_classes)
+        dim_mlp = self.fc.in_features
+        if mlp:
+            # self.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), self.fc)
+            self.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp, bias=False),
+                                        nn.BatchNorm1d(dim_mlp),
+                                        nn.ReLU(inplace=True), # first layer
+                                        nn.Linear(dim_mlp, dim_mlp, bias=False),
+                                        nn.BatchNorm1d(dim_mlp),
+                                        nn.ReLU(inplace=True), # second layer
+                                        self.fc)
+        
+        self.use_adapter = use_adapter
+        self.adapter_ratio = adapter_ratio
+        self.vars = nn.ParameterList()
+        if self.use_adapter:
+            fc1 = nn.Linear(dim_mlp, dim_mlp // 4, bias=False)
+            w = nn.Parameter(torch.ones_like(fc1.weight))
+            torch.nn.init.kaiming_normal_(w)
+            self.vars.append(w)
+            
+            fc2 = nn.Linear(dim_mlp // 4, dim_mlp, bias=False)
+            w = nn.Parameter(torch.ones_like(fc2.weight))
+            torch.nn.init.kaiming_normal_(w)
+            self.vars.append(w)
+
+    def _make_layer(self, block, planes, num_blocks, stride):
+        strides = [stride] + [1]*(num_blocks-1)
+        layers = []
+        for stride in strides:
+            layers.append(block(self.in_planes, planes, stride))
+            self.in_planes = planes * block.expansion
+        return nn.Sequential(*layers)
+
+    def forward(self, x, vars=None):
+        if vars is None:
+            vars = self.vars
+        
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = self.maxpool(out)
+        out = self.layer1(out)
+        out = self.layer2(out)
+        out = self.layer3(out)
+        out = self.layer4(out)
+        out = self.avgpool(out)
+        out = out.view(out.size(0), -1)
+        if self.use_adapter:
+            adapted_out = F.relu(F.linear(out, vars[0]))
+            adapted_out = F.relu(F.linear(adapted_out, vars[1]))
+            out = self.adapter_ratio * adapted_out + (1 - self.adapter_ratio) * out
+        out = self.fc(out)
+        return out
+    
+    # def zero_grad(self, vars=None):
+    #     with torch.no_grad():
+    #         if vars is None:
+    #             for p in self.vars:
+    #                 if p.grad is not None:
+    #                     p.grad.zero_()
+    #         else:
+    #             for p in vars:
+    #                 if p.grad is not None:
+    #                     p.grad.zero_()
+    
+    # def parameters(self):
+    #     return self.vars
 
 
 class ResNet_meta(nn.Module):
@@ -547,6 +635,9 @@ def ResNet34(num_classes=10):
 
 def ResNet50(num_classes=10, mlp=True, use_adapter=False, adapter_ratio=0):
     return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, mlp, use_adapter, adapter_ratio)
+
+def ResNet50_meta_adapt(num_classes=10, mlp=True, use_adapter=False, adapter_ratio=0):
+    return ResNet_meta_adapt(Bottleneck, [3, 4, 6, 3], num_classes, mlp, use_adapter, adapter_ratio)
 
 def ResNet50_meta(num_classes=10, mlp=True):
     return ResNet_meta(Bottleneck, [3, 4, 6, 3], num_classes, mlp)

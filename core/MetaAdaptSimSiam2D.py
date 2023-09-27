@@ -16,27 +16,18 @@ import torch.nn.functional as F
 import torchvision.models as models
 import torch.multiprocessing as mp
 
+from torchvision import transforms
+
 from torch.autograd import Variable
 from torch.utils.data import DataLoader, DistributedSampler, Subset
 
-from net.resnet import ResNet18, ModifiedResNet50, ResNet18_meta, ResNet50
+from net.resnet import ResNet18, ResNet50_meta_adapt, ResNet50
 from net.convnetDigit5 import CNN
 
 from data_loader.DomainNetDataset import DomainNetDataset
+from RandAugment import RandAugment
 
 from tqdm import tqdm
-
-class Predictor(nn.Module):
-    def __init__(self, dim, pred_dim=1):
-        super(Predictor, self).__init__()
-        self.layer = nn.Sequential(nn.Linear(dim, pred_dim, bias=False),
-                                   nn.BatchNorm1d(pred_dim),
-                                   nn.ReLU(inplace=True),
-                                   nn.Linear(pred_dim, dim))
-    
-    def forward(self, x):
-        x = self.layer(x)
-        return x
 
 class SimSiamNet(nn.Module):
     def __init__(self, backbone='resnet18', out_dim=128, pred_dim=64, mlp=True, use_adapter=False, adapter_ratio=0, adapt_algorithm='simsiam', supervised_adaptation=False):
@@ -45,8 +36,7 @@ class SimSiamNet(nn.Module):
         if backbone == 'resnet18':
             self.encoder = ResNet18(num_classes=out_dim, mlp=mlp)
         elif backbone == 'resnet50':
-            # self.encoder = ModifiedResNet50(num_classes=out_dim, mlp=mlp, adapter=adapter)
-            self.encoder = ResNet50(num_classes=out_dim, mlp=mlp, use_adapter=use_adapter, adapter_ratio=adapter_ratio)
+            self.encoder = ResNet50_meta_adapt(num_classes=out_dim, mlp=mlp, use_adapter=use_adapter, adapter_ratio=adapter_ratio)
         elif backbone == 'cnn':
             self.encoder = CNN(num_classes=out_dim, mlp=mlp)
         elif backbone == 'imagenet_resnet50':
@@ -66,36 +56,30 @@ class SimSiamNet(nn.Module):
             self.encoder.fc[6].bias.requires_grad = False
             self.encoder.fc.append(nn.BatchNorm1d(out_dim, affine=False))
         
-        # if backbone == 'imagenet_resnet50':
         self.predictor = nn.Sequential(nn.Linear(out_dim, pred_dim, bias=False),
                                         nn.BatchNorm1d(pred_dim),
                                         nn.ReLU(inplace=True), # hidden layer
                                         nn.Linear(pred_dim, out_dim)) # output layer
         self.adapt_algorithm = adapt_algorithm
         self.supervised_adaptation = supervised_adaptation
-        # else:
-        #     self.predictor = Predictor(dim=out_dim, pred_dim=pred_dim)
 
-    # def forward(self, x1, x2):
-    #     z1 = self.encoder(x1)
+    # def forward(self, x1, x2, vars=None):
+    #     if vars == None:
+    #         vars = self.encoder.vars
+    #     z1 = self.encoder(x1, vars)
     #     p1 = self.predictor(z1)
-    #     z2 = self.encoder(x2)
+    #     z2 = self.encoder(x2, vars)
     #     p2 = self.predictor(z2)
         
     #     return p1, p2, z1.detach(), z2.detach()
     
-    def forward(self, x1, x2, y):
-        if self.adapt_algorithm == 'simsiam':
-            z1 = self.encoder(x1)
-            p1 = self.predictor(z1)
-            z2 = self.encoder(x2)
-            p2 = self.predictor(z2)
-            
-            return p1, p2, z1.detach(), z2.detach()
+    def forward(self, x1, x2, y=None, vars=None):
+        if vars == None:
+            vars = self.encoder.vars
         # compute query features
-        z1 = self.encoder(x1)  # queries: NxC
+        z1 = self.encoder(x1, vars)  # queries: NxC
         z1 = nn.functional.normalize(z1, dim=1) 
-        z2 = self.encoder(x2)
+        z2 = self.encoder(x2, vars)
         z2 = nn.functional.normalize(z2, dim=1)
         
         LARGE_NUM = 1e9
@@ -113,9 +97,11 @@ class SimSiamNet(nn.Module):
         logits_bb = logits_bb - masks * LARGE_NUM
         logits_ab = torch.matmul(z1, z2.t())
 
-        logits = torch.cat([logits_ab, logits_aa, logits_bb], dim=1)
-        if self.supervised_adaptation:
+        logits = torch.cat([torch.einsum('ij,ij->i', z1, z2).reshape(batch_size, 1), logits_aa], dim=1)#, logits_bb], dim=1)
+        labels = torch.zeros(batch_size, dtype=torch.long).cuda()
+        if not y is None:
             logits = logits_ab
+            labels = torch.arange(batch_size).cuda()
             for i in range(len(logits)):
                 for j in range(len(logits)):
                     if i != j and y[i] == y[j]:
@@ -124,6 +110,20 @@ class SimSiamNet(nn.Module):
         # logits = F.pad(logits, (0, full_batch_size*3-logits.shape[1]), "constant", -LARGE_NUM)
 
         return logits, labels
+    
+    # def zero_grad(self, vars=None):
+    #     with torch.no_grad():
+    #         if vars is None:
+    #             for p in self.encoder.vars:
+    #                 if p.grad is not None:
+    #                     p.grad.zero_()
+    #         else:
+    #             for p in vars:
+    #                 if p.grad is not None:
+    #                     p.grad.zero_()
+    
+    # def parameters(self):
+    #     return self.encoder.vars
 
 
 class SimSiamClassifier(nn.Module):
@@ -133,8 +133,7 @@ class SimSiamClassifier(nn.Module):
         if backbone == 'resnet18':
             self.encoder = ResNet18(num_classes=num_cls, mlp=mlp)
         elif backbone == 'resnet50':
-            # self.encoder = ModifiedResNet50(num_classes=num_cls, mlp=mlp, adapter=adapter)
-            self.encoder = ResNet50(num_classes=num_cls, mlp=mlp, use_adapter=use_adapter, adapter_ratio=adapter_ratio)
+            self.encoder = ResNet50_meta_adapt(num_classes=num_cls, mlp=mlp, use_adapter=use_adapter, adapter_ratio=adapter_ratio)
         elif backbone == 'imagenet_resnet50':
             self.encoder = models.resnet50(num_classes=num_cls)
         elif backbone == 'cnn':
@@ -175,7 +174,7 @@ class AdapterSimSiam2DLearner:
         torch.cuda.set_device(rank)
         
         # Model initialization
-        net = SimSiamNet(self.cfg.backbone, self.cfg.out_dim, self.cfg.pred_dim, self.cfg.pretrain_mlp, self.cfg.use_adapter, self.cfg.adapter_ratio, self.cfg.adapt_algorithm, self.cfg.supervised_adaptation)
+        net = SimSiamNet(self.cfg.backbone, self.cfg.out_dim, self.cfg.pred_dim, self.cfg.pretrain_mlp, self.cfg.use_adapter, self.cfg.adapter_ratio)
         net.cuda()
         if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval_finetune':
             cls_net = SimSiamClassifier(self.cfg.backbone, self.cfg.n_way, self.cfg.finetune_mlp, self.cfg.use_adapter, self.cfg.adapter_ratio)
@@ -227,51 +226,7 @@ class AdapterSimSiam2DLearner:
         if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval_finetune':
             cls_criterion = nn.CrossEntropyLoss().cuda()
         
-        # For pretraining, load pretrained model
-        # if self.cfg.mode == 'pretrain':
-        #     if self.cfg.pretrained == 'clip':
-        #         device = "cuda" if torch.cuda.is_available() else "cpu"
-        #         if self.cfg.backbone == 'resnet50':
-        #             self.write_log(rank, logs, "Loading pretrained model from CLIP - RN50")
-        #             clip_model, _ = clip.load("RN50", device=device)
-        #             clip_state = clip_model.visual.state_dict()
-                    
-        #             new_state = {}
-        #             for k, v in clip_state.items():
-        #                 k = 'encoder.' + k
-        #                 if world_size > 1:
-        #                     k = 'module.' + k
-        #                 if not k in net.state_dict().keys():
-        #                     self.write_log(rank, logs, f'Unrecognized key in CLIP: {k}')
-        #                 if not 'fc' in k:
-        #                     new_state[k] = v
-                        
-        #             msg = net.load_state_dict(new_state, strict=False)
-        #             self.write_log(rank, logs, f'Missing keys: {msg.missing_keys}')
-        #             del clip_state, clip_model
-        
-        # For finetuning, load pretrained model
-        if self.cfg.mode == 'finetune':
-            # if self.cfg.pretrained == 'clip':
-            #     device = "cuda" if torch.cuda.is_available() else "cpu"
-            #     if self.cfg.backbone == 'resnet50':
-            #         self.write_log(rank, logs, "Loading pretrained model from CLIP - RN50")
-            #         clip_model, _ = clip.load("RN50", device=device)
-            #         clip_state = clip_model.visual.state_dict()
-                    
-            #         new_state = {}
-            #         for k, v in clip_state.items():
-            #             k = 'encoder.' + k
-            #             if world_size > 1:
-            #                 k = 'module.' + k
-            #             if not k in net.state_dict().keys():
-            #                 self.write_log(rank, logs, f'Unrecognized key in CLIP: {k}')
-            #             if not 'fc' in k:
-            #                 new_state[k] = v
-                        
-            #         msg = net.load_state_dict(new_state, strict=False)
-            #         self.write_log(rank, logs, f'Missing keys: {msg.missing_keys}')
-            #         del clip_state, clip_model
+        if self.cfg.mode == 'pretrain':
             if os.path.isfile(self.cfg.pretrained):
                 loc = 'cuda:{}'.format(rank)
                 state = torch.load(self.cfg.pretrained, map_location=loc)['state_dict']
@@ -287,6 +242,50 @@ class AdapterSimSiam2DLearner:
                 self.write_log(rank, logs, f"missing keys: {msg.missing_keys}")
             else:
                 self.write_log(rank, logs, "No checkpoint found at '{}'".format(self.cfg.pretrained))
+        
+        # For finetuning, load pretrained model
+        if self.cfg.mode == 'finetune':
+            if os.path.isfile(self.cfg.pretrained):
+                loc = 'cuda:{}'.format(rank)
+                state = torch.load(self.cfg.pretrained, map_location=loc)['state_dict']
+                
+                new_state = {}
+                for k, v in state.items():
+                    if k.startswith('module.'):
+                        k = k.replace('module.', '')
+                    new_state[k] = v
+                    
+                msg = net.load_state_dict(new_state, strict=False)
+                self.write_log(rank, logs, "Loading pretrained model from checkpoint - {}".format(self.cfg.pretrained))
+                self.write_log(rank, logs, f"missing keys: {msg.missing_keys}")
+            else:
+                self.write_log(rank, logs, "No checkpoint found at '{}'".format(self.cfg.pretrained))
+                
+                
+            _IMAGENET_SIZE = (224, 224)
+            _IMAGENET_MEAN = [0.485, 0.456, 0.406]
+            _IMAGENET_STDDEV = [0.229, 0.224, 0.225]
+            pre_transform = transforms.Compose([
+                # transforms.Resize(_IMAGENET_SIZE)
+                transforms.RandomResizedCrop(_IMAGENET_SIZE)
+            ])
+            post_transform = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize(mean=_IMAGENET_MEAN,
+                                    std=_IMAGENET_STDDEV)
+            ])
+                
+            # def get_features(batch):
+            #     x1 = []
+            #     x2 = []
+            #     for x in batch:
+            #         x1_elem = post_transform(pre_transform(x[0][0]))
+            #         x2_elem = post_transform(augs(pre_transform(x[0][0])))
+            #         x1.append(x1_elem)
+            #         x2.append(x2_elem)
+            #     return torch.stack(x1).cuda(), torch.stack(x2).cuda(), y
+            
+            # support_loader = DataLoader(supports[idx], batch_size=len(supports[idx]), collate_fn=get_features)
             
             def get_features(batch):
                 x1 = []
@@ -298,18 +297,8 @@ class AdapterSimSiam2DLearner:
                     y.append(x[1])
                 return torch.stack(x1).cuda(), torch.stack(x2).cuda(), y
             
-            # batch_indices = [torch.randint(len(meta_train_dataset), size=(self.cfg.inner_batch_size,)) for _ in range(self.cfg.inner_steps)]
-            batch_indices = [list(range(len(meta_train_dataset))) for _ in range(self.cfg.inner_steps)]
-            # support_loader = DataLoader(meta_train_dataset, batch_sampler=batch_indices, collate_fn=get_features)
             support_loader = DataLoader(meta_train_dataset, batch_size=len(meta_train_dataset), collate_fn=get_features)
-            
             val_loader = DataLoader(val_dataset, batch_size=len(val_dataset), collate_fn=get_features, shuffle=True)
-            val_support_loader = DataLoader(val_dataset, batch_size=len(meta_train_dataset), collate_fn=get_features, shuffle=True)
-            self.cfg.k_shot = 5
-            self.cfg.domains = ["clipart"]
-            label_dict = {'The_Mona_Lisa': 0, 'butterfly': 1, 'teddy-bear': 2, 'penguin': 3, 'shark': 4}
-            big_train_dataset = DomainNetDataset(self.cfg, self.logger, type='train', label_dict=label_dict)
-            support_loader = DataLoader(big_train_dataset, batch_size=len(meta_train_dataset), collate_fn=get_features, shuffle=True)
             net.encoder.use_adapter = False
             self.write_log(rank, logs, "simsiam evaluation on val dataset")
             self.meta_eval(rank, net, val_loader, simsiam_criterion, logs)
@@ -317,15 +306,30 @@ class AdapterSimSiam2DLearner:
             self.meta_eval(rank, net, support_loader, simsiam_criterion, logs)
             
             net.encoder.use_adapter = self.cfg.use_adapter
-            # if self.cfg.domain_adaptation:
+            self.write_log(rank, logs, "simsiam evaluation on val dataset")
+            self.meta_eval(rank, net, val_loader, simsiam_criterion, logs)
+            self.write_log(rank, logs, "simsiam evaluation on train dataset")
+            self.meta_eval(rank, net, support_loader, simsiam_criterion, logs)
             if self.cfg.use_adapter:
                 self.write_log(rank, logs, "Performing domain adaptation")
                 if world_size > 1:
                     train_sampler.set_epoch(0)
-                self.meta_train(rank, net, support_loader, simsiam_criterion, logs)
-                # self.meta_train(rank, net, val_support_loader, simsiam_criterion, logs)
+                # self.meta_train(rank, net, support_loader, simsiam_criterion, logs)
+                # s_x1, s_x2, y = next(iter(support_loader))
+                simsiam_criterion = nn.CosineSimilarity(dim=1).cuda()
+                for name, p in net.named_parameters():
+                    if 'vars' in name: p.requires_grad = True
+                    else: p.requires_grad = False
+                net.eval()
+                # fast_weights = self.meta_train(rank, net, s_x1, s_x2, y, simsiam_criterion, self.cfg.log_steps, logs)
+                for name, p in net.named_parameters():
+                    if 'vars' in name:
+                        p.requires_grad = True
+                    else:
+                        p.requires_grad = False
+                fast_weights = self.meta_train(rank, net, support_loader, simsiam_criterion, self.cfg.log_steps, logs)
+                msg = net.load_state_dict({'encoder.vars.0': fast_weights[0], 'encoder.vars.1': fast_weights[1]}, strict=False)
             
-            # batch_indices = [torch.randint(len(val_dataset), size=(self.cfg.inner_batch_size,)) for _ in range(self.cfg.inner_steps)]
             self.write_log(rank, logs, "simsiam evaluation on val dataset")
             self.meta_eval(rank, net, val_loader, simsiam_criterion, logs)
             self.write_log(rank, logs, "simsiam evaluation on train dataset")
@@ -350,6 +354,7 @@ class AdapterSimSiam2DLearner:
                     else:
                         param.requires_grad = True
         
+        # parameters = [p for n, p in net.named_parameters() if p.requires_grad]
         parameters = list(filter(lambda p: p.requires_grad, net.parameters()))
         if self.cfg.optimizer == 'sgd':
             optimizer = torch.optim.SGD(parameters, self.cfg.lr,
@@ -407,6 +412,22 @@ class AdapterSimSiam2DLearner:
                     sampled_indices_by_domain[k] = indices
                 
             self.write_log(rank, logs, "Start training")
+            
+            if self.cfg.mode == 'pretrain':
+                for name, p in net.named_parameters():
+                    if 'vars' in name:
+                        p.requires_grad = True
+                    else:
+                        p.requires_grad = False
+                parameters = list(filter(lambda p: p.requires_grad, net.parameters()))
+                if self.cfg.optimizer == 'sgd':
+                    optimizer = torch.optim.SGD(parameters, self.cfg.lr,
+                                                momentum=self.cfg.momentum,
+                                                weight_decay=self.cfg.wd)
+                elif self.cfg.optimizer == 'adam':
+                    optimizer = torch.optim.Adam(parameters, self.cfg.lr,
+                                                weight_decay=self.cfg.wd)
+            
             for epoch in tqdm(range(self.cfg.start_epoch, self.cfg.epochs)):
                 if world_size > 1:
                     train_sampler.set_epoch(epoch)
@@ -415,12 +436,8 @@ class AdapterSimSiam2DLearner:
                     test_sampler.set_epoch(epoch)
                 
                 if self.cfg.mode == 'pretrain':
-                    supports = self.gen_per_domain_tasks(
-                        train_dataset, sampled_indices_by_domain, self.cfg.task_size, self.cfg.num_task//world_size)
-                    rand_supports = self.gen_random_tasks(
-                        meta_train_dataset, self.cfg.task_size, self.cfg.multi_cond_num_task//world_size)
-                    supports = supports + rand_supports
-                    self.pretrain(rank, net, supports, simsiam_criterion, epoch, self.cfg.epochs, logs)
+                    supports, queries = self.gen_random_tasks(meta_train_dataset, self.cfg.task_size, self.cfg.num_task)
+                    self.pretrain(rank, net, supports, queries, simsiam_criterion, optimizer, epoch, self.cfg.epochs, logs)
                     
                 elif self.cfg.mode == 'finetune':
                     self.finetune(rank, net, train_loader, cls_criterion, optimizer, epoch, self.cfg.epochs, logs)
@@ -459,14 +476,17 @@ class AdapterSimSiam2DLearner:
     
     def gen_random_tasks(self, dataset, task_size, num_task):
         supports = []
+        queries = []
         with torch.no_grad():
             for _ in range(num_task):
                 indices = list(range(len(dataset)))
                 random.shuffle(indices)
                 support = Subset(dataset, indices[:task_size])
                 supports.append(support)
+                query = Subset(dataset, indices[task_size:task_size*2])
+                queries.append(query)
         
-        return supports
+        return supports, queries
     
     def get_optimizer(self, net, state=None):
         for name, param in net.named_parameters():
@@ -487,80 +507,109 @@ class AdapterSimSiam2DLearner:
             optimizer.load_state_dict(state)
         return optimizer
     
-    def pretrain(self, rank, net, supports, criterion, epoch, num_epochs, logs):
-        num_tasks = len(supports)
+    def pretrain(self, rank, net, supports, queries, criterion, optimizer, epoch, num_epochs, logs):
+        net.eval()
+        # net.train()
+        net.zero_grad()
         
-        def get_features(batch):
-            x1, x2, y = [], [], []
-            for x in batch:
-                x1.append(x[0][0])
-                x2.append(x[0][1])
-                y.append(x[1])
-            return torch.stack(x1).cuda(), torch.stack(x2).cuda(), y
-        
-        old_weights = {}
-        for name in net.state_dict():
-            if 'running_mean' in name or 'running_var' in name or 'num_batches_tracked' in name: continue
-            old_weights[name] = net.state_dict()[name]
-        weight_updates = {name: 0 for name in old_weights}
+        _IMAGENET_SIZE = (224, 224)
+        _IMAGENET_MEAN = [0.485, 0.456, 0.406]
+        _IMAGENET_STDDEV = [0.229, 0.224, 0.225]
+        pre_transform = transforms.Compose([
+            # transforms.Resize(_IMAGENET_SIZE)
+            transforms.RandomResizedCrop(_IMAGENET_SIZE)
+        ])
+        post_transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean=_IMAGENET_MEAN,
+                                 std=_IMAGENET_STDDEV)
+        ])
         
         losses = []
-        for task_idx in range(num_tasks):
-            support = supports[task_idx]
-            # batch_indices = [torch.randint(len(support), size=(self.cfg.inner_batch_size,)) for _ in range(self.cfg.inner_steps)]
-            batch_indices = [list(range(len(support))) for _ in range(self.cfg.inner_steps)]
-            # support_loader = DataLoader(support, batch_sampler=batch_indices, collate_fn=get_features)
-            support_loader = DataLoader(support, batch_size=len(support), collate_fn=get_features)
+        for idx in range(len(supports)):
+            augs = self.get_random_augmentations()
+            def get_features(batch):
+                x1 = []
+                x2 = []
+                for x in batch:
+                    x1_elem = post_transform(pre_transform(x[0]))
+                    x2_elem = post_transform(augs(pre_transform(x[0])))
+                    x1.append(x1_elem)
+                    x2.append(x2_elem)
+                return torch.stack(x1).cuda(), torch.stack(x2).cuda()
+            query_loader = DataLoader(queries[idx], batch_size=len(queries[idx]), collate_fn=get_features)
+            q_x1, q_x2 = next(iter(query_loader))
+            # p1, p2, z1, z2 = net(q_x1, q_x2, vars=fast_weights)
+            # loss = -(criterion(p1, z2).mean() + criterion(p2, z1).mean()) * 0.5
+            # losses.append(loss)
+            logits, targets = net(q_x1, q_x2, None)
+            criterion = nn.CrossEntropyLoss().cuda()
+            loss = criterion(logits, targets)
+            acc = (logits.argmax(dim=1) == targets).float().mean()
             
-            loss = self.meta_train(rank, net, support_loader, criterion, logs)
+            if idx % self.cfg.log_freq == 0 and rank == 0:
+                log = f'Epoch [{epoch+1}/{num_epochs}]-({idx}/{len(supports)}) '
+                log += f'-------Query Loss: {loss.item():.4f}\tacc: {acc.item():.2f}'
+                logs.append(log)
+                print(log)
+            support_loader = DataLoader(supports[idx], batch_size=len(supports[idx]), collate_fn=get_features)
+            s_x1, s_x2 = next(iter(support_loader))
+            fast_weights = self.meta_train(rank, net, s_x1, s_x2, None, criterion, self.cfg.log_steps, logs)
+            
+            query_loader = DataLoader(queries[idx], batch_size=len(queries[idx]), collate_fn=get_features)
+            q_x1, q_x2 = next(iter(query_loader))
+            # p1, p2, z1, z2 = net(q_x1, q_x2, vars=fast_weights)
+            # loss = -(criterion(p1, z2).mean() + criterion(p2, z1).mean()) * 0.5
+            # losses.append(loss)
+            logits, targets = net(q_x1, q_x2, None, vars=fast_weights)
+            criterion = nn.CrossEntropyLoss().cuda()
+            loss = criterion(logits, targets)
+            acc = (logits.argmax(dim=1) == targets).float().mean()
             losses.append(loss)
-            self.write_log(rank, logs, f'Task({task_idx}) Loss: {loss:.4f}')
-             
-            weight_updates = {name: weight_updates[name]+(net.state_dict()[name]-old_weights[name]) for name in old_weights}
-            net.load_state_dict(old_weights, strict=False)
+            
+            if idx % self.cfg.log_freq == 0 and rank == 0:
+                log = f'Epoch [{epoch+1}/{num_epochs}]-({idx}/{len(supports)}) '
+                log += f'-------Query Loss: {loss.item():.4f}\tacc: {acc.item():.2f}'
+                logs.append(log)
+                print(log)
         
-        frac_done = epoch/self.cfg.epochs
-        epsilone = frac_done * self.cfg.epsilone_final + (1-frac_done) * self.cfg.epsilone_start
-        net.load_state_dict({name :
-            old_weights[name]+weight_updates[name]*epsilone/num_tasks
-            for name in old_weights}, strict=False)
-
-        if task_idx % self.cfg.log_freq == 0 and rank == 0:
-            self.write_log(rank, logs, f'Epoch [{epoch+1}/{num_epochs}] Loss: {sum(losses)/len(losses):.4f}')
+        losses = torch.stack(losses, dim=0)
+        loss = torch.sum(losses)/len(supports)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
     
-    def meta_train(self, rank, net, support_loader, criterion, logs):
+    # def meta_train(self, rank, net, x1, x2, y, criterion, log_steps=False, logs=None):
+    def meta_train(self, rank, net, loader, criterion, log_steps=False, logs=None):
         net.eval()
-        net.zero_grad()
-        optimizer = self.get_optimizer(net)
-        # s_x1, s_x2, y = next(iter(support_loader))
-        for inner_step in range(self.cfg.inner_steps):
-            for s_x1, s_x2, y in support_loader:
-                if self.cfg.adapt_algorithm == 'simsiam':
-                    p1, p2, z1, z2 = net(s_x1, s_x2, y)
-                    loss = -(criterion(p1, z2).mean() + criterion(p2, z1).mean()) * 0.5
-                    optimizer.zero_grad()
-                    loss.backward()
-                    optimizer.step()
-                    
-                    if self.cfg.log_steps:
-                        KNNCls = KNN(n_neighbors=3)
-                        KNNCls.fit(z1.detach().cpu().numpy(), y=y)
-                        KNN_pred = KNNCls.predict(z2.detach().cpu().numpy())
-                        KNN_acc = np.mean(KNN_pred == y)*100
-                        std = torch.std(torch.cat((F.normalize(z1, dim=1), F.normalize(z1, dim=1)), dim=0))
-                        self.write_log(rank, logs, f'\tStep [{inner_step}/{self.cfg.inner_steps}] Loss: {loss.item():.4f}\tStd: {std.item():.4f}\tKNN Acc: {KNN_acc:.2f}%')
-                elif self.cfg.adapt_algorithm == 'simclr':
-                    logits, targets = net(s_x1, s_x2, y)
-                    criterion = nn.CrossEntropyLoss().cuda()
-                    loss = criterion(logits, targets)
-                    optimizer.zero_grad()
-                    loss.backward()
-                    optimizer.step()
+        fast_weights = list(net.encoder.vars)
+        for step in range(self.cfg.task_steps):
+            for x1, x2, y in loader:
+                # p1, p2, z1, z2 = net(x1, x2, vars=fast_weights)
+                # loss = -(criterion(p1, z2).mean() + criterion(p2, z1).mean()) * 0.5
+                logits, targets = net(x1, x2, y, vars=fast_weights)
+                criterion = nn.CrossEntropyLoss().cuda()
+                loss = criterion(logits, targets)
+                acc = (logits.argmax(dim=1) == targets).float().mean()
+                grad = torch.autograd.grad(loss, [p for p in fast_weights if p.requires_grad])
                 
-                    if self.cfg.log_steps:
-                        acc = (logits.argmax(dim=1) == targets).float().mean()
-                        self.write_log(rank, logs, f'\tStep [{inner_step}/{self.cfg.inner_steps}] Loss: {loss.item():.4f} Acc: {acc.item()*100:.2f}')#\tStd: {std.item():.4f}\tKNN Acc: {KNN_acc:.2f}%')
-        return loss.item()
+                new_weights = []
+                grad_idx = 0
+                for p in fast_weights:
+                    if p.requires_grad:
+                        new_weights.append(p - self.cfg.task_lr * grad[grad_idx])
+                        grad_idx += 1
+                    else:
+                        new_weights.append(p)
+                fast_weights = new_weights
+                
+                if log_steps and rank == 0:
+                    # std = torch.std(torch.cat((F.normalize(z1, dim=1), F.normalize(z2, dim=1)), dim=0))
+                    log = f'\tStep [{step}/{self.cfg.task_steps}] Loss: {loss.item():.4f}\tacc: {acc.item():.2f}'#\tstd: {std.item():.4f}'
+                    logs.append(log)
+                    print(log)
+        
+        return fast_weights
     
     def meta_eval(self, rank, net, val_loader, criterion, logs):
         net.eval()
@@ -572,24 +621,28 @@ class AdapterSimSiam2DLearner:
             
             if self.cfg.adapt_algorithm == 'simsiam':
                 for inner_step, (val_x1, val_x2, val_y) in enumerate(val_loader):
-                    val_p1, val_p2, val_z1, val_z2 = net(val_x1, val_x2, val_y)
-                    val_z1s.append(val_z1)
-                    val_z2s.append(val_z2)
+                    # val_p1, val_p2, val_z1, val_z2 = net(val_x1, val_x2)
+                    # val_z1s.append(val_z1)
+                    # val_z2s.append(val_z2)
+                    logits, targets = net(val_x1, val_x2, val_y)
+                    criterion = nn.CrossEntropyLoss().cuda()
+                    loss = criterion(logits, targets)
+                    acc = (logits.argmax(dim=1) == targets).float().mean()
                     val_ys += val_y
-                    loss = -(criterion(val_p1, val_z2).mean() + criterion(val_p2, val_z1).mean()) * 0.5
+                    # loss = -(criterion(val_p1, val_z2).mean() + criterion(val_p2, val_z1).mean()) * 0.5
                     losses.append(loss)
                 
-                val_z1 = torch.cat(val_z1s, dim=0)
-                val_z2 = torch.cat(val_z2s, dim=0)
+                # val_z1 = torch.cat(val_z1s, dim=0)
+                # val_z2 = torch.cat(val_z2s, dim=0)
                 loss = sum(losses)/len(losses)
-                val_len = len(val_z1)
+                # val_len = len(val_z1)
                 if self.cfg.log_steps:
-                    KNNCls = KNN(n_neighbors=5)
-                    KNNCls.fit(val_z1.detach().cpu().numpy()[:val_len//2], y=val_ys[:val_len//2])
-                    KNN_pred = KNNCls.predict(val_z1.detach().cpu().numpy()[val_len//2:])
-                    KNN_acc = np.mean(KNN_pred == val_ys[val_len//2:])*100
-                    std = torch.std(torch.cat((F.normalize(val_z1, dim=1), F.normalize(val_z2, dim=1)), dim=0))
-                    self.write_log(rank, logs, f'\tStep [{inner_step}/{self.cfg.inner_steps}] Loss: {loss.item():.4f}\tStd: {std.item():.4f}\tKNN Acc: {KNN_acc:.2f}%')
+                    # KNNCls = KNN(n_neighbors=5)
+                    # KNNCls.fit(val_z1.detach().cpu().numpy()[:val_len//2], y=val_ys[:val_len//2])
+                    # KNN_pred = KNNCls.predict(val_z1.detach().cpu().numpy()[val_len//2:])
+                    # KNN_acc = np.mean(KNN_pred == val_ys[val_len//2:])*100
+                    # std = torch.std(torch.cat((F.normalize(val_z1, dim=1), F.normalize(val_z2, dim=1)), dim=0))
+                    self.write_log(rank, logs, f'\tStep [{inner_step}/{self.cfg.inner_steps}] Loss: {loss.item():.4f} Acc: {acc.item()*100:.2f}')#\tStd: {std.item():.4f}\tKNN Acc: {KNN_acc:.2f}%')
             elif self.cfg.adapt_algorithm == 'simclr':
                 criterion = nn.CrossEntropyLoss().cuda()
                 for inner_step, (val_x1, val_x2, val_y) in enumerate(val_loader):
@@ -623,6 +676,94 @@ class AdapterSimSiam2DLearner:
                 print(log)
             
             return total_loss.item()
+    
+    def get_random_augmentations(self):
+        # List of available augmentations
+        augmentations = [
+            transforms.RandomResizedCrop,
+            transforms.RandomHorizontalFlip,
+            transforms.RandomVerticalFlip, 
+            transforms.RandomRotation,
+            
+            transforms.ColorJitter,
+            transforms.GaussianBlur,
+            transforms.RandomInvert,
+            transforms.RandomPerspective,
+            transforms.RandomPosterize,
+            transforms.RandomGrayscale,
+            transforms.RandomAdjustSharpness,
+            transforms.RandomSolarize,
+            transforms.ElasticTransform,
+        ]
+
+        # Randomly select two augmentations
+        selected_augmentations = random.sample(augmentations, 3)
+
+        # Define random parameters for the selected augmentations
+        augmentation_params = {}
+        for augmentation in selected_augmentations:
+            if augmentation == transforms.RandomResizedCrop:
+                augmentation_params[augmentation] = {
+                    "size": 224,
+                    "scale": (random.uniform(0.5, 0.8), 0.8)
+                }
+            elif augmentation in [transforms.RandomHorizontalFlip,
+                                  transforms.RandomVerticalFlip,
+                                  transforms.RandomInvert,
+                                  transforms.RandomGrayscale]:
+                # Set the probability to 1.0 (always apply the flip)
+                augmentation_params[augmentation] = {"p": 1.0}
+            elif augmentation == transforms.RandomRotation:
+                augmentation_params[augmentation] = {
+                    "degrees": random.uniform(0, 180),  # Define random rotation degrees
+                }
+            elif augmentation == transforms.ColorJitter:
+                augmentation_params[augmentation] = {
+                    "brightness": random.uniform(0.1, 0.5),
+                    "contrast": random.uniform(0.1, 0.5),
+                    "saturation": random.uniform(0.1, 0.5),
+                    "hue": random.uniform(0.1, 0.5),
+                }
+            elif augmentation == transforms.RandomPerspective:
+                augmentation_params[augmentation] = {
+                    "distortion_scale": random.uniform(0.1, 0.5),
+                    "p": 1.0,
+                }
+            elif augmentation == transforms.RandomPosterize:
+                augmentation_params[augmentation] = {
+                    "bits": random.randint(4, 8),
+                    "p": 1.0,
+                }
+            elif augmentation == transforms.RandomSolarize:
+                augmentation_params[augmentation] = {
+                    "threshold": random.uniform(0, 256),
+                    "p": 1.0,
+                }
+            elif augmentation == transforms.RandomAdjustSharpness:
+                augmentation_params[augmentation] = {
+                    "sharpness_factor": random.uniform(0, 2),
+                    "p": 1.0,
+                }
+            elif augmentation == transforms.ElasticTransform:
+                augmentation_params[augmentation] = {
+                    "alpha": random.uniform(1.0, 10.0),
+                    "sigma": random.uniform(10.0, 50.0),
+                }
+            elif augmentation == transforms.GaussianBlur:
+                augmentation_params[augmentation] = {
+                    "kernel_size": random.choice([3, 5, 7, 9]),
+                    "sigma": random.uniform(0.1, 2.0),
+                }
+            # Add more conditions for other augmentations as needed
+
+        # Create a Compose transform with the selected augmentations and parameters
+        composed_transform = transforms.Compose([
+            # augmentation(**augmentation_params[augmentation]) for augmentation in selected_augmentations
+            RandAugment()
+        ])
+
+        return composed_transform
+
     
     def finetune(self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs):
         # if self.cfg.freeze: net.eval()
@@ -728,3 +869,270 @@ class AdapterSimSiam2DLearner:
             )
 
             return f1, recall, precision
+
+
+# code in this file is adpated from rpmcruz/autoaugment
+# https://github.com/rpmcruz/autoaugment/blob/master/transformations.py
+import random
+
+import PIL, PIL.ImageOps, PIL.ImageEnhance, PIL.ImageDraw
+import numpy as np
+import torch
+from PIL import Image
+
+
+def ShearX(img, v):  # [-0.3, 0.3]
+    assert -0.3 <= v <= 0.3
+    if random.random() > 0.5:
+        v = -v
+    return img.transform(img.size, PIL.Image.AFFINE, (1, v, 0, 0, 1, 0))
+
+
+def ShearY(img, v):  # [-0.3, 0.3]
+    assert -0.3 <= v <= 0.3
+    if random.random() > 0.5:
+        v = -v
+    return img.transform(img.size, PIL.Image.AFFINE, (1, 0, 0, v, 1, 0))
+
+
+def TranslateX(img, v):  # [-150, 150] => percentage: [-0.45, 0.45]
+    assert -0.45 <= v <= 0.45
+    if random.random() > 0.5:
+        v = -v
+    v = v * img.size[0]
+    return img.transform(img.size, PIL.Image.AFFINE, (1, 0, v, 0, 1, 0))
+
+
+def TranslateXabs(img, v):  # [-150, 150] => percentage: [-0.45, 0.45]
+    assert 0 <= v
+    if random.random() > 0.5:
+        v = -v
+    return img.transform(img.size, PIL.Image.AFFINE, (1, 0, v, 0, 1, 0))
+
+
+def TranslateY(img, v):  # [-150, 150] => percentage: [-0.45, 0.45]
+    assert -0.45 <= v <= 0.45
+    if random.random() > 0.5:
+        v = -v
+    v = v * img.size[1]
+    return img.transform(img.size, PIL.Image.AFFINE, (1, 0, 0, 0, 1, v))
+
+
+def TranslateYabs(img, v):  # [-150, 150] => percentage: [-0.45, 0.45]
+    assert 0 <= v
+    if random.random() > 0.5:
+        v = -v
+    return img.transform(img.size, PIL.Image.AFFINE, (1, 0, 0, 0, 1, v))
+
+
+def Rotate(img, v):  # [-30, 30]
+    assert -30 <= v <= 30
+    if random.random() > 0.5:
+        v = -v
+    return img.rotate(v)
+
+
+def AutoContrast(img, _):
+    return PIL.ImageOps.autocontrast(img)
+
+
+def Invert(img, _):
+    return PIL.ImageOps.invert(img)
+
+
+def Equalize(img, _):
+    return PIL.ImageOps.equalize(img)
+
+
+def Flip(img, _):  # not from the paper
+    return PIL.ImageOps.mirror(img)
+
+
+def Solarize(img, v):  # [0, 256]
+    assert 0 <= v <= 256
+    return PIL.ImageOps.solarize(img, v)
+
+
+def SolarizeAdd(img, addition=0, threshold=128):
+    img_np = np.array(img).astype(np.int)
+    img_np = img_np + addition
+    img_np = np.clip(img_np, 0, 255)
+    img_np = img_np.astype(np.uint8)
+    img = Image.fromarray(img_np)
+    return PIL.ImageOps.solarize(img, threshold)
+
+
+def Posterize(img, v):  # [4, 8]
+    v = int(v)
+    v = max(1, v)
+    return PIL.ImageOps.posterize(img, v)
+
+
+def Contrast(img, v):  # [0.1,1.9]
+    assert 0.1 <= v <= 1.9
+    return PIL.ImageEnhance.Contrast(img).enhance(v)
+
+
+def Color(img, v):  # [0.1,1.9]
+    assert 0.1 <= v <= 1.9
+    return PIL.ImageEnhance.Color(img).enhance(v)
+
+
+def Brightness(img, v):  # [0.1,1.9]
+    assert 0.1 <= v <= 1.9
+    return PIL.ImageEnhance.Brightness(img).enhance(v)
+
+
+def Sharpness(img, v):  # [0.1,1.9]
+    assert 0.1 <= v <= 1.9
+    return PIL.ImageEnhance.Sharpness(img).enhance(v)
+
+
+def Cutout(img, v):  # [0, 60] => percentage: [0, 0.2]
+    assert 0.0 <= v <= 0.2
+    if v <= 0.:
+        return img
+
+    v = v * img.size[0]
+    return CutoutAbs(img, v)
+
+
+def CutoutAbs(img, v):  # [0, 60] => percentage: [0, 0.2]
+    # assert 0 <= v <= 20
+    if v < 0:
+        return img
+    w, h = img.size
+    x0 = np.random.uniform(w)
+    y0 = np.random.uniform(h)
+
+    x0 = int(max(0, x0 - v / 2.))
+    y0 = int(max(0, y0 - v / 2.))
+    x1 = min(w, x0 + v)
+    y1 = min(h, y0 + v)
+
+    xy = (x0, y0, x1, y1)
+    color = (125, 123, 114)
+    # color = (0, 0, 0)
+    img = img.copy()
+    PIL.ImageDraw.Draw(img).rectangle(xy, color)
+    return img
+
+
+def SamplePairing(imgs):  # [0, 0.4]
+    def f(img1, v):
+        i = np.random.choice(len(imgs))
+        img2 = PIL.Image.fromarray(imgs[i])
+        return PIL.Image.blend(img1, img2, v)
+
+    return f
+
+
+def Identity(img, v):
+    return img
+
+
+def augment_list():  # 16 oeprations and their ranges
+    # https://github.com/google-research/uda/blob/master/image/randaugment/policies.py#L57
+    # l = [
+    #     (Identity, 0., 1.0),
+    #     (ShearX, 0., 0.3),  # 0
+    #     (ShearY, 0., 0.3),  # 1
+    #     (TranslateX, 0., 0.33),  # 2
+    #     (TranslateY, 0., 0.33),  # 3
+    #     (Rotate, 0, 30),  # 4
+    #     (AutoContrast, 0, 1),  # 5
+    #     (Invert, 0, 1),  # 6
+    #     (Equalize, 0, 1),  # 7
+    #     (Solarize, 0, 110),  # 8
+    #     (Posterize, 4, 8),  # 9
+    #     # (Contrast, 0.1, 1.9),  # 10
+    #     (Color, 0.1, 1.9),  # 11
+    #     (Brightness, 0.1, 1.9),  # 12
+    #     (Sharpness, 0.1, 1.9),  # 13
+    #     # (Cutout, 0, 0.2),  # 14
+    #     # (SamplePairing(imgs), 0, 0.4),  # 15
+    # ]
+
+    # https://github.com/tensorflow/tpu/blob/8462d083dd89489a79e3200bcc8d4063bf362186/models/official/efficientnet/autoaugment.py#L505
+    l = [
+        (AutoContrast, 0, 1),
+        (Equalize, 0, 1),
+        (Invert, 0, 1),
+        (Rotate, 0, 30),
+        (Posterize, 0, 4),
+        (Solarize, 0, 256),
+        (SolarizeAdd, 0, 110),
+        (Color, 0.1, 1.9),
+        (Contrast, 0.1, 1.9),
+        (Brightness, 0.1, 1.9),
+        (Sharpness, 0.1, 1.9),
+        (ShearX, 0., 0.3),
+        (ShearY, 0., 0.3),
+        (CutoutAbs, 0, 40),
+        (TranslateXabs, 0., 100),
+        (TranslateYabs, 0., 100),
+    ]
+
+    return l
+
+
+class Lighting(object):
+    """Lighting noise(AlexNet - style PCA - based noise)"""
+
+    def __init__(self, alphastd, eigval, eigvec):
+        self.alphastd = alphastd
+        self.eigval = torch.Tensor(eigval)
+        self.eigvec = torch.Tensor(eigvec)
+
+    def __call__(self, img):
+        if self.alphastd == 0:
+            return img
+
+        alpha = img.new().resize_(3).normal_(0, self.alphastd)
+        rgb = self.eigvec.type_as(img).clone() \
+            .mul(alpha.view(1, 3).expand(3, 3)) \
+            .mul(self.eigval.view(1, 3).expand(3, 3)) \
+            .sum(1).squeeze()
+
+        return img.add(rgb.view(3, 1, 1).expand_as(img))
+
+
+class CutoutDefault(object):
+    """
+    Reference : https://github.com/quark0/darts/blob/master/cnn/utils.py
+    """
+    def __init__(self, length):
+        self.length = length
+
+    def __call__(self, img):
+        h, w = img.size(1), img.size(2)
+        mask = np.ones((h, w), np.float32)
+        y = np.random.randint(h)
+        x = np.random.randint(w)
+
+        y1 = np.clip(y - self.length // 2, 0, h)
+        y2 = np.clip(y + self.length // 2, 0, h)
+        x1 = np.clip(x - self.length // 2, 0, w)
+        x2 = np.clip(x + self.length // 2, 0, w)
+
+        mask[y1: y2, x1: x2] = 0.
+        mask = torch.from_numpy(mask)
+        mask = mask.expand_as(img)
+        img *= mask
+        return img
+
+
+class RandAugment:
+    def __init__(self):
+        self.n = 5
+        self.augment_list = augment_list()
+
+    def __call__(self, img):
+        self.ops = random.choices(self.augment_list, k=self.n)
+        ops = self.ops
+        self.m = random.uniform(0, 30)
+        for op, minval, maxval in ops:
+            val = (float(self.m) / 30) * float(maxval - minval) + minval
+            img = op(img, val)
+
+        return img

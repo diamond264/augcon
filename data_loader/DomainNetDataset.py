@@ -81,7 +81,10 @@ class DomainNetDataset(torch.utils.data.Dataset):
         
         cnt = 0
         for i, domain in enumerate(self.cfg.domains):
-            loader = self.get_loader(self.cfg.rand_aug)
+            if self.cfg.mode == 'finetune':
+                loader = self.get_loader(self.cfg.rand_aug)
+            else:
+                loader = None
             dataset = ImageFolder(os.path.join(self.file_path, domain), loader)
             
             if self.cfg.mode == 'finetune':
@@ -112,20 +115,21 @@ class DomainNetDataset(torch.utils.data.Dataset):
             indices = np.array(dataset.targets)
             indices = np.where(indices == label_num)[0]
             if self.type == 'train':
-                if len(indices) < k_shot: continue
-            else: k_shot = len(indices)
-            indices = np.random.choice(indices, k_shot, replace=False)
+                if k_shot > len(indices): shots = len(indices)
+                else: shots = k_shot
+            else: shots = len(indices)
+            
+            indices = np.random.choice(indices, shots, replace=False)
             
             new_dataset = torch.utils.data.Subset(dataset, indices)
             new_label = self.label_dict[label]
             
             if self.cfg.supervised_adaptation and self.type != 'test':
                 xs, qs, ks = [], [], []
-                for feature, _ in new_dataset:
+                for feature, t in new_dataset:
                     xs.append(feature[0])
-                    qs.append(feature[1])
-                    ks.append(feature[2])
-                
+                    qs.append(feature[0])
+                    ks.append(feature[0])
                 random.shuffle(ks)
                 new_dataset = []
                 new_dataset = [([xs[i], qs[i], ks[i]], new_label) for i in range(len(xs))]
