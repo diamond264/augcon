@@ -91,7 +91,7 @@ class Aggregator(nn.Module):
         
         # define convolutional blocks with increasing kernel sizes
         kernel_sizes = [2, 3, 4, 5, 6, 7]
-        if num_filters == 512:
+        if num_blocks == 9:
             kernel_sizes = [3, 3, 3, 3, 3, 3, 3, 3, 3]
         for i in range(num_blocks):
             k = kernel_sizes[i]
@@ -673,6 +673,7 @@ class MetaCPCLearner:
                     
                     query = torch.utils.data.Subset(dataset, indices[task_size:2*task_size])
                     query = [e[0] for e in query]
+                    print(query)
                     query = torch.stack(query, dim=0)
                     supports.append(support)
                     queries.append(query)

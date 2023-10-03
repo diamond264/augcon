@@ -10,9 +10,9 @@ from collections import defaultdict
 
 class ProcessICHAR():
     def __init__(self, file, class_type, seq_len=256,
-                 split_ratio=0.6, drop_size_threshold=500,
-                 shots=[10, 5, 2, 1],
-                 finetune_test_size=300, finetune_val_size=100):
+                 split_ratio=0.7, drop_size_threshold=500,
+                 shots=[20, 10, 5, 2, 1],
+                 finetune_test_size=100, finetune_val_size=100):
         self.metadata = {
             'domain': ['PH0007-jskim', 'PH0012-thanh', 'PH0014-wjlee',
                        'PH0034-ykha', 'PH0038-iygoo', 'PH0041-hmkim',
@@ -123,17 +123,11 @@ class ProcessICHAR():
                    [domain_labels[i] for i in target_idxs])
         return source_data, target_data
     
-    def process(self, pretrain_dir='', finetune_dir='',):
-        pt_source_data, pt_target_data = self.split_source_target(self.pt_data)
-        print(f'Loaded source domain pre-training data({len(pt_source_data[0])})')
-        ft_source_data, ft_target_data = self.split_source_target(self.ft_data)
-        print(f'Loaded target domain fine-tuning data({len(ft_target_data[0])})')
-        
-        pt_features, pt_class_labels, pt_domain_labels = pt_source_data
+    def save_pretrain_data(self, data, pretrain_dir):
+        pt_features, pt_class_labels, pt_domain_labels = data
         pt_idxs = list(range(len(pt_features)))
         random.shuffle(pt_idxs)
-        train_idxs = pt_idxs[:int(0.8*len(pt_idxs))]
-        test_idxs = pt_idxs[int(0.8*len(pt_idxs)):int(0.9*len(pt_idxs))]
+        train_idxs = pt_idxs[:int(0.9*len(pt_idxs))]
         val_idxs = pt_idxs[int(0.9*len(pt_idxs)):]
         
         features = [pt_features[i] for i in train_idxs]
@@ -142,55 +136,22 @@ class ProcessICHAR():
         pretrain_train_path = os.path.join(pretrain_dir, 'train.pkl')
         self.save(features, class_labels, domain_labels, pretrain_train_path)
         
-        features = [pt_features[i] for i in test_idxs]
-        class_labels = [pt_class_labels[i] for i in test_idxs]
-        domain_labels = [pt_domain_labels[i] for i in test_idxs]
-        pretrain_test_path = os.path.join(pretrain_dir, 'test.pkl')
-        self.save(features, class_labels, domain_labels, pretrain_test_path)
-        
         features = [pt_features[i] for i in val_idxs]
         class_labels = [pt_class_labels[i] for i in val_idxs]
         domain_labels = [pt_domain_labels[i] for i in val_idxs]
         pretrain_val_path = os.path.join(pretrain_dir, 'val.pkl')
         self.save(features, class_labels, domain_labels, pretrain_val_path)
+    
+    def process(self, pretrain_dir='', finetune_dir='',):
+        pt_source_data, pt_target_data = self.split_source_target(self.pt_data)
+        print(f'Loaded source domain pre-training data({len(pt_source_data[0])})')
+        ft_source_data, ft_target_data = self.split_source_target(self.ft_data)
+        print(f'Loaded target domain fine-tuning data({len(ft_target_data[0])})')
+        
+        self.save_pretrain_data(pt_source_data, pretrain_dir)
         print(f'Saved pre-training data of source domain')
-        
-        # source_features, source_class_labels, source_domain_labels = source_ft_data
-        # idx_per_source_classes = {}
-        # for idx, class_label in enumerate(source_class_labels):
-        #     if class_label in idx_per_source_classes.keys():
-        #         idx_per_source_classes[class_label].append(idx)
-        #     else: idx_per_source_classes[class_label] = [idx]
-        
-        # for shot in self.shots:
-        #     train_idxs = []
-        #     remaining_idxs = []
-        #     for class_label, idxs in idx_per_source_classes.items():
-        #         random.shuffle(idxs)
-        #         train_idxs.extend(idxs[:shot])
-        #         remaining_idxs.extend(idxs[shot:])
-        #     random.shuffle(remaining_idxs)
-        #     test_idxs = remaining_idxs[:self.finetune_test_size]
-        #     val_idxs = remaining_idxs[self.finetune_test_size:self.finetune_test_size+self.finetune_val_size]
-                
-        #     features = [source_features[i] for i in train_idxs]
-        #     class_labels = [source_class_labels[i] for i in train_idxs]
-        #     domain_labels = [source_domain_labels[i] for i in train_idxs]
-        #     finetune_source_train_path = os.path.join(finetune_dir, f'{shot}shot', 'source', 'train.pkl')
-        #     self.save(features, class_labels, domain_labels, finetune_source_train_path)
-            
-        #     features = [source_features[i] for i in test_idxs]
-        #     class_labels = [source_class_labels[i] for i in test_idxs]
-        #     domain_labels = [source_domain_labels[i] for i in test_idxs]
-        #     finetune_source_test_path = os.path.join(finetune_dir, f'{shot}shot', 'source', 'test.pkl')
-        #     self.save(features, class_labels, domain_labels, finetune_source_test_path)
-            
-        #     features = [source_features[i] for i in val_idxs]
-        #     class_labels = [source_class_labels[i] for i in val_idxs]
-        #     domain_labels = [source_domain_labels[i] for i in val_idxs]
-        #     finetune_source_val_path = os.path.join(finetune_dir, f'{shot}shot', 'source', 'val.pkl')
-        #     self.save(features, class_labels, domain_labels, finetune_source_val_path)
-        # print(f'Saved fine-tuning data of target domain')
+        self.save_pretrain_data(pt_target_data, pretrain_dir+'_target')
+        print(f'Saved pre-training data of target domain')
         
         target_features, target_class_labels, target_domain_labels = ft_target_data
         idx_per_target_classes = {}
@@ -204,11 +165,17 @@ class ProcessICHAR():
             remaining_idxs = []
             for class_label, idxs in idx_per_target_classes.items():
                 random.shuffle(idxs)
+                if len(idxs) < shot:
+                    print(f'not enough data for {class_label} (size {len(idxs)})')
+                    assert(0)
                 train_idxs.extend(idxs[:shot])
                 remaining_idxs.extend(idxs[shot:])
+            if len(remaining_idxs) < 100:
+                print(f'not enough data for test and val (size {len(remaining_idxs)})')
+                assert(0)
             random.shuffle(remaining_idxs)
-            test_idxs = remaining_idxs[:self.finetune_test_size]
-            val_idxs = remaining_idxs[self.finetune_test_size:self.finetune_test_size+self.finetune_val_size]
+            test_idxs = remaining_idxs[:int(len(remaining_idxs)*0.5)]
+            val_idxs = remaining_idxs[int(len(remaining_idxs)*0.5):]
             
             features = [target_features[i] for i in train_idxs]
             class_labels = [target_class_labels[i] for i in train_idxs]

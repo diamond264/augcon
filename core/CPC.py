@@ -1,5 +1,8 @@
 import os
 import math
+import sklearn.metrics as metrics
+
+from collections import defaultdict
 
 import torch
 import torch.nn as nn
@@ -8,8 +11,6 @@ import torch.distributed as dist
 import torch.multiprocessing as mp
 from torch.utils.data import DataLoader
 from torch.utils.data import DistributedSampler
-
-from collections import defaultdict
 
 # reference:
 # https://github.com/facebookresearch/fairseq/blob/176cd934982212a4f75e0669ee81b834ee71dbb0/fairseq/models/wav2vec/wav2vec.py#L431
@@ -256,6 +257,11 @@ class CPCLearner:
         self.gpu = gpu
         self.logger = logger
     
+    def write_log(self, rank, logs, log):
+        if rank == 0:
+            logs.append(log)
+            print(log)
+    
     def run(self, train_dataset, val_dataset, test_dataset):
         num_gpus = len(self.gpu)
         logs = mp.Manager().list([])
@@ -272,6 +278,8 @@ class CPCLearner:
             self.logger.info(log)
 
     def main_worker(self, rank, world_size, train_dataset, val_dataset, test_dataset, logs):
+        torch.cuda.set_device(rank)
+        
         # Model initialization
         if self.cfg.mode == 'pretrain':
             net = CPCNet(self.cfg.input_channels, self.cfg.z_dim, self.cfg.enc_blocks, self.cfg.kernel_sizes, self.cfg.strides,
@@ -279,6 +287,7 @@ class CPCLearner:
         elif self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
             net = CPCClassifier(self.cfg.input_channels, self.cfg.z_dim, self.cfg.enc_blocks, self.cfg.kernel_sizes, self.cfg.strides,
                                 self.cfg.agg_blocks, self.cfg.pooling, self.cfg.num_cls, self.cfg.mlp)
+        net.cuda()
         
         # DDP setting
         if world_size > 1:
@@ -286,8 +295,7 @@ class CPCLearner:
                                     init_method=self.cfg.dist_url,
                                     world_size=world_size,
                                     rank=rank)
-            torch.cuda.set_device(rank)
-            net.cuda()
+            net = torch.nn.SyncBatchNorm.convert_sync_batchnorm(net)
             net = nn.parallel.DistributedDataParallel(net, device_ids=[rank], find_unused_parameters=True)
             
             train_sampler = DistributedSampler(train_dataset)
@@ -301,14 +309,9 @@ class CPCLearner:
                                         shuffle=False, sampler=val_sampler, num_workers=self.cfg.num_workers, drop_last=True)
             test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size//world_size,
                                       shuffle=False, sampler=test_sampler, num_workers=self.cfg.num_workers, drop_last=True)
-            if rank == 0:
-                log = "DDP is used for training - training {} instances for each worker".format(len(list(train_sampler)))
-                logs.append(log)
-                print(log)
+            self.write_log(rank, logs, "DDP is used for training - training {} instances for each worker".format(len(list(train_sampler))))
         # Single GPU setting
         else:
-            torch.cuda.set_device(rank)
-            net.cuda()
             train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size,
                                       shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
             if len(val_dataset) > 0:
@@ -316,10 +319,7 @@ class CPCLearner:
                                         shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
             test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size,
                                       shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
-            if rank == 0:
-                log = "Single GPU is used for training - training {} instances for each worker".format(len(train_dataset))
-                logs.append(log)
-                print(log)
+            self.write_log(rank, logs, "Single GPU is used for training - training {} instances for each worker".format(len(train_dataset)))
         
         self.all_domains = self.split_per_domain(train_dataset)
         
@@ -330,10 +330,7 @@ class CPCLearner:
         # For finetuning and evaluation, load pretrained model
         if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
             if os.path.isfile(self.cfg.pretrained):
-                if rank == 0:
-                    log = "Loading pretrained model from checkpoint - {}".format(self.cfg.pretrained)
-                    logs.append(log)
-                    print(log)
+                self.write_log(rank, logs, "Loading pretrained model from checkpoint - {}".format(self.cfg.pretrained))
                 loc = 'cuda:{}'.format(rank)
                 state = torch.load(self.cfg.pretrained, map_location=loc)['state_dict']
                 
@@ -344,10 +341,7 @@ class CPCLearner:
                         state[k] = v
                 
                 msg = net.load_state_dict(state, strict=False)
-                if rank == 0:
-                    log = "Missing keys: {}".format(msg.missing_keys)
-                    logs.append(log)
-                    print(log)
+                self.write_log(rank, logs, f"missing keys: {msg.missing_keys}")
             else:
                 if rank == 0:
                     log = "No checkpoint found at '{}'".format(self.cfg.pretrained)
@@ -469,8 +463,7 @@ class CPCLearner:
             optimizer.step()
     
     def finetune(self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs):
-        if self.cfg.freeze: net.eval()
-        else: net.train()
+        net.eval()
         
         for batch_idx, data in enumerate(train_loader):
             features = data[0].cuda()
@@ -479,13 +472,11 @@ class CPCLearner:
             logits = net(features)
             loss = criterion(logits, targets)
             
-            if rank == 0:
-                if batch_idx % self.cfg.log_freq == 0:
-                    acc1, acc5 = self.accuracy(logits, targets, topk=(1, 5))
-                    log = f'Epoch [{epoch+1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) '
-                    log += f'Loss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
-                    logs.append(log)
-                    print(log)
+            if batch_idx % self.cfg.log_freq == 0:
+                acc1, acc5 = self.accuracy(logits, targets, topk=(1, 5))
+                log = f'Epoch [{epoch+1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) '
+                log += f'Loss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+                self.write_log(rank, logs, log)
             
             optimizer.zero_grad()
             loss.backward()
@@ -512,11 +503,9 @@ class CPCLearner:
         f1, recall, precision = self.scores(total_logits, total_targets)
         total_loss /= len(val_loader)
         
-        if rank == 0:
-            log = f'Validation Loss: {total_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
-            log += f', F1: {f1.item():.2f}, Recall: {recall.item():.2f}, Precision: {precision.item():.2f}'
-            logs.append(log)
-            print(log)
+        log = f'Validation Loss: {total_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+        log += f', F1: {f1.item():.2f}, Recall: {recall.item():.2f}, Precision: {precision.item():.2f}'
+        self.write_log(rank, logs, log)
     
     def save_checkpoint(self, filename, epoch, state_dict, optimizer):
         directory = os.path.dirname(filename)
@@ -548,18 +537,22 @@ class CPCLearner:
 
     def scores(self, output, target):
         with torch.no_grad():
-            batch_size = target.size(0)
-
-            _, pred = output.max(1)
-            correct = pred.eq(target)
-
-            # Compute f1-score, recall, and precision for top-1 prediction
-            tp = torch.logical_and(correct, target).sum()
-            fp = pred.sum() - tp
-            fn = target.sum() - tp
-            precision = tp / (tp + fp + 1e-12)
-            recall = tp / (tp + fn + 1e-12)
-            f1 = (2 * precision * recall) / (precision + recall + 1e-12)
+            out_val = torch.flatten(torch.argmax(output, dim=1)).cpu().numpy()
+            target_val = torch.flatten(target).cpu().numpy()
+            
+            cohen_kappa = metrics.cohen_kappa_score(target_val, out_val)
+            precision = metrics.precision_score(
+                target_val, out_val, average="macro", zero_division=0
+            )
+            recall = metrics.recall_score(
+                target_val, out_val, average="macro", zero_division=0
+            )
+            f1 = metrics.f1_score(
+                target_val, out_val, average="macro", zero_division=0
+            )
+            acc = metrics.accuracy_score(
+                target_val, out_val
+            )
 
             return f1, recall, precision
     

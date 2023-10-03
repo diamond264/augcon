@@ -10,8 +10,8 @@ from collections import defaultdict
 
 class ProcessOpportunity():
     def __init__(self, file, class_type, seq_len=256,
-                 split_ratio=0.6, drop_size_threshold=500,
-                 shots=[10, 5, 2, 1],
+                 split_ratio=0.7, drop_size_threshold=500,
+                 shots=[20, 10, 5, 2, 1],
                  finetune_test_size=300, finetune_val_size=100):
         self.metadata = {
             'domain': ['head', 'waist', 'shin', 'forearm', 'upperarm', 'thigh', 'chest'],
