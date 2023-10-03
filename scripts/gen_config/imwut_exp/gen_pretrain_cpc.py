@@ -64,7 +64,7 @@ lr: 0.0005
 wd: 0.0
 '''
             save_freq = args.epochs/10
-            ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/ichar/pretrain/{pretext}/without_{domain}'
+            ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/without_{domain}'
             if args.target_only:
                 ckpt_dir = ckpt_dir.replace('without', 'only')
             log_config = f'''### Logs and checkpoints
