@@ -1,5 +1,6 @@
 import os
 import math
+import sklearn.metrics as metrics
 import random
 
 import torch
@@ -582,7 +583,7 @@ class MetaCPCLearner:
                         print(log)
                     if world_size > 1:
                         train_sampler.set_epoch(0)
-                    net.train()
+                    # net.train()
                     net.zero_grad()
                     support = [e[0] for e in meta_train_dataset]
                     support = torch.stack(support, dim=0).cuda()
@@ -621,11 +622,6 @@ class MetaCPCLearner:
                 cls_net.load_state_dict(state['state_dict'], strict=False)
                 optimizer.load_state_dict(state['optimizer'])
                 self.cfg.start_epoch = state['epoch']
-            
-            if not self.cfg.freeze:
-                cls_net.train()
-            else:
-                cls_net.eval()
             
             if self.cfg.mode == 'finetune':
                 for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
@@ -767,8 +763,7 @@ class MetaCPCLearner:
         optimizer.step()
     
     def finetune(self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs):
-        if self.cfg.freeze: net.eval()
-        else: net.train()
+        net.eval()
         
         for batch_idx, data in enumerate(train_loader):
             features = data[0].cuda()
@@ -861,17 +856,21 @@ class MetaCPCLearner:
     
     def scores(self, output, target):
         with torch.no_grad():
-            batch_size = target.size(0)
-
-            _, pred = output.max(1)
-            correct = pred.eq(target)
-
-            # Compute f1-score, recall, and precision for top-1 prediction
-            tp = torch.logical_and(correct, target).sum()
-            fp = pred.sum() - tp
-            fn = target.sum() - tp
-            precision = tp / (tp + fp + 1e-12)
-            recall = tp / (tp + fn + 1e-12)
-            f1 = (2 * precision * recall) / (precision + recall + 1e-12)
+            out_val = torch.flatten(torch.argmax(output, dim=1)).cpu().numpy()
+            target_val = torch.flatten(target).cpu().numpy()
+            
+            cohen_kappa = metrics.cohen_kappa_score(target_val, out_val)
+            precision = metrics.precision_score(
+                target_val, out_val, average="macro", zero_division=0
+            )
+            recall = metrics.recall_score(
+                target_val, out_val, average="macro", zero_division=0
+            )
+            f1 = metrics.f1_score(
+                target_val, out_val, average="macro", zero_division=0
+            )
+            acc = metrics.accuracy_score(
+                target_val, out_val
+            )
 
             return f1, recall, precision
