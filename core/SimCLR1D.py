@@ -385,9 +385,9 @@ class SimCLR1DLearner:
         net.train()
         
         for batch_idx, data in enumerate(train_loader):
-            features = data[0].cuda()
-            pos_features = data[1].cuda()
-            domains = data[3].cuda()
+            features = data[1].cuda()
+            pos_features = data[2].cuda()
+            domains = data[4].cuda()
             
             if self.cfg.neg_per_domain:
                 all_logits = []
