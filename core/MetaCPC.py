@@ -558,7 +558,7 @@ class MetaCPCLearner:
                     
                     if self.cfg.no_vars:
                         enc_dict = {}
-                        for idx, k in enumerate(list(cls_net.state_dict().keys())):
+                        for idx, k in enumerate(list(net.state_dict().keys())):
                             if not 'classifier' in k:
                                 enc_dict[k] = list(state.items())[idx][1]
                         msg = net.load_state_dict(enc_dict, strict=False)
@@ -746,9 +746,9 @@ class MetaCPCLearner:
             q_losses.append(q_loss)
             
             if task_idx % self.cfg.log_freq == 0:
-                acc1, acc5 = self.accuracy(q_logits, q_targets, topk=(1, 5))
+                acc1, acc3 = self.accuracy(q_logits, q_targets, topk=(1, 3))
                 log = f'\t({task_idx}/{len(supports)}) '
-                log += f'Loss: {q_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+                log += f'Loss: {q_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(3): {acc3.item():.2f}'
                 if rank == 0:
                     logs.append(log)
                     print(log)
@@ -774,9 +774,9 @@ class MetaCPCLearner:
             
             if rank == 0:
                 if batch_idx % self.cfg.log_freq == 0:
-                    acc1, acc5 = self.accuracy(logits, targets, topk=(1, 5))
+                    acc1, acc3 = self.accuracy(logits, targets, topk=(1, 3))
                     log = f'Epoch [{epoch+1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) '
-                    log += f'Loss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+                    log += f'Loss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(3): {acc3.item():.2f}'
                     logs.append(log)
                     print(log)
             
@@ -793,8 +793,8 @@ class MetaCPCLearner:
             fast_weights = list(map(lambda p: p[1] - self.cfg.task_lr * p[0], zip(grad, fast_weights)))
             
             if log_internals and rank == 0:
-                acc1, acc5 = self.accuracy(s_logits, s_targets, topk=(1, 5))
-                log = f'\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {s_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+                acc1, acc3 = self.accuracy(s_logits, s_targets, topk=(1, 3))
+                log = f'\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {s_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(3): {acc3.item():.2f}'
                 logs.append(log)
                 print(log)
         
@@ -817,12 +817,12 @@ class MetaCPCLearner:
         
         total_targets = torch.cat(total_targets, dim=0)
         total_logits = torch.cat(total_logits, dim=0)
-        acc1, acc5 = self.accuracy(total_logits, total_targets, topk=(1, 5))
+        acc1, acc3 = self.accuracy(total_logits, total_targets, topk=(1, 3))
         f1, recall, precision = self.scores(total_logits, total_targets)
         total_loss /= len(val_loader)
         
         if rank == 0:
-            log = f'\tValidation Loss: {total_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+            log = f'\tValidation Loss: {total_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(3): {acc3.item():.2f}'
             log += f', F1: {f1.item():.2f}, Recall: {recall.item():.2f}, Precision: {precision.item():.2f}'
             logs.append(log)
             print(log)
