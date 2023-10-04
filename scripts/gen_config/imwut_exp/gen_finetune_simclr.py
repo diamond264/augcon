@@ -2,6 +2,7 @@ import os
 import argparse
 from glob import glob
 
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', type=str, required=True)
@@ -17,6 +18,7 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+
 data_paths = {'ichar': '/mnt/sting/hjyoon/projects/cross/ICHAR/augcon',
               'hhar': '/mnt/sting/hjyoon/projects/cross/HHAR/augcon',
               'opportunity': '/mnt/sting/hjyoon/projects/cross/Opportunity/augcon',
@@ -26,32 +28,33 @@ num_cls = {'ichar': 9,
            'opportunity': 4,
            'realworld': 19}
 
+
 def run(args):
-    pretext = 'cpc'
+    pretext = 'simclr'
     data_path = data_paths[args.dataset]
     config_path = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main/{args.dataset}/finetune_{args.shot}shot/{pretext}'
-    
+
     domains = glob(os.path.join(data_path, '*'))
     domains = [os.path.basename(domain) for domain in domains]
     print(domains)
-    
+
     flag = 0
     for domain in domains:
         if args.num_gpus == 4:
             if flag == 0:
-                gpu = [0,1,2,3]
+                gpu = [0, 1, 2, 3]
                 dist_url = f'tcp://localhost:{args.port}'
                 flag = 1
             elif flag == 1:
-                gpu = [4,5,6,7]
-                dist_url = f'tcp://localhost:{args.port+1}'
+                gpu = [4, 5, 6, 7]
+                dist_url = f'tcp://localhost:{args.port + 1}'
                 flag = 0
         elif args.num_gpus == 1:
             gpu = [flag]
-            dist_url = f'tcp://localhost:{args.port+flag}'
+            dist_url = f'tcp://localhost:{args.port + flag}'
             flag += 1
             if flag == 8: flag = 0
-        
+
         default_config = f'''### Default config
 mode: finetune
 seed: {args.seed} # fix as 0 in pretrain
@@ -82,13 +85,13 @@ wd: 0.0
         ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/finetune_{args.shot}shot/pretrained_cpc_'
         postfix = f'without'
         if args.target_only: postfix = f'only'
-        if args.perdomain: postfix = 'perdomain_'+postfix
+        if args.perdomain: postfix = 'perdomain_' + postfix
         pretrained = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/{postfix}_{domain}/checkpoint_0099.pth.tar'
         if args.domain_adaptation:
-            postfix = postfix+f'/da_true_seed_{args.seed}'
+            postfix = postfix + f'/da_true_seed_{args.seed}'
         else:
-            postfix = postfix+f'/da_false_seed_{args.seed}'
-        ckpt_dir = ckpt_dir+postfix
+            postfix = postfix + f'/da_false_seed_{args.seed}'
+        ckpt_dir = ckpt_dir + postfix
         log_config = f'''### Logs and checkpoints
 resume: ''
 pretrained: {pretrained}
@@ -105,7 +108,7 @@ no_vars: true
 mlp: false
 freeze: true'''
         model_config = f'''### Model config
-pretext: metacpc
+pretext: {pretext}
 ## Encoder
 enc_blocks: 4
 kernel_sizes: [8, 4, 2, 1]
@@ -133,6 +136,7 @@ offset: 4
         # generate config file
         with open(file_path, 'w') as f:
             f.write(config)
+
 
 if __name__ == '__main__':
     args = parse_args()
