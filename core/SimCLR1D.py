@@ -1,4 +1,5 @@
 import os
+import sklearn.metrics as metrics
 import torch
 import torch.nn as nn
 import torch.distributed as dist
@@ -507,12 +508,12 @@ class SimCLR1DLearner:
                 total_targets = torch.cat(total_targets, dim=0)
                 total_logits = torch.cat(total_logits, dim=0)
                 acc1, acc5 = self.accuracy(total_logits, total_targets, topk=(1, 5))
-                # f1, recall, precision = self.scores(total_logits, total_targets)
+                f1, recall, precision = self.scores(total_logits, total_targets)
             total_loss /= len(val_loader)
             
             if rank == 0:
                 log = f'[Finetune] Validation Loss: {total_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
-                # log += f', F1: {f1.item():.2f}, Recall: {recall.item():.2f}, Precision: {precision.item():.2f}'
+                log += f', F1: {f1.item():.2f}, Recall: {recall.item():.2f}, Precision: {precision.item():.2f}'
                 logs.append(log)
                 print(log)
     
@@ -546,17 +547,21 @@ class SimCLR1DLearner:
 
     def scores(self, output, target):
         with torch.no_grad():
-            batch_size = target.size(0)
+            out_val = torch.flatten(torch.argmax(output, dim=1)).cpu().numpy()
+            target_val = torch.flatten(target).cpu().numpy()
 
-            _, pred = output.max(1)
-            correct = pred.eq(target)
-
-            # Compute f1-score, recall, and precision for top-1 prediction
-            tp = torch.logical_and(correct, target).sum()
-            fp = pred.sum() - tp
-            fn = target.sum() - tp
-            precision = tp / (tp + fp + 1e-12)
-            recall = tp / (tp + fn + 1e-12)
-            f1 = (2 * precision * recall) / (precision + recall + 1e-12)
+            cohen_kappa = metrics.cohen_kappa_score(target_val, out_val)
+            precision = metrics.precision_score(
+                target_val, out_val, average="macro", zero_division=0
+            )
+            recall = metrics.recall_score(
+                target_val, out_val, average="macro", zero_division=0
+            )
+            f1 = metrics.f1_score(
+                target_val, out_val, average="macro", zero_division=0
+            )
+            acc = metrics.accuracy_score(
+                target_val, out_val
+            )
 
             return f1, recall, precision

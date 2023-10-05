@@ -29,6 +29,7 @@ from core.SimCLR1D import SimCLR1DLearner
 
 # 1D meta pretext tasks
 from core.MetaCPC import MetaCPCLearner
+from core.MetaSimCLR1D import MetaSimCLR1DLearner
 
 
 class Experiment:
@@ -82,6 +83,8 @@ class Experiment:
         # Meta learning methods
         elif self.cfg.pretext == 'metacpc':
             learner = MetaCPCLearner(self.cfg, self.gpu, self.logger)
+        elif self.cfg.pretext == 'metasimclr':
+            learner = MetaSimCLR1DLearner(self.cfg, self.gpu, self.logger)
         else:
             self.logger.warning('Pretext task not supported')
         
