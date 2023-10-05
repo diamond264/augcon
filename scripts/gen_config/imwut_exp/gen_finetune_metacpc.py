@@ -83,7 +83,7 @@ wd: 0.0
         postfix = f'without'
         if args.target_only: postfix = f'only'
         if args.perdomain: postfix = 'perdomain_'+postfix
-        pretrained = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/{postfix}_{domain}/checkpoint_2999.pth.tar'
+        pretrained = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/{postfix}_{domain}/checkpoint_0999.pth.tar'
         if args.domain_adaptation:
             postfix = postfix+f'/da_true_seed_{args.seed}'
         else:
@@ -99,7 +99,7 @@ save_freq: {save_freq}
         learning_config = f'''### Meta-learning
 domain_adaptation: {'true' if args.domain_adaptation else 'false'}
 task_steps: 10
-task_lr: 0.001
+task_lr: 0.01
 reg_lambda: 0
 no_vars: true
 mlp: false
