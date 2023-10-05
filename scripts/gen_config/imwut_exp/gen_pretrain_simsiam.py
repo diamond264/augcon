@@ -2,52 +2,53 @@ import os
 import argparse
 from glob import glob
 
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', type=str, required=True)
-    parser.add_argument('--epochs', type=int, required=False, default=1000)
+    parser.add_argument('--epochs', type=int, required=False, default=100)
+    parser.add_argument('--batch_size', type=int, required=False, default=512)
     # recommended batch_size - 512 for target-only setting
     parser.add_argument('--target_only', action='store_true')
     parser.add_argument('--perdomain', action='store_true')
     parser.add_argument('--port', type=int, required=False, default=10001)
-    parser.add_argument('--num_task', type=int, required=False, default=8)
-    parser.add_argument('--multi_cond_num_task', type=int, required=False, default=4)
-    parser.add_argument('--task_size', type=int, required=False, default=100)
-    parser.add_argument('--num_gpus', type=int, required=False, default=1)
+    parser.add_argument('--num_gpus', type=int, required=False, default=4)
     args = parser.parse_args()
     return args
+
 
 data_paths = {'ichar': '/mnt/sting/hjyoon/projects/cross/ICHAR/augcon',
               'hhar': '/mnt/sting/hjyoon/projects/cross/HHAR/augcon',
               'opportunity': '/mnt/sting/hjyoon/projects/cross/Opportunity/augcon',
               'realworld': '/mnt/sting/hjyoon/projects/cross/RealWorld/augcon'}
 
+
 def run(args):
-    pretext = 'metacpc'
+    pretext = 'simsiam'
     data_path = data_paths[args.dataset]
     config_path = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main/{args.dataset}/pretrain/{pretext}'
-    
+
     domains = glob(os.path.join(data_path, '*'))
     domains = [os.path.basename(domain) for domain in domains]
     print(domains)
-    
+
     flag = 0
     for domain in domains:
         if args.num_gpus == 4:
             if flag == 0:
-                gpu = [0,1,2,3]
+                gpu = [0, 1, 2, 3]
                 dist_url = f'tcp://localhost:{args.port}'
                 flag = 1
             elif flag == 1:
-                gpu = [4,5,6,7]
-                dist_url = f'tcp://localhost:{args.port+1}'
+                gpu = [4, 5, 6, 7]
+                dist_url = f'tcp://localhost:{args.port + 1}'
                 flag = 0
         elif args.num_gpus == 1:
             gpu = [flag]
-            dist_url = f'tcp://localhost:{args.port+flag}'
+            dist_url = f'tcp://localhost:{args.port + flag}'
             flag += 1
             if flag == 8: flag = 0
-        
+
         default_config = f'''### Default config
 mode: pretrain
 seed: 0 # fix as 0 in pretrain
@@ -69,10 +70,11 @@ optimizer: adam
 criterion: crossentropy
 start_epoch: 0
 epochs: {args.epochs}
-lr: 0.0005
+batch_size: {args.batch_size}
+lr: 0.0001
 wd: 0.0
 '''
-        save_freq = 100
+        save_freq = args.epochs / 10
         ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/without_{domain}'
         if args.perdomain:
             ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/perdomain_without_{domain}'
@@ -85,29 +87,16 @@ log_freq: 20
 save_freq: {save_freq}
 '''
         neg_per_domain = 'true' if args.perdomain else 'false'
-        learning_config = f'''### Meta-learning config
-task_per_domain: {neg_per_domain}
-num_task: {args.num_task}
-multi_cond_num_task: {args.multi_cond_num_task}
-task_size: {args.task_size}
-task_steps: 10
-task_lr: 0.01
-reg_lambda: 0
-log_meta_train: false'''
+        learning_config = f'neg_per_domain: {neg_per_domain}'
         model_config = f'''### Model config
 pretext: {pretext}
-## Encoder
-enc_blocks: 4
-kernel_sizes: [8, 4, 2, 1]
-strides: [4, 2, 1, 1]
-## Aggregator
-agg_blocks: 5
+
+#For simsiam
+out_dim: 50
+pred_dim: 25
+mlp: true
 z_dim: 256
-## Predictor
-pooling: mean
-pred_steps: 12
-n_negatives: 15
-offset: 4
+
 {learning_config}
 '''
         config = f'''{default_config}
@@ -120,13 +109,14 @@ offset: 4
         if args.target_only:
             filename = f'only_{domain}'
         if args.perdomain:
-            filename = filename+'_perdomain'
+            filename = filename + '_perdomain'
         file_path = os.path.join(config_path, f'gpu{flag}_{filename}.yaml')
         # generate directory if not exist
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         # generate config file
         with open(file_path, 'w') as f:
             f.write(config)
+
 
 if __name__ == '__main__':
     args = parse_args()
