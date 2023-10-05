@@ -495,7 +495,7 @@ class SimCLR1DLearner:
         with torch.no_grad():
             for batch_idx, data in enumerate(val_loader):
                 features = data[0].cuda()
-                targets = data[2].cuda()
+                targets = data[3].cuda()
                 
                 logits = net(features)
                 
