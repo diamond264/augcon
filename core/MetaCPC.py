@@ -755,8 +755,8 @@ class MetaCPCLearner:
         
         q_losses = torch.stack(q_losses, dim=0)
         loss = torch.sum(q_losses)
-        reg_term = torch.sum((q_losses - torch.mean(q_losses))**2)
-        loss += reg_term * self.cfg.reg_lambda
+        # reg_term = torch.sum((q_losses - torch.mean(q_losses))**2)
+        # loss += reg_term * self.cfg.reg_lambda
         loss = loss/len(supports)
         optimizer.zero_grad()
         loss.backward()

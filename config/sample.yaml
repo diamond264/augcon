@@ -1,30 +1,35 @@
-data:
-  dir: /mnt/sting/hjyoon/projects/cross/ImageNet_ILSVRC2012_mini
-
-multiprocessing:
-  workers: 32
-  world_size: -1
-  rank: -1
-  dist_url: tcp://224.66.41.62:23456
-  dist_backend: nccl
-  seed: null
-  gpu: null
-  multiprocessing_distributed: true
-
-training:
-  arch: resnet18
-  resume: ""
-  epochs: 100
-  start_epoch: 0
-  batch_size: 512
-  lr: 0.00001
-  momentum: 0.9
-  weight_decay: 1e-4
-
-utilities:
-  print_freq: 100
-  save_dir: /mnt/sting/hjyoon/projects/augcontrast/models/temp
-
-augcontrast:
-  temp: 0.07
-  fix_pred_lr: false
+### Default config
+mode: pretrain
+seed: 0
+gpu: [2]
+num_workers: 8
+dist_url: tcp://localhost:10001
+### Dataset config
+dataset_name: ichar
+train_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_PH0034-ykha/pretrain_target/train.pkl
+test_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_PH0034-ykha/pretrain_target/val.pkl
+val_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_PH0034-ykha/pretrain_target/val.pkl
+input_channels: 3
+num_cls: 9
+### Training config
+optimizer: adam
+criterion: crossentropy
+start_epoch: 0
+epochs: 300
+batch_size: 256
+lr: 0.00005
+momentum: 0.0
+wd: 0.0
+### Logs and checkpoints
+resume: ''
+ckpt_dir: /mnt/sting/hjyoon/projects/augcontrast/models/simclr_preliminary/simclr
+log_freq: 20
+save_freq: 10
+### Model config
+pretext: simclr
+z_dim: 96
+out_dim: 50
+T: 0.1
+mlp: true
+freeze: false
+neg_per_domain: false
