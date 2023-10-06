@@ -226,6 +226,8 @@ class SimSiam1DLearner:
         # Define criterion
         if self.cfg.criterion == 'crossentropy':
             criterion = nn.CrossEntropyLoss().cuda()
+        if self.cfg.criterion == 'cosinesimilarity':
+            criterion = nn.CosineSimilarity(dim=1).cuda()
         
         # For finetuning, load pretrained model
         if self.cfg.mode == 'finetune':

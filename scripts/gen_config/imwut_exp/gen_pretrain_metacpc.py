@@ -25,7 +25,7 @@ data_paths = {'ichar': '/mnt/sting/hjyoon/projects/cross/ICHAR/augcon',
 def run(args):
     pretext = 'metacpc'
     data_path = data_paths[args.dataset]
-    config_path = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main/{args.dataset}/pretrain/{pretext}'
+    config_path = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main_debug/{args.dataset}/pretrain/{pretext}'
     
     domains = glob(os.path.join(data_path, '*'))
     domains = [os.path.basename(domain) for domain in domains]
@@ -69,13 +69,13 @@ optimizer: adam
 criterion: crossentropy
 start_epoch: 0
 epochs: {args.epochs}
-lr: 0.0005
+lr: 0.001
 wd: 0.0
 '''
         save_freq = 100
-        ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/without_{domain}'
+        ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main_debug/{args.dataset}/pretrain/{pretext}/without_{domain}'
         if args.perdomain:
-            ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/perdomain_without_{domain}'
+            ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main_debug/{args.dataset}/pretrain/{pretext}/perdomain_without_{domain}'
         if args.target_only:
             ckpt_dir = ckpt_dir.replace('without', 'only')
         log_config = f'''### Logs and checkpoints
@@ -91,7 +91,7 @@ num_task: {args.num_task}
 multi_cond_num_task: {args.multi_cond_num_task}
 task_size: {args.task_size}
 task_steps: 10
-task_lr: 0.01
+task_lr: 0.005
 reg_lambda: 0
 log_meta_train: false'''
         model_config = f'''### Model config

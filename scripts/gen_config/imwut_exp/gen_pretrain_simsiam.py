@@ -67,7 +67,7 @@ num_cls: 9 # not important
 '''
         training_config = f'''### Training config
 optimizer: adam
-criterion: crossentropy
+criterion: cosinesimilarity
 start_epoch: 0
 epochs: {args.epochs}
 batch_size: {args.batch_size}
