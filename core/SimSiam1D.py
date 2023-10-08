@@ -5,9 +5,13 @@ import torch.distributed as dist
 import torch.nn.functional as F
 import torchvision.models as models
 import torch.multiprocessing as mp
+import sklearn.metrics as metrics
 
 # from datautils.SimCLR_dataset import subject_collate
 from torch.utils.data import DataLoader, Dataset, DistributedSampler
+
+from sklearn.neighbors import KNeighborsClassifier as KNN
+import numpy as np
 
 class Encoder(nn.Module):
     def __init__(self, input_channels, z_dim):
@@ -47,22 +51,32 @@ class Encoder(nn.Module):
 
 class Classifier(nn.Module):
     def __init__(self, base_model, in_dim=96,
-                 hidden_1=256, hidden_2=128, out_dim=50):
+                 hidden_1=128, hidden_2=128, out_dim=96):
         super(Classifier, self).__init__()
         self.base_model = base_model
-        self.fc1 = nn.Linear(in_dim, hidden_1)
+        self.fc1 = nn.Linear(in_dim, hidden_1, bias=False)
+        self.bn1 = nn.BatchNorm1d(hidden_1)
         self.relu1 = nn.ReLU()
-        self.fc2 = nn.Linear(hidden_1, hidden_2)
+        self.fc2 = nn.Linear(hidden_1, hidden_2, bias=False)
+        self.bn2 = nn.BatchNorm1d(hidden_2)
         self.relu2 = nn.ReLU()
-        self.fc3 = nn.Linear(hidden_2, out_dim)
+        self.fc3 = nn.Linear(hidden_2, out_dim, bias=False)
+        # self.fc3.bias.requires_grad_(False)
+        self.bn3 = nn.BatchNorm1d(out_dim, affine=False)
+        # self.relu3 = nn.ReLU()
 
     def forward(self, x):
-        base_model_output = self.base_model(x)
-        x = self.fc1(base_model_output)
+        x = self.base_model(x)
+        # x = self.bn0(base_model_output)
+        x = self.fc1(x)
+        x = self.bn1(x)
         x = self.relu1(x)
         x = self.fc2(x)
+        x = self.bn2(x)
         x = self.relu2(x)
         x = self.fc3(x)
+        x = self.bn3(x)
+        # x = self.relu3(x)
         return x
 
 class Predictor(nn.Module):
@@ -82,7 +96,7 @@ class SimSiamNet(nn.Module):
     Build a SimCLR model with: a query encoder, a key encoder, and a queue
     https://arxiv.org/abs/1911.05722
     """
-    def __init__(self, input_channels=3, z_dim=96, out_dim=50, pred_dim=25, mlp=True):
+    def __init__(self, input_channels=3, z_dim=96, out_dim=96, pred_dim=64, mlp=True):
         super(SimSiamNet, self).__init__()
 
         # create the encoders
@@ -238,7 +252,6 @@ class SimSiam1DLearner:
                     print(log)
                 loc = 'cuda:{}'.format(rank)
                 state = torch.load(self.cfg.pretrained, map_location=loc)['state_dict']
-                
                 for k, v in list(state.items()):
                     if k.startswith('encoder.'):
                         k = k[len('encoder.'):]
@@ -404,8 +417,13 @@ class SimSiam1DLearner:
             loss = -(criterion(p1, z2).mean() + criterion(p2, z1).mean()) * 0.5
 
             if batch_idx % self.cfg.log_freq == 0 and rank == 0:
+                KNNCls = KNN(n_neighbors=10)
+                KNNCls.fit(z1.detach().cpu().numpy()[:len(z1)//2], y=data[3][:len(z1)//2].numpy())
+                KNN_pred = KNNCls.predict(z1.detach().cpu().numpy()[len(z1)//2:])
+                KNN_acc = np.mean(KNN_pred == data[3].numpy()[len(z1)//2:])*100
+                std = torch.std(torch.cat((F.normalize(z1, dim=1), F.normalize(z1, dim=1)), dim=0))
                 log = f'Epoch [{epoch+1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) '
-                log += f'Loss: {loss.item():.4f}'
+                log += f'Loss: {loss.item():.4f}\tKNN Acc: {KNN_acc:.2f}\tStd: {std.item():.4f}'
                 logs.append(log)
                 print(log)
 
@@ -458,8 +476,7 @@ class SimSiam1DLearner:
             return total_loss.item()
     
     def finetune(self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs):
-        if self.cfg.freeze: net.eval()
-        else: net.train()
+        net.eval()
         
         for batch_idx, data in enumerate(train_loader):
             features = data[0].cuda()
@@ -502,12 +519,12 @@ class SimSiam1DLearner:
                 total_targets = torch.cat(total_targets, dim=0)
                 total_logits = torch.cat(total_logits, dim=0)
                 acc1, acc5 = self.accuracy(total_logits, total_targets, topk=(1, 5))
-                # f1, recall, precision = self.scores(total_logits, total_targets)
+                f1, recall, precision = self.scores(total_logits, total_targets)
             total_loss /= len(val_loader)
             
             if rank == 0:
                 log = f'[Finetune] Validation Loss: {total_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
-                # log += f', F1: {f1.item():.2f}, Recall: {recall.item():.2f}, Precision: {precision.item():.2f}'
+                log += f', F1: {f1.item():.2f}, Recall: {recall.item():.2f}, Precision: {precision.item():.2f}'
                 logs.append(log)
                 print(log)
     
@@ -541,17 +558,21 @@ class SimSiam1DLearner:
 
     def scores(self, output, target):
         with torch.no_grad():
-            batch_size = target.size(0)
-
-            _, pred = output.max(1)
-            correct = pred.eq(target)
-
-            # Compute f1-score, recall, and precision for top-1 prediction
-            tp = torch.logical_and(correct, target).sum()
-            fp = pred.sum() - tp
-            fn = target.sum() - tp
-            precision = tp / (tp + fp + 1e-12)
-            recall = tp / (tp + fn + 1e-12)
-            f1 = (2 * precision * recall) / (precision + recall + 1e-12)
+            out_val = torch.flatten(torch.argmax(output, dim=1)).cpu().numpy()
+            target_val = torch.flatten(target).cpu().numpy()
+            
+            cohen_kappa = metrics.cohen_kappa_score(target_val, out_val)
+            precision = metrics.precision_score(
+                target_val, out_val, average="macro", zero_division=0
+            )
+            recall = metrics.recall_score(
+                target_val, out_val, average="macro", zero_division=0
+            )
+            f1 = metrics.f1_score(
+                target_val, out_val, average="macro", zero_division=0
+            )
+            acc = metrics.accuracy_score(
+                target_val, out_val
+            )
 
             return f1, recall, precision

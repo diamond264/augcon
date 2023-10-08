@@ -30,7 +30,7 @@ num_cls = {'ichar': 9,
 
 
 def run(args):
-    pretext = 'simclr'
+    pretext = 'simsiam'
     data_path = data_paths[args.dataset]
     config_path = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main/{args.dataset}/finetune_{args.shot}shot/{pretext}'
 
@@ -108,7 +108,7 @@ no_vars: true
 mlp: false
 freeze: true'''
         model_config = f'''### Model config
-pretext: {pretext}
+pretext: simsiam
 ## Encoder
 enc_blocks: 4
 kernel_sizes: [8, 4, 2, 1]
