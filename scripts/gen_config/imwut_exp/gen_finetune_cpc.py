@@ -14,6 +14,7 @@ def parse_args():
     parser.add_argument('--perdomain', action='store_true')
     parser.add_argument('--target_only', action='store_true')
     parser.add_argument('--domain_adaptation', action='store_true')
+    parser.add_argument('--random_init', action='store_true')
     args = parser.parse_args()
     return args
 
@@ -79,11 +80,14 @@ lr: 0.001
 wd: 0.0
 '''
         save_freq = 10
-        ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/finetune_{args.shot}shot/pretrained_cpc_'
+        ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/finetune_{args.shot}shot/pretrained_{pretext}_'
         postfix = f'without'
         if args.target_only: postfix = f'only'
         if args.perdomain: postfix = 'perdomain_'+postfix
         pretrained = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/{postfix}_{domain}/checkpoint_0099.pth.tar'
+        if args.random_init:
+            postfix = 'random_init'
+            pretrained = "''"
         if args.domain_adaptation:
             postfix = postfix+f'/da_true_seed_{args.seed}'
         else:
