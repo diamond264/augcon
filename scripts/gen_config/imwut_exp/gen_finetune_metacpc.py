@@ -83,7 +83,7 @@ wd: 0.0
         postfix = f'without'
         if args.target_only: postfix = f'only'
         if args.perdomain: postfix = 'perdomain_'+postfix
-        pretrained = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main_debug/{args.dataset}/pretrain/{pretext}/{postfix}_{domain}/checkpoint_2999.pth.tar'
+        pretrained = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/{postfix}_{domain}/checkpoint_0999.pth.tar'
         if args.domain_adaptation:
             postfix = postfix+f'/da_true_seed_{args.seed}'
         else:

@@ -31,7 +31,7 @@ from core.SimSiam1D import SimSiam1DLearner
 # 1D meta pretext tasks
 from core.MetaCPC import MetaCPCLearner
 from core.MetaSimCLR1D import MetaSimCLR1DLearner
-
+from core.MetaSimSiam1D import MetaSimSiam1DLearner
 
 class Experiment:
     def __init__(self, cfg, logger):
@@ -88,6 +88,8 @@ class Experiment:
             learner = MetaCPCLearner(self.cfg, self.gpu, self.logger)
         elif self.cfg.pretext == 'metasimclr':
             learner = MetaSimCLR1DLearner(self.cfg, self.gpu, self.logger)
+        elif self.cfg.pretext == 'metasimsiam':
+            learner = MetaSimSiam1DLearner(self.cfg, self.gpu, self.logger)
         else:
             self.logger.warning('Pretext task not supported')
         

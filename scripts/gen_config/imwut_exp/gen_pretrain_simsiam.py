@@ -7,12 +7,12 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', type=str, required=True)
     parser.add_argument('--epochs', type=int, required=False, default=100)
-    parser.add_argument('--batch_size', type=int, required=False, default=512)
+    parser.add_argument('--batch_size', type=int, required=False, default=256)
     # recommended batch_size - 512 for target-only setting
     parser.add_argument('--target_only', action='store_true')
     parser.add_argument('--perdomain', action='store_true')
     parser.add_argument('--port', type=int, required=False, default=10001)
-    parser.add_argument('--num_gpus', type=int, required=False, default=4)
+    parser.add_argument('--num_gpus', type=int, required=False, default=1)
     args = parser.parse_args()
     return args
 
@@ -71,7 +71,7 @@ criterion: cosinesimilarity
 start_epoch: 0
 epochs: {args.epochs}
 batch_size: {args.batch_size}
-lr: 0.0001
+lr: 0.001
 wd: 0.0
 '''
         save_freq = args.epochs / 10
