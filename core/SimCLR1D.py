@@ -464,9 +464,8 @@ class SimCLR1DLearner:
             return total_loss.item()
     
     def finetune(self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs):
-        if self.cfg.freeze: net.eval()
-        else: net.train()
-        
+        net.eval()
+
         for batch_idx, data in enumerate(train_loader):
             features = data[0].cuda()
             targets = data[3].cuda()

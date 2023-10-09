@@ -12,6 +12,8 @@ def parse_args():
     parser.add_argument('--target_only', action='store_true')
     parser.add_argument('--perdomain', action='store_true')
     parser.add_argument('--port', type=int, required=False, default=20001)
+    parser.add_argument('--lr', type=float, required=False, default=0.001)
+    parser.add_argument('--task_lr', type=float, required=False, default=0.001)
     parser.add_argument('--num_task', type=int, required=False, default=5)
     parser.add_argument('--multi_cond_num_task', type=int, required=False, default=5)
     parser.add_argument('--task_size', type=int, required=False, default=100)
@@ -28,7 +30,7 @@ data_paths = {'ichar': '/mnt/sting/hjyoon/projects/cross/ICHAR/augcon',
 def run(args):
     pretext = 'metasimclr'
     data_path = data_paths[args.dataset]
-    config_path = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main/{args.dataset}/pretrain/{pretext}'
+    config_path = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main/{args.dataset}/pretrain/{pretext}/ts{args.task_size}_nt{args.num_task}_mcnt{args.multi_cond_num_task}_lr{args.lr}_tlr{args.task_lr}'
 
     domains = glob(os.path.join(data_path, '*'))
     domains = [os.path.basename(domain) for domain in domains]
@@ -72,7 +74,7 @@ optimizer: adam
 criterion: crossentropy
 start_epoch: 0
 epochs: {args.epochs}
-lr: 0.0001
+lr: {args.lr}
 wd: 0.0
 '''
         save_freq = args.epochs / 10
@@ -94,7 +96,7 @@ num_task: {args.num_task}
 multi_cond_num_task: {args.multi_cond_num_task}
 task_size: {args.task_size}
 task_steps: 10
-task_lr: 0.001
+task_lr: {args.task_lr}
 reg_lambda: 0
 log_meta_train: false'''
         model_config = f'''### Model config

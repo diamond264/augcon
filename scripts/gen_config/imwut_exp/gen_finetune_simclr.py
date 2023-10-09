@@ -83,7 +83,7 @@ lr: 0.001
 wd: 0.0
 '''
         save_freq = 10
-        ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/finetune_{args.shot}shot/pretrained_{pretext}_'
+        ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/finetune_{args.shot}shot/pretrained_simclr_'
         postfix = f'without'
         if args.target_only: postfix = f'only'
         if args.perdomain: postfix = 'perdomain_' + postfix
@@ -105,6 +105,12 @@ save_freq: {save_freq}
 '''
         learning_config = f'''### Meta-learning
 domain_adaptation: {'true' if args.domain_adaptation else 'false'}
+
+#For simclr
+out_dim: 50
+T: 0.1
+z_dim: 256
+ 
 task_steps: 10
 task_lr: 0.001
 reg_lambda: 0
@@ -112,19 +118,9 @@ no_vars: true
 mlp: false
 freeze: true'''
         model_config = f'''### Model config
-pretext: {pretext}
-## Encoder
-enc_blocks: 4
-kernel_sizes: [8, 4, 2, 1]
-strides: [4, 2, 1, 1]
-## Aggregator
-agg_blocks: 5
-z_dim: 256
-## Predictor
-pooling: mean
-pred_steps: 12
-n_negatives: 15
-offset: 4
+pretext: metasimclr
+
+
 {learning_config}
 '''
         config = f'''{default_config}

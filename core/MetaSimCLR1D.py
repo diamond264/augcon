@@ -279,7 +279,6 @@ class MetaSimCLR1DLearner:
         self.cfg = cfg
         self.gpu = gpu
         self.logger = logger
-        
     def run(self, train_dataset, val_dataset, test_dataset):
         num_gpus = len(self.gpu)
         logs = mp.Manager().list([])
@@ -930,9 +929,8 @@ class MetaSimCLR1DLearner:
             return total_loss.item()
     
     def finetune(self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs):
-        if self.cfg.freeze: net.eval()
-        else: net.train()
-        
+        net.eval()
+
         for batch_idx, data in enumerate(train_loader):
             features = data[0].cuda()
             targets = data[3].cuda()
