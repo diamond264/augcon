@@ -77,7 +77,7 @@ epochs: {args.epochs}
 lr: {args.lr}
 wd: 0.0
 '''
-        save_freq = args.epochs / 10
+        save_freq = 100
         ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/without_{domain}'
         if args.perdomain:
             ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/perdomain_without_{domain}'
