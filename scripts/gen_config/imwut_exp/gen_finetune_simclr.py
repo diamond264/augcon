@@ -30,7 +30,7 @@ num_cls = {'ichar': 9,
 
 
 def run(args):
-    pretext = 'simclr'
+    pretext = 'metasimclr'
     data_path = data_paths[args.dataset]
     config_path = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main/{args.dataset}/finetune_{args.shot}shot/{pretext}'
 
@@ -82,11 +82,11 @@ lr: 0.001
 wd: 0.0
 '''
         save_freq = 10
-        ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/finetune_{args.shot}shot/pretrained_cpc_'
+        ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/finetune_{args.shot}shot/pretrained_simclr_'
         postfix = f'without'
         if args.target_only: postfix = f'only'
         if args.perdomain: postfix = 'perdomain_' + postfix
-        pretrained = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/{postfix}_{domain}/checkpoint_0099.pth.tar'
+        pretrained = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/simclr/{postfix}_{domain}/checkpoint_0099.pth.tar'
         if args.domain_adaptation:
             postfix = postfix + f'/da_true_seed_{args.seed}'
         else:
@@ -101,6 +101,12 @@ save_freq: {save_freq}
 '''
         learning_config = f'''### Meta-learning
 domain_adaptation: {'true' if args.domain_adaptation else 'false'}
+
+#For simclr
+out_dim: 50
+T: 0.1
+z_dim: 256
+ 
 task_steps: 10
 task_lr: 0.001
 reg_lambda: 0
@@ -109,18 +115,8 @@ mlp: false
 freeze: true'''
         model_config = f'''### Model config
 pretext: {pretext}
-## Encoder
-enc_blocks: 4
-kernel_sizes: [8, 4, 2, 1]
-strides: [4, 2, 1, 1]
-## Aggregator
-agg_blocks: 5
-z_dim: 256
-## Predictor
-pooling: mean
-pred_steps: 12
-n_negatives: 15
-offset: 4
+
+
 {learning_config}
 '''
         config = f'''{default_config}
