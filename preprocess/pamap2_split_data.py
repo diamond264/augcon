@@ -8,16 +8,16 @@ from tqdm import tqdm
 from collections import defaultdict
 # import itertools
 
-class ProcessRealWorld():
+class ProcessPAMAP2():
     def __init__(self, file, class_type, seq_len=256,
                  split_ratio=0.7, drop_size_threshold=500,
                  shots=[20, 10, 5, 2, 1],
                  finetune_test_size=100, finetune_val_size=100):
         self.metadata = {
-            'domain': ['head', 'waist', 'shin', 'forearm', 'upperarm', 'thigh', 'chest'],
-            'activity': ['climbingup', 'jumping', 'sitting',
-                         'standing', 'lying', 'walking',
-                         'running', 'climbingdown']
+            'domain': ['wrist', 'chest', 'ankle'],
+            'activity': ['other', 'lying', 'sitting', 'standing', 'ironing',
+       'vacuum cleaning', 'ascending stairs', 'descending stairs',
+       'walking', 'Nordic walking', 'cycling', 'running', 'rope jumping']
         }
         
         self.finetune_test_size = finetune_test_size
@@ -240,6 +240,7 @@ class ProcessRealWorld():
         for idx in tqdm(range(max(len(df) // self.OVERLAPPING_WIN_LEN - 1, 0))):
             domain_ = df.iloc[idx * self.OVERLAPPING_WIN_LEN, 6]
             activity = df.iloc[idx * self.OVERLAPPING_WIN_LEN, 7]
+            if activity == 'other': continue
             domain_ = self.class_to_number('domain', domain_)
             activity = self.class_to_number('activity', activity)
             
@@ -285,13 +286,13 @@ class ProcessRealWorld():
 
 
 if __name__ == '__main__':
-    file_path = '/mnt/sting/hjyoon/projects/cross/RealWorld/csvs/min_max_scaled_realworld_full_data.csv'
-    base_out_dir = '/mnt/sting/hjyoon/projects/cross/RealWorld/augcon'
+    file_path = '/mnt/sting/hjyoon/projects/cross/PAMAP2/csvs/processed_data.csv'
+    base_out_dir = '/mnt/sting/hjyoon/projects/cross/PAMAP2/augcon'
     
     class_type = 'activity'
-    domains = ['head', 'waist', 'shin', 'forearm', 'upperarm', 'thigh', 'chest']
+    domains = ['wrist', 'chest', 'ankle']
     
-    dataset = ProcessRealWorld(file_path, 'activity')
+    dataset = ProcessPAMAP2(file_path, 'activity')
     for domain in domains:
         pretrain_dir = os.path.join(base_out_dir, f'target_domain_{domain}', 'pretrain')
         finetune_dir = os.path.join(base_out_dir, f'target_domain_{domain}', 'finetune')

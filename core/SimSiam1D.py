@@ -13,6 +13,14 @@ from torch.utils.data import DataLoader, Dataset, DistributedSampler
 from sklearn.neighbors import KNeighborsClassifier as KNN
 import numpy as np
 
+class GlobalMaxPooling1D(nn.Module):
+    def __init__(self):
+        super(GlobalMaxPooling1D, self).__init__()
+
+    def forward(self, x):
+        # Apply global max pooling along the 'seq_length' dimension
+        return torch.max(x, dim=2)[0]  # Taking the max along dim=2
+
 class Encoder(nn.Module):
     def __init__(self, input_channels, z_dim):
         super(Encoder, self).__init__()
@@ -29,7 +37,7 @@ class Encoder(nn.Module):
         self.relu3 = nn.ReLU()
         self.dropout3 = nn.Dropout(0.1)
 
-        self.global_max_pooling = nn.AdaptiveMaxPool1d(1)
+        self.global_max_pooling = GlobalMaxPooling1D()
 
     def forward(self, x):
         x = self.conv1(x)
@@ -414,6 +422,9 @@ class SimSiam1DLearner:
                 z2 = torch.cat(z2s, dim=0)
             else:
                 p1, p2, z1, z2 = net(features, pos_features)
+                print(1)
+                print(net.encoder.bn1.running_mean)
+                print(net.encoder.bn1.running_var)
             loss = -(criterion(p1, z2).mean() + criterion(p2, z1).mean()) * 0.5
 
             if batch_idx % self.cfg.log_freq == 0 and rank == 0:

@@ -92,10 +92,10 @@ save_freq: {save_freq}
 pretext: {pretext}
 
 #For simsiam
-out_dim: 50
-pred_dim: 25
+out_dim: 96
+pred_dim: 64
 mlp: true
-z_dim: 256
+z_dim: 96
 
 {learning_config}
 '''

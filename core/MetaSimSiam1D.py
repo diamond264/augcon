@@ -14,6 +14,17 @@ import torch.multiprocessing as mp
 # from datautils.SimCLR_dataset import subject_collate
 from torch.utils.data import DataLoader, Dataset, DistributedSampler
 
+from sklearn.neighbors import KNeighborsClassifier as KNN
+import numpy as np
+
+class GlobalMaxPooling1D(nn.Module):
+    def __init__(self):
+        super(GlobalMaxPooling1D, self).__init__()
+
+    def forward(self, x):
+        # Apply global max pooling along the 'seq_length' dimension
+        return torch.max(x, dim=2)[0]  # Taking the max along dim=2
+
 class Encoder(nn.Module):
     def __init__(self, input_channels, z_dim):
         super(Encoder, self).__init__()
@@ -35,7 +46,7 @@ class Encoder(nn.Module):
             self.vars.append(w)
             self.vars.append(b)
 
-        self.global_max_pooling = nn.AdaptiveMaxPool1d(1)
+        self.global_max_pooling = GlobalMaxPooling1D()
 
     def forward(self, x, vars=None):
         if vars is None:
@@ -49,7 +60,7 @@ class Encoder(nn.Module):
             x = F.relu(x, True)
             x = F.dropout(x, 0.1)
         
-        x = F.adaptive_max_pool1d(x, 1)
+        x = self.global_max_pooling(x)
         x = x.squeeze(-1)
         return x
     
@@ -70,7 +81,7 @@ class Encoder(nn.Module):
 
 class Classifier(nn.Module):
     def __init__(self, in_dim=96,
-                 hidden_1=256, hidden_2=128, out_dim=50):
+                 hidden_1=128, hidden_2=128, out_dim=96):
         super(Classifier, self).__init__()
         self.vars = nn.ParameterList()
         self.vars_bn = nn.ParameterList()
@@ -88,11 +99,11 @@ class Classifier(nn.Module):
         self.vars.append(w)
         w = bn1.weight
         b = bn1.bias
-        torch.nn.init.kaiming_normal_(w)
+        # torch.nn.init.kaiming_normal_(w)
         self.vars.append(w)
         self.vars.append(b)
-        rm = bn1.running_mean
-        rv = bn1.running_var
+        rm = nn.Parameter(torch.zeros_like(bn1.running_mean), requires_grad=False)
+        rv = nn.Parameter(torch.ones_like(bn1.running_var), requires_grad=False)
         self.vars_bn.extend([rm, rv])
         
         w = fc2.weight
@@ -100,37 +111,43 @@ class Classifier(nn.Module):
         self.vars.append(w)
         w = bn2.weight
         b = bn2.bias
-        torch.nn.init.kaiming_normal_(w)
+        # torch.nn.init.kaiming_normal_(w)
         self.vars.append(w)
         self.vars.append(b)
-        rm = bn2.running_mean
-        rv = bn2.running_var
+        rm = nn.Parameter(torch.zeros_like(bn2.running_mean), requires_grad=False)
+        rv = nn.Parameter(torch.ones_like(bn2.running_var), requires_grad=False)
         self.vars_bn.extend([rm, rv])
         
         w = fc3.weight
         torch.nn.init.kaiming_normal_(w)
         self.vars.append(w)
-        w = bn3.weight
-        b = bn3.bias
-        torch.nn.init.kaiming_normal_(w)
-        self.vars.append(w)
-        self.vars.append(b)
-        rm = bn3.running_mean
-        rv = bn3.running_var
+        # w = bn3.weight
+        # b = bn3.bias
+        # # torch.nn.init.kaiming_normal_(w)
+        # self.vars.append(w)
+        # self.vars.append(b)
+        rm = nn.Parameter(torch.zeros_like(bn3.running_mean), requires_grad=False)
+        rv = nn.Parameter(torch.ones_like(bn3.running_var), requires_grad=False)
         self.vars_bn.extend([rm, rv])
 
-    def forward(self, x, vars=None):
+    def forward(self, x, vars=None, bn_training=True):
         if vars is None:
             vars = self.vars
         
         x = F.linear(x, vars[0], None)
-        x = F.batch_norm(x, self.vars_bn[0], self.vars_bn[1], vars[1], vars[2])
+        running_mean = self.vars_bn[0]
+        running_var = self.vars_bn[1]
+        x = F.batch_norm(x, running_mean, running_var, vars[1], vars[2], training=bn_training)
         x = F.relu(x, True)
         x = F.linear(x, vars[3], None)
-        x = F.batch_norm(x, self.vars_bn[2], self.vars_bn[3], vars[4], vars[5])
+        running_mean = self.vars_bn[2]
+        running_var = self.vars_bn[3]
+        x = F.batch_norm(x, running_mean, running_var, vars[4], vars[5], training=bn_training)
         x = F.relu(x, True)
         x = F.linear(x, vars[6], None)
-        x = F.batch_norm(x, self.vars_bn[4], self.vars_bn[5], vars[7], vars[8])
+        running_mean = self.vars_bn[4]
+        running_var = self.vars_bn[5]
+        x = F.batch_norm(x, running_mean, running_var, None, None, training=bn_training)
         return x
 
     def zero_grad(self, vars=None):
@@ -163,11 +180,11 @@ class Predictor(nn.Module):
         self.vars.append(w)
         w = bn.weight
         b = bn.bias
-        torch.nn.init.kaiming_normal_(w)
+        # torch.nn.init.kaiming_normal_(w)
         self.vars.append(w)
         self.vars.append(b)
-        rm = bn.running_mean
-        rv = bn.running_var
+        rm = nn.Parameter(torch.zeros_like(bn.running_mean), requires_grad=False)
+        rv = nn.Parameter(torch.ones_like(bn.running_var), requires_grad=False)
         self.vars_bn.extend([rm, rv])
         w = fc2.weight
         torch.nn.init.kaiming_normal_(w)
@@ -175,12 +192,14 @@ class Predictor(nn.Module):
         self.vars.append(w)
         self.vars.append(b)
     
-    def forward(self, x, vars=None):
+    def forward(self, x, vars=None, bn_training=True):
         if vars is None:
             vars = self.vars
         
         x = F.linear(x, vars[0], None)
-        x = F.batch_norm(x, self.vars_bn[0], self.vars_bn[1], vars[1], vars[2])
+        running_mean = self.vars_bn[0]
+        running_var = self.vars_bn[1]
+        x = F.batch_norm(x, running_mean, running_var, vars[1], vars[2], training=bn_training)
         x = F.relu(x, True)
         x = F.linear(x, vars[3], vars[4])
         return x
@@ -217,7 +236,7 @@ class SimSiamNet(nn.Module):
         
         self.predictor = Predictor(out_dim, pred_dim)
 
-    def forward(self, x1, x2, vars=None):
+    def forward(self, x1, x2, vars=None, bn_training=True):
         if vars is None:
             vars = nn.ParameterList()
             vars.extend(self.encoder.parameters())
@@ -233,10 +252,10 @@ class SimSiamNet(nn.Module):
         z1 = self.encoder(x1, enc_vars)  # queries: NxC
         z2 = self.encoder(x2, enc_vars)  # keys: NxC
         if self.mlp:
-            z1 = self.classifier(z1, cls_vars)
-            z2 = self.classifier(z2, cls_vars)
-        p1 = self.predictor(z1, pred_vars)
-        p2 = self.predictor(z2, pred_vars)
+            z1 = self.classifier(z1, cls_vars, bn_training)
+            z2 = self.classifier(z2, cls_vars, bn_training)
+        p1 = self.predictor(z1, pred_vars, bn_training)
+        p2 = self.predictor(z2, pred_vars, bn_training)
 
         return p1, p2, z1.detach(), z2.detach()
     
@@ -321,7 +340,7 @@ class MetaSimSiam1DLearner:
     
     def main_worker(self, rank, world_size, train_dataset, val_dataset, test_dataset, logs):
         # Model initialization
-        net = SimSiamNet(self.cfg.input_channels, self.cfg.z_dim, self.cfg.out_dim, self.cfg.T, True)
+        net = SimSiamNet(self.cfg.input_channels, self.cfg.z_dim, self.cfg.out_dim, self.cfg.pred_dim, True)
         if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval_finetune':
             cls_net = SimSiamClassifier(self.cfg.input_channels, self.cfg.z_dim, self.cfg.num_cls, self.cfg.mlp)
         
@@ -418,9 +437,34 @@ class MetaSimSiam1DLearner:
                 #         state[k] = v
                 new_state = {}
                 if self.cfg.no_vars:
+                    enc_idx = 0
+                    cls_idx = 6
+                    cls_bn_idx = 13
+                    pred_idx = 19
+                    pred_bn_idx = 24
                     for i, (k, v) in enumerate(state.items()):
-                        new_k = list(net.state_dict().keys())[i]
-                        new_state[new_k] = v
+                        if 'base_model' in k:
+                            new_k = list(net.state_dict().keys())[enc_idx]
+                            new_state[new_k] = v
+                            enc_idx += 1
+                        elif not 'predictor' in k and not 'num_batches_tracked' in k:
+                            if not 'running' in k:
+                                new_k = list(net.state_dict().keys())[cls_idx]
+                                new_state[new_k] = v
+                                cls_idx += 1
+                            else:
+                                new_k = list(net.state_dict().keys())[cls_bn_idx]
+                                new_state[new_k] = v
+                                cls_bn_idx += 1
+                        elif not 'num_batches_tracked' in k:
+                            if not 'running' in k:
+                                new_k = list(net.state_dict().keys())[pred_idx]
+                                new_state[new_k] = v
+                                pred_idx += 1
+                            else:
+                                new_k = list(net.state_dict().keys())[pred_bn_idx]
+                                new_state[new_k] = v
+                                pred_bn_idx += 1
                 else:
                     new_state = state
                 
@@ -450,19 +494,24 @@ class MetaSimSiam1DLearner:
                 net.train()
                 net.zero_grad()
                 
+                meta_criterion = nn.CosineSimilarity(dim=1).cuda()
                 if self.cfg.out_cls_neg_sampling:
-                    enc_parameters = self.adapt(rank, net, meta_train_dataset, criterion, log_steps=True, logs=logs)
+                    enc_parameters = self.adapt(rank, net, meta_train_dataset, meta_criterion, log_steps=True, logs=logs)
                     # self.meta_eval(rank, net, test_dataset, criterion, enc_parameters, logs)
                 else:
+                    shuffled_idx = torch.randperm(len(meta_train_dataset))
+                    meta_train_dataset = torch.utils.data.Subset(meta_train_dataset, shuffled_idx)
                     support = [e[1] for e in meta_train_dataset]
                     pos_support = [e[2] for e in meta_train_dataset]
+                    support_label = [e[3] for e in meta_train_dataset]
                     support = torch.stack(support, dim=0).cuda()
                     pos_support = torch.stack(pos_support, dim=0).cuda()
-                    enc_parameters = self.meta_train(rank, net, support, pos_support, criterion, log_steps=True, logs=logs)
+                    support_label = torch.stack(support_label, dim=0)
+                    enc_parameters = self.meta_train(rank, net, support, pos_support, support_label, meta_criterion, bn_training=False, log_steps=True, logs=logs)
                     # self.meta_eval(rank, net, test_dataset, criterion, enc_parameters, logs)
             else:
                 enc_parameters = list(net.parameters())
-            
+            # assert(0)
             if rank == 0:
                 log = "Loading encoder parameters to the classifier"
                 logs.append(log)
@@ -470,7 +519,7 @@ class MetaSimSiam1DLearner:
             
             enc_dict = {}
             for idx, k in enumerate(list(net.state_dict().keys())):
-                if not 'classifier' in k:
+                if not 'classifier' in k and not 'predictor' in k:
                     k_ = k.replace('encoder.', 'base_model.')
                     enc_dict[k_] = enc_parameters[idx]
             
@@ -548,14 +597,14 @@ class MetaSimSiam1DLearner:
                     pos_supports = []
                     pos_queries = []
                     if self.cfg.task_per_domain:
-                        supports, pos_supports, queries, pos_queries = self.gen_per_domain_tasks(
+                        supports, pos_supports, queries, pos_queries, support_labels, query_labels = self.gen_per_domain_tasks(
                             meta_train_dataset,
                             indices_per_domain,
                             self.cfg.task_size,
                             self.cfg.num_task
                         )
                     if self.cfg.multi_cond_num_task > 0:
-                        multi_cond_supports, multi_cond_pos_supports, multi_cond_queries, multi_cond_pos_queries = self.gen_random_tasks(
+                        multi_cond_supports, multi_cond_pos_supports, multi_cond_queries, multi_cond_pos_queries, multi_cond_support_labels, multi_cond_query_labels = self.gen_random_tasks(
                             meta_train_dataset,
                             self.cfg.task_size,
                             self.cfg.multi_cond_num_task
@@ -564,9 +613,11 @@ class MetaSimSiam1DLearner:
                         queries = queries+multi_cond_queries
                         pos_supports = pos_supports+multi_cond_pos_supports
                         pos_queries = pos_queries+multi_cond_pos_queries
+                        support_labels = support_labels+multi_cond_support_labels
+                        query_labels = query_labels+multi_cond_query_labels
 
                     # print(f"Num task : {len(supports)}")
-                    self.pretrain(rank, net, supports, pos_supports, queries, pos_queries, criterion, optimizer, epoch, self.cfg.epochs, logs)
+                    self.pretrain(rank, net, supports, pos_supports, queries, pos_queries, support_labels, query_labels, criterion, optimizer, epoch, self.cfg.epochs, logs)
                     # if len(val_dataset) > 0:
                     #     loss_ep = self.validate_pretrain(rank, net, val_loader, criterion, logs)
                     
@@ -637,6 +688,8 @@ class MetaSimSiam1DLearner:
         queries = []
         pos_supports = []
         pos_queries = []
+        support_labels = []
+        query_labels = []
         
         with torch.no_grad():
             if num_task is None:
@@ -645,25 +698,33 @@ class MetaSimSiam1DLearner:
                     support_ = torch.utils.data.Subset(dataset, indices[:task_size])
                     support = []
                     pos_support = []
+                    support_label = []
                     for e in support_:
                         support.append(e[1])
                         pos_support.append(e[2])
+                        support_label.append(e[3])
                     support = torch.stack(support, dim=0)
                     pos_support = torch.stack(pos_support, dim=0)
+                    support_label = torch.stack(support_label, dim=0)
                     
                     query_ = torch.utils.data.Subset(dataset, indices[task_size:2*task_size])
                     query = []
                     pos_query = []
+                    query_label = []
                     for e in query_:
                         query.append(e[1])
                         pos_query.append(e[2])
+                        query_label.append(e[3])
                     query = torch.stack(query, dim=0)
                     pos_query = torch.stack(pos_query, dim=0)
+                    query_label = torch.stack(query_label, dim=0)
                     
                     supports.append(support)
                     queries.append(query)
                     pos_supports.append(pos_support)
                     pos_queries.append(pos_query)
+                    support_labels.append(support_label)
+                    query_labels.append(query_label)
             else:
                 for _ in range(num_task):
                     dom = random.choice(list(indices_per_domain.keys()))
@@ -673,47 +734,61 @@ class MetaSimSiam1DLearner:
                     # support_ = torch.utils.data.Subset(dataset, indices[:len(indices)//2])
                     support = []
                     pos_support = []
+                    support_label = []
                     for e in support_:
                         support.append(e[1])
                         pos_support.append(e[2])
+                        support_label.append(e[3])
                     if len(support) >= task_size:
                         support = support[:task_size]
                         pos_support = pos_support[:task_size]
+                        support_label = support_label[:task_size]
                     else:
                         assert(0)
                         support = support * (task_size // len(support)) + support[:task_size % len(support)]
                         pos_support = pos_support * (task_size // len(pos_support)) + pos_support[:task_size % len(pos_support)]
+                        support_label = support_label * (task_size // len(support_label)) + support_label[:task_size % len(support_label)]
                     support = torch.stack(support, dim=0)
                     pos_support = torch.stack(pos_support, dim=0)
+                    support_label = torch.stack(support_label, dim=0)
                     
                     query_ = torch.utils.data.Subset(dataset, indices[task_size:2*task_size])
                     # query_ = torch.utils.data.Subset(dataset, indices[len(indices)//2:])
                     query = []
                     pos_query = []
+                    query_label = []
                     for e in query_:
                         query.append(e[1])
                         pos_query.append(e[2])
+                        query_label.append(e[3])
                     if len(query) >= task_size:
                         query = query[:task_size]
                         pos_query = pos_query[:task_size]
+                        query_label = query_label[:task_size]
                     else:
                         query = query * (task_size // len(query)) + query[:task_size % len(query)]
                         pos_query = pos_query * (task_size // len(pos_query)) + pos_query[:task_size % len(pos_query)]
+                        query_label = query_label * (task_size // len(query_label)) + query_label[:task_size % len(query_label)]
                     query = torch.stack(query, dim=0)
                     pos_query = torch.stack(pos_query, dim=0)
+                    query_label = torch.stack(query_label, dim=0)
                     
                     supports.append(support)
                     queries.append(query)
                     pos_supports.append(pos_support)
                     pos_queries.append(pos_query)
+                    support_labels.append(support_label)
+                    query_labels.append(query_label)
         
-        return supports, pos_supports, queries, pos_queries
+        return supports, pos_supports, queries, pos_queries, support_labels, query_labels
 
     def gen_random_tasks(self, dataset, task_size, num_task):
         supports = []
         queries = []
         pos_supports = []
         pos_queries = []
+        support_labels = []
+        query_labels = []
         with torch.no_grad():
             for _ in range(num_task):
                 indices = list(range(len(dataset)))
@@ -725,32 +800,40 @@ class MetaSimSiam1DLearner:
                 support_ = torch.utils.data.Subset(dataset, indices[st:ed])
                 support = []
                 pos_support = []
+                support_label = []
                 for e in support_:
                     support.append(e[1])
                     pos_support.append(e[2])
+                    support_label.append(e[3])
                 support = torch.stack(support, dim=0)
                 pos_support = torch.stack(pos_support, dim=0)
+                support_label = torch.stack(support_label, dim=0)
                 st += task_size
                 ed += task_size
                 
                 query_ = torch.utils.data.Subset(dataset, indices[st:ed])
                 query = []
                 pos_query = []
+                query_label = []
                 for e in query_:
                     query.append(e[1])
                     pos_query.append(e[2])
+                    query_label.append(e[3])
                 query = torch.stack(query, dim=0)
                 pos_query = torch.stack(pos_query, dim=0)
+                query_label = torch.stack(query_label, dim=0)
                 st += task_size
                 ed += task_size
                 supports.append(support)
                 queries.append(query)
                 pos_supports.append(pos_support)
                 pos_queries.append(pos_query)
+                support_labels.append(support_label)
+                query_labels.append(query_label)
             
-        return supports, pos_supports, queries, pos_queries
+        return supports, pos_supports, queries, pos_queries, support_labels, query_labels
     
-    def pretrain(self, rank, net, supports, pos_supports, queries, pos_queries, criterion, optimizer, epoch, num_epochs, logs):
+    def pretrain(self, rank, net, supports, pos_supports, queries, pos_queries, support_labels, query_labels, criterion, optimizer, epoch, num_epochs, logs):
         net.train()
         net.zero_grad()
         
@@ -760,17 +843,24 @@ class MetaSimSiam1DLearner:
             pos_support = pos_supports[task_idx].cuda()
             query = queries[task_idx].cuda()
             pos_query = pos_queries[task_idx].cuda()
+            support_label = support_labels[task_idx]
+            query_label = query_labels[task_idx]
             
-            fast_weights = self.meta_train(rank, net, support, pos_support, criterion, log_steps=self.cfg.log_meta_train, logs=logs)
-            
-            q_logits, q_targets = net(query, pos_query, fast_weights)
-            q_loss = criterion(q_logits, q_targets)
+            log_steps = False
+            if epoch % self.cfg.log_freq == 0 and self.cfg.log_meta_train: log_steps = True
+            fast_weights = self.meta_train(rank, net, support, pos_support, support_label, criterion, bn_training=False, log_steps=log_steps, logs=logs)
+            q_p1, q_p2, q_z1, q_z2 = net(query, pos_query, fast_weights)
+            q_loss = -(criterion(q_p1, q_z2).mean() + criterion(q_p2, q_z1).mean()) * 0.5
             q_losses.append(q_loss)
             
-            if task_idx % self.cfg.log_freq == 0:
-                acc1, acc5 = self.accuracy(q_logits, q_targets, topk=(1, 5))
+            if epoch % self.cfg.log_freq == 0:
+                KNNCls = KNN(n_neighbors=3)
+                KNNCls.fit(q_z1.detach().cpu().numpy()[:len(q_z1)//2], y=query_label[:len(q_z1)//2].numpy())
+                KNN_pred = KNNCls.predict(q_z1.detach().cpu().numpy()[len(q_z1)//2:])
+                KNN_acc = np.mean(KNN_pred == query_label.numpy()[len(q_z1)//2:])*100
+                std = torch.std(torch.cat((F.normalize(q_z1, dim=1), F.normalize(q_z1, dim=1)), dim=0))
                 log = f'Epoch [{epoch+1}/{num_epochs}]  \t({task_idx}/{len(supports)}) '
-                log += f'Loss: {q_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+                log += f'Loss: {q_loss.item():.4f}\tKNN Acc: {KNN_acc:.2f}\tStd: {std.item():.4f}'
                 if rank == 0:
                     logs.append(log)
                     print(log)
@@ -788,18 +878,22 @@ class MetaSimSiam1DLearner:
         loss.backward()
         optimizer.step()
     
-    def meta_train(self, rank, net, support, pos_support, criterion, log_steps=False, logs=None):
+    def meta_train(self, rank, net, support, pos_support, support_label, criterion, bn_training=True, log_steps=False, logs=None):
         fast_weights = list(net.parameters())
         for i in range(self.cfg.task_steps):
-            s_p1, s_p2, s_z1, s_z2 = net(support, pos_support, fast_weights)
+            s_p1, s_p2, s_z1, s_z2 = net(support, pos_support, fast_weights, bn_training=bn_training)
             s_loss = -(criterion(s_p1, s_z2).mean() + criterion(s_p2, s_z1).mean()) * 0.5
             grad = torch.autograd.grad(s_loss, fast_weights)
             fast_weights = list(map(lambda p: p[1] - self.cfg.task_lr * p[0], zip(grad, fast_weights)))
             
             if log_steps and rank == 0:
+                KNNCls = KNN(n_neighbors=3)
+                KNNCls.fit(s_z1.detach().cpu().numpy()[:len(s_z1)//2], y=support_label[:len(s_z1)//2].numpy())
+                KNN_pred = KNNCls.predict(s_z1.detach().cpu().numpy()[len(s_z1)//2:])
+                KNN_acc = np.mean(KNN_pred == support_label.numpy()[len(s_z1)//2:])*100
                 std = torch.std(torch.cat((F.normalize(s_z1, dim=1), F.normalize(s_z1, dim=1)), dim=0))
                 log = f'\tmeta-train [{i}/{self.cfg.task_steps}] '
-                logs += f'Loss: {s_loss.item():.4f}\tStd: {std.item():.4f}'
+                log += f'Loss: {s_loss.item():.4f}\tKNN Acc: {KNN_acc:.2f}\tStd: {std.item():.4f}'
                 logs.append(log)
                 print(log)
         

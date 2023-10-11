@@ -115,7 +115,7 @@ kernel_sizes: [8, 4, 2, 1]
 strides: [4, 2, 1, 1]
 ## Aggregator
 agg_blocks: 5
-z_dim: 256
+z_dim: 96
 ## Predictor
 pooling: mean
 pred_steps: 12
