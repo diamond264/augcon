@@ -422,7 +422,10 @@ class MetaSimCLR1DLearner:
                     train_sampler.set_epoch(0)
                 net.train()
                 net.zero_grad()
-                
+
+                shuffled_idx = torch.randperm(len(meta_train_dataset))
+                meta_train_dataset = torch.utils.data.Subset(meta_train_dataset, shuffled_idx)
+
                 if self.cfg.out_cls_neg_sampling:
                     enc_parameters = self.adapt(rank, net, meta_train_dataset, criterion, log_steps=True, logs=logs)
                     self.meta_eval(rank, net, test_dataset, criterion, enc_parameters, logs)
@@ -653,7 +656,6 @@ class MetaSimCLR1DLearner:
                         support = support[:task_size]
                         pos_support = pos_support[:task_size]
                     else:
-                        assert(0)
                         support = support * (task_size // len(support)) + support[:task_size % len(support)]
                         pos_support = pos_support * (task_size // len(pos_support)) + pos_support[:task_size % len(pos_support)]
                     support = torch.stack(support, dim=0)

@@ -12,7 +12,12 @@ def parse_args():
     parser.add_argument('--target_only', action='store_true')
     parser.add_argument('--perdomain', action='store_true')
     parser.add_argument('--port', type=int, required=False, default=10001)
-    parser.add_argument('--num_gpus', type=int, required=False, default=4)
+    parser.add_argument('--num_gpus', type=int, required=False, default=1)
+
+    parser.add_argument('--lr', type=float, required=False, default=0.001)
+    parser.add_argument('--wd', type=float, required=False, default=0.0001)
+    parser.add_argument('--momentum', type=float, required=False, default=0)
+    parser.add_argument('--prefix', type=str, required=False, default='')
     args = parser.parse_args()
     return args
 
@@ -20,13 +25,15 @@ def parse_args():
 data_paths = {'ichar': '/mnt/sting/hjyoon/projects/cross/ICHAR/augcon',
               'hhar': '/mnt/sting/hjyoon/projects/cross/HHAR/augcon',
               'opportunity': '/mnt/sting/hjyoon/projects/cross/Opportunity/augcon',
-              'realworld': '/mnt/sting/hjyoon/projects/cross/RealWorld/augcon'}
+              'realworld': '/mnt/sting/hjyoon/projects/cross/RealWorld/augcon',
+              'pamap2': '/mnt/sting/hjyoon/projects/cross/PAMAP2/augcon'}
 
 
 def run(args):
     pretext = 'simclr'
     data_path = data_paths[args.dataset]
-    config_path = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main/{args.dataset}/pretrain/{pretext}'
+    specific_path = f'{args.prefix}lr{args.lr}_m{args.momentum}_wd{args.wd}'
+    config_path = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main/{args.dataset}/pretrain/{pretext}/{specific_path}'
 
     domains = glob(os.path.join(data_path, '*'))
     domains = [os.path.basename(domain) for domain in domains]
@@ -47,7 +54,7 @@ def run(args):
             gpu = [flag]
             dist_url = f'tcp://localhost:{args.port + flag}'
             flag += 1
-            if flag == 8: flag = 0
+            if flag == 4: flag = 0
 
         default_config = f'''### Default config
 mode: pretrain
@@ -71,13 +78,14 @@ criterion: crossentropy
 start_epoch: 0
 epochs: {args.epochs}
 batch_size: {args.batch_size}
-lr: 0.0001
-wd: 0.0
+lr: {args.lr}
+wd: {args.wd}
+momentum : {args.momentum}
 '''
         save_freq = args.epochs / 10
-        ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/without_{domain}'
+        ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/without_{domain}/{specific_path}'
         if args.perdomain:
-            ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/perdomain_without_{domain}'
+            ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/perdomain_without_{domain}/{specific_path}'
         if args.target_only:
             ckpt_dir = ckpt_dir.replace('without', 'only')
         log_config = f'''### Logs and checkpoints
