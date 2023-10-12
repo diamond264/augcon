@@ -632,8 +632,8 @@ class MetaCPCLearner:
                         test_sampler.set_epoch(epoch)
                         
                     self.finetune(rank, cls_net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
-                    if len(val_dataset) > 0:
-                        self.validate(rank, cls_net, val_loader, criterion, logs)
+                    # if len(val_dataset) > 0:
+                    #     self.validate(rank, cls_net, val_loader, criterion, logs)
                     
                     if rank == 0 and (epoch+1) % self.cfg.save_freq == 0:
                         ckpt_dir = self.cfg.ckpt_dir

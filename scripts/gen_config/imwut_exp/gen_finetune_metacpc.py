@@ -20,11 +20,13 @@ def parse_args():
 data_paths = {'ichar': '/mnt/sting/hjyoon/projects/cross/ICHAR/augcon',
               'hhar': '/mnt/sting/hjyoon/projects/cross/HHAR/augcon',
               'opportunity': '/mnt/sting/hjyoon/projects/cross/Opportunity/augcon',
-              'realworld': '/mnt/sting/hjyoon/projects/cross/RealWorld/augcon'}
+              'realworld': '/mnt/sting/hjyoon/projects/cross/RealWorld/augcon',
+              'pamap2': '/mnt/sting/hjyoon/projects/cross/PAMAP2/augcon'}
 num_cls = {'ichar': 9,
            'hhar': 6,
            'opportunity': 4,
-           'realworld': 19}
+           'realworld': 8,
+           'pamap2': 12}
 
 def run(args):
     pretext = 'metacpc'
@@ -83,7 +85,7 @@ wd: 0.0
         postfix = f'without'
         if args.target_only: postfix = f'only'
         if args.perdomain: postfix = 'perdomain_'+postfix
-        pretrained = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/{postfix}_{domain}/checkpoint_0999.pth.tar'
+        pretrained = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/{postfix}_{domain}/checkpoint_2999.pth.tar'
         if args.domain_adaptation:
             postfix = postfix+f'/da_true_seed_{args.seed}'
         else:

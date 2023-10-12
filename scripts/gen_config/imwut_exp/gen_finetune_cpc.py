@@ -21,11 +21,13 @@ def parse_args():
 data_paths = {'ichar': '/mnt/sting/hjyoon/projects/cross/ICHAR/augcon',
               'hhar': '/mnt/sting/hjyoon/projects/cross/HHAR/augcon',
               'opportunity': '/mnt/sting/hjyoon/projects/cross/Opportunity/augcon',
-              'realworld': '/mnt/sting/hjyoon/projects/cross/RealWorld/augcon'}
+              'realworld': '/mnt/sting/hjyoon/projects/cross/RealWorld/augcon',
+              'pamap2': '/mnt/sting/hjyoon/projects/cross/PAMAP2/augcon'}
 num_cls = {'ichar': 9,
            'hhar': 6,
            'opportunity': 4,
-           'realworld': 19}
+           'realworld': 8,
+           'pamap2': 12}
 
 def run(args):
     pretext = 'cpc'

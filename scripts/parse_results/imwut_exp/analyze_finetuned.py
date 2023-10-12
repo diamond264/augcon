@@ -20,6 +20,7 @@ def run(args):
         with open(log, 'r') as f:
             content = f.read()
             content = content.split('\n')[-2]
+            # print(content)
             if args.metric == 'acc':
                 score = float(content.split('Acc(1): ')[1].split(', ')[0])
             elif args.metric == 'f1':

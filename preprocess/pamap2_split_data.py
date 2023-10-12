@@ -15,7 +15,7 @@ class ProcessPAMAP2():
                  finetune_test_size=100, finetune_val_size=100):
         self.metadata = {
             'domain': ['wrist', 'chest', 'ankle'],
-            'activity': ['other', 'lying', 'sitting', 'standing', 'ironing',
+            'activity': ['lying', 'sitting', 'standing', 'ironing',
        'vacuum cleaning', 'ascending stairs', 'descending stairs',
        'walking', 'Nordic walking', 'cycling', 'running', 'rope jumping']
         }
