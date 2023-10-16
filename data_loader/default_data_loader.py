@@ -3,6 +3,7 @@ import torch
 import pickle
 from data_loader.CPCDataset import CPCDataset
 from data_loader.SimCLRDataset import SimCLRDataset
+from data_loader.TPNDataset import TPNDataset
 
 class DefaultDataLoader():
     def __init__(self, cfg, logger):
@@ -22,7 +23,13 @@ class DefaultDataLoader():
             self.val_dataset = pickle.load(f)
     
     def get_datasets(self):
-        if self.cfg.pretext == 'cpc' or self.cfg.pretext == 'metacpc':
+        if self.cfg.pretext == 'tpn':
+            self.train_dataset = TPNDataset(self.train_dataset)
+            self.val_dataset = TPNDataset(self.val_dataset)
+            self.test_dataset = TPNDataset(self.test_dataset)
+        if self.cfg.pretext == 'cpc' or \
+            self.cfg.pretext == 'metacpc' or\
+            self.cfg.pretext == 'autoencoder':
             self.train_dataset = CPCDataset(self.train_dataset)
             self.val_dataset = CPCDataset(self.val_dataset)
             self.test_dataset = CPCDataset(self.test_dataset)

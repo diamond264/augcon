@@ -27,6 +27,8 @@ from data_loader.EmptyDataset import EmptyDataset
 from core.CPC import CPCLearner
 from core.SimCLR1D import SimCLR1DLearner
 from core.SimSiam1D import SimSiam1DLearner
+from core.AutoEncoder import AutoEncoderLearner
+from core.TPN import TPNLearner
 
 # 1D meta pretext tasks
 from core.MetaCPC import MetaCPCLearner
@@ -81,6 +83,10 @@ class Experiment:
             learner = CPCLearner(self.cfg, self.gpu, self.logger)
         elif self.cfg.pretext == 'simclr':
             learner = SimCLR1DLearner(self.cfg, self.gpu, self.logger)
+        elif self.cfg.pretext == 'autoencoder':
+            learner = AutoEncoderLearner(self.cfg, self.gpu, self.logger)
+        elif self.cfg.pretext == 'tpn':
+            learner = TPNLearner(self.cfg, self.gpu, self.logger)
         elif self.cfg.pretext == 'simsiam':
             learner = SimSiam1DLearner(self.cfg, self.gpu, self.logger)
         # Meta learning methods

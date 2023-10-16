@@ -1,15 +1,16 @@
 ### Default config
 mode: finetune
-seed: 0
-gpu: [5]
+seed: 0 # fix as 0 in pretrain
+gpu: [7]
 num_workers: 1
-dist_url: tcp://localhost:10001
+dist_url: tcp://localhost:6007
+episodes: 1
 
 ### Dataset config
 dataset_name: ichar
-train_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_PH0007-jskim/finetune/10shot/target/train.pkl
-test_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_PH0007-jskim/finetune/10shot/target/test.pkl
-val_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_PH0007-jskim/finetune/10shot/target/val.pkl
+train_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA0002-bkkim/finetune/10shot/target/train.pkl
+test_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA0002-bkkim/finetune/10shot/target/test.pkl
+val_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_WA0002-bkkim/finetune/10shot/target/val.pkl
 input_channels: 3
 num_cls: 9
 
@@ -22,35 +23,29 @@ batch_size: 4
 lr: 0.001
 wd: 0.0
 
-episodes: 1
-
 ### Logs and checkpoints
 resume: ''
-pretrained: /mnt/sting/hjyoon/projects/aaa/models/imwut/main/ichar/pretrain/simclr/without_target_domain_WA0002-bkkim/checkpoint_0099.pth.tar
-ckpt_dir: /mnt/sting/hjyoon/projects/aaa/models/imwut/main/ichar/pretrain/metasimclr/perdomain_without_target_domain_WA0002-bkkim/
+pretrained: ./temp/checkpoint_0099.pth.tar
+ckpt_dir: ./temp/finetune
 log_freq: 5
 save_freq: 10
 
 ### Model config
-pretext: metasimclr
-## Encoder
-enc_blocks: 4
-kernel_sizes: [8, 4, 2, 1]
-strides: [4, 2, 1, 1]
+pretext: tpn
 
-#For simclr
-out_dim: 50
-T: 0.1
-z_dim: 256
 
 ### Meta-learning
 domain_adaptation: false
-out_cls_neg_sampling: false
-task_wd: 0.0001
 
-task_steps: 0
-task_lr: 0
+#For simclr
+out_dim: 2
+T: 0.1
+z_dim: 96
+ 
+task_steps: 10
+task_lr: 0.001
 reg_lambda: 0
+no_vars: true
 mlp: false
 freeze: true
-no_vars: true
+

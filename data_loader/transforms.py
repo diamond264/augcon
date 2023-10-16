@@ -106,9 +106,9 @@ def time_segment_permutation_transform_vectorized(X, num_segments=4, minSegLengt
             bWhile = False
     pp = 0
     for ii in range(num_segments):
-        x_temp = X[segs[idx[ii]]:segs[idx[ii]+1],:]
-        X_transformed[pp:pp+len(x_temp),:] = x_temp
-        pp += len(x_temp)
+        x_temp = X[:,segs[idx[ii]]:segs[idx[ii]+1]]
+        X_transformed[:,pp:pp+x_temp.shape[1]] = x_temp
+        pp += x_temp.shape[1]
     return X_transformed
 
 def GenerateRandomCurves(X, sigma=0.2, knot=4):
@@ -138,3 +138,72 @@ def time_warp_transform_vectorized(X, sigma=0.2):
     X_new[1,:] = np.interp(x_range, tt_new[1,:], X[1,:])
     X_new[2,:] = np.interp(x_range, tt_new[2,:], X[2,:])
     return X_new
+
+def is_scaling_factor_invalid(scaling_factor, min_scale_sigma):
+    """
+    Ensure each of the abs values of the scaling
+    factors are greater than the min
+    """
+    for i in range(len(scaling_factor)):
+        if abs(scaling_factor[i] - 1) < min_scale_sigma:
+            return True
+    return False
+
+def tpn_noise(X, choice):
+    if choice == 1:
+        return noise_transform_vectorized(X, 0.1)
+    else:
+        return X+0
+
+def tpn_rotate(X, choice):
+    if choice == 1:
+        return rotation_transform_vectorized(X)
+    else:
+        return X+0
+
+def tpn_negate(X, choice):
+    if choice == 1:
+        return negate_transform_vectorized(X)
+    else:
+        return X+0
+
+def tpn_flip(X, choice):
+    if choice == 1:
+        return np.flip(X, axis=1)
+    else: return X+0
+
+def tpn_scale(X, choice, scale_range=0.5, min_scale_diff=0.15):
+    if choice == 1:
+        low = 1 - scale_range
+        high = 1 + scale_range
+        scaling_factor = np.random.uniform(
+            low=low, high=high, size=(X.shape[0])
+        )
+        while is_scaling_factor_invalid(scaling_factor, min_scale_diff):
+            scaling_factor = np.random.uniform(
+                low=low, high=high, size=(X.shape[0])
+            )
+        X_new = np.zeros(X.shape)
+        for i in range(3):
+            X_new[i, :] = X[i, :] * scaling_factor[i]
+        return X_new
+    else:
+        return X+0
+
+def tpn_permute(X, choice):
+    if choice == 1:
+        return time_segment_permutation_transform_vectorized(X)
+    else:
+        return X+0
+
+def tpn_time_warp(X, choice):
+    if choice == 1:
+        return time_warp_transform_vectorized(X)
+    else:
+        return X+0
+
+def tpn_channel_shuffle(X, choice):
+    if choice == 1:
+        return channel_shuffle_transform_vectorized(X)
+    else:
+        return X+0
