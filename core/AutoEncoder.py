@@ -32,14 +32,17 @@ class Encoder(nn.Module):
         x = self.conv1(x)
         x = self.relu1(x)
         x = self.dropout1(x)
+        # print(x.shape)
 
         x = self.conv2(x)
         x = self.relu2(x)
         x = self.dropout2(x)
+        # print(x.shape)
 
         x = self.conv3(x)
         x = self.relu3(x)
         x = self.dropout3(x)
+        # print(x.shape)
         
         x = self.global_max_pooling(x)
         x = x.squeeze(-1)
@@ -49,23 +52,28 @@ class Encoder(nn.Module):
 class Decoder(nn.Module):
     def __init__(self, input_channels, z_dim=96):
         super(Decoder, self).__init__()
+        self.linear = nn.Linear(z_dim, 64*218)
         
-        self.convt1 = nn.ConvTranspose1d(z_dim, 64, kernel_size=8)
+        # self.convt1 = nn.ConvTranspose1d(z_dim, 64, kernel_size=8)
         self.relu1 = nn.ReLU()
         
         self.convt2 = nn.ConvTranspose1d(64, 32, kernel_size=16)
         self.relu2 = nn.ReLU()
         
         self.convt3 = nn.ConvTranspose1d(32, input_channels, kernel_size=24)
-        self.relu3 = nn.ReLU()
+        self.tanh = nn.Tanh()
 
     def forward(self, x):
-        x = self.convt1(x)
+        # x = x.unsqueeze(-1)
+        x = self.linear(x)
+        # x = self.convt1(x)
         x = self.relu1(x)
+        x = x.view(x.shape[0], 64, 218)
         x = self.convt2(x)
         x = self.relu2(x)
         x = self.convt3(x)
-        x = self.relu3(x)
+        x = self.tanh(x)
+        # x = nn.functional.normalize(x, dim=2)
         return x
 
 
@@ -351,8 +359,8 @@ class AutoEncoderLearner:
     def split_per_domain(self, dataset):
         domains = []
         for d in dataset:
-            if d[3] not in domains:
-                domains.append(d[3])
+            if d[2] not in domains:
+                domains.append(d[2])
         domains = sorted(domains)
         return domains
     
