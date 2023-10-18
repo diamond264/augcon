@@ -23,7 +23,8 @@ class DefaultDataLoader():
             self.val_dataset = pickle.load(f)
     
     def get_datasets(self):
-        if self.cfg.pretext == 'tpn':
+        if self.cfg.pretext == 'tpn' or \
+           self.cfg.pretext == 'metatpn':
             self.train_dataset = TPNDataset(self.train_dataset)
             self.val_dataset = TPNDataset(self.val_dataset)
             self.test_dataset = TPNDataset(self.test_dataset)
