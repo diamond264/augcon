@@ -16,6 +16,8 @@ def parse_args():
     parser.add_argument('--target_only', action='store_true')
     parser.add_argument('--domain_adaptation', action='store_true')
     parser.add_argument('--random_init', action='store_true')
+    parser.add_argument('--specific_path', type=str, required=False, default='')
+    parser.add_argument('--unfreeze', action='store_true')
     args = parser.parse_args()
     return args
 
@@ -23,23 +25,27 @@ def parse_args():
 data_paths = {'ichar': '/mnt/sting/hjyoon/projects/cross/ICHAR/augcon',
               'hhar': '/mnt/sting/hjyoon/projects/cross/HHAR/augcon',
               'opportunity': '/mnt/sting/hjyoon/projects/cross/Opportunity/augcon',
-              'realworld': '/mnt/sting/hjyoon/projects/cross/RealWorld/augcon'}
+              'realworld': '/mnt/sting/hjyoon/projects/cross/RealWorld/augcon',
+              'pamap2': '/mnt/sting/hjyoon/projects/cross/PAMAP2/augcon'}
+
 num_cls = {'ichar': 9,
            'hhar': 6,
            'opportunity': 4,
-           'realworld': 19}
+           'realworld': 8,
+           'pamap2': 12}
 
 
 def run(args):
-    pretext = 'simclr'
+    pretext = 'metasimclr'
     data_path = data_paths[args.dataset]
-    config_path = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main/{args.dataset}/finetune_{args.shot}shot/{pretext}'
+    config_path = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main/{args.dataset}/finetune_{args.shot}shot/simclr/{args.specific_path}'
+    specific_path = args.specific_path
 
     domains = glob(os.path.join(data_path, '*'))
     domains = [os.path.basename(domain) for domain in domains]
     print(domains)
 
-    flag = 0
+    flag = 4
     for domain in domains:
         if args.num_gpus == 4:
             if flag == 0:
@@ -54,7 +60,7 @@ def run(args):
             gpu = [flag]
             dist_url = f'tcp://localhost:{args.port + flag}'
             flag += 1
-            if flag == 8: flag = 0
+            if flag == 8: flag = 4
 
         default_config = f'''### Default config
 mode: finetune
@@ -87,10 +93,14 @@ wd: 0.0
         postfix = f'without'
         if args.target_only: postfix = f'only'
         if args.perdomain: postfix = 'perdomain_' + postfix
-        pretrained = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/{postfix}_{domain}/checkpoint_0099.pth.tar'
+        pretrained = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/simclr/{postfix}_{domain}/{specific_path}/checkpoint_0099.pth.tar'
+        # only_domain = domain.replace('target_domain_', '')
+        # pretrained = f'/home/jaehyun98/git/setsimclr/exp/{only_domain}/encoder_400.pth'
         if args.random_init:
             postfix = 'random_init'
             pretrained = "''"
+        if args.unfreeze:
+            postfix = postfix + f'/unfreeze'
         if args.domain_adaptation:
             postfix = postfix + f'/da_true_seed_{args.seed}'
         else:
@@ -105,6 +115,7 @@ save_freq: {save_freq}
 '''
         learning_config = f'''### Meta-learning
 domain_adaptation: {'true' if args.domain_adaptation else 'false'}
+out_cls_neg_sampling: false
 
 #For simclr
 out_dim: 50
@@ -116,9 +127,9 @@ task_lr: 0.001
 reg_lambda: 0
 no_vars: true
 mlp: false
-freeze: true'''
+freeze: {'true' if not args.unfreeze else 'false'}'''
         model_config = f'''### Model config
-pretext: metasimclr
+pretext: {pretext}
 
 
 {learning_config}
