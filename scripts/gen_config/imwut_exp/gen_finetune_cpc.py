@@ -15,6 +15,7 @@ def parse_args():
     parser.add_argument('--target_only', action='store_true')
     parser.add_argument('--domain_adaptation', action='store_true')
     parser.add_argument('--random_init', action='store_true')
+    parser.add_argument('--unfreeze', action='store_true')
     args = parser.parse_args()
     return args
 
@@ -90,6 +91,8 @@ wd: 0.0
         if args.random_init:
             postfix = 'random_init'
             pretrained = "''"
+        if args.unfreeze:
+            postfix += '_unfreeze'
         if args.domain_adaptation:
             postfix = postfix+f'/da_true_seed_{args.seed}'
         else:
@@ -102,6 +105,8 @@ ckpt_dir: {ckpt_dir}
 log_freq: 5
 save_freq: {save_freq}
 '''
+        freeze = 'true'
+        if args.unfreeze: freeze = 'false'
         learning_config = f'''### Meta-learning
 domain_adaptation: {'true' if args.domain_adaptation else 'false'}
 task_steps: 10
@@ -109,7 +114,7 @@ task_lr: 0.001
 reg_lambda: 0
 no_vars: true
 mlp: false
-freeze: true'''
+freeze: {freeze}'''
         model_config = f'''### Model config
 pretext: metacpc
 ## Encoder

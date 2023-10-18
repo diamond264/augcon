@@ -218,6 +218,8 @@ class AutoEncoderLearner:
         # Define criterion
         if self.cfg.criterion == 'mse':
             criterion = nn.MSELoss().cuda()
+        elif self.cfg.criterion == 'crossentropy':
+            criterion = nn.CrossEntropyLoss().cuda()
         
         # For finetuning, load pretrained model
         if self.cfg.mode == 'finetune':

@@ -395,8 +395,7 @@ class SimCLR1DLearner:
                 all_targets = []
                 for dom in self.all_domains:
                     dom_idx = torch.nonzero(domains == dom).squeeze()
-                    if dom_idx.dim() == 0: dom_idx = dom_idx.unsqueeze(0)
-                    if torch.numel(dom_idx):
+                    if dom_idx.size()[0] > 0:
                         dom_features = features[dom_idx]
                         dom_pos_features = pos_features[dom_idx]
                         logits, targets = net(dom_features, dom_pos_features, features.shape[0])
