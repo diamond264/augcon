@@ -504,13 +504,13 @@ class MetaCPCLearner:
                         meta_train_dataset,
                         indices_per_domain,
                         self.cfg.task_size,
-                        self.cfg.num_task
+                        self.cfg.num_task//world_size
                     )
                 if self.cfg.multi_cond_num_task > 0:
                     multi_cond_supports, multi_cond_queries = self.gen_random_tasks(
                         meta_train_dataset,
                         self.cfg.task_size,
-                        self.cfg.multi_cond_num_task
+                        self.cfg.multi_cond_num_task//world_size
                     )
                     supports = supports+multi_cond_supports
                     queries = queries+multi_cond_queries
