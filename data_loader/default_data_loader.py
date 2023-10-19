@@ -30,7 +30,8 @@ class DefaultDataLoader():
             self.test_dataset = TPNDataset(self.test_dataset)
         if self.cfg.pretext == 'cpc' or \
             self.cfg.pretext == 'metacpc' or\
-            self.cfg.pretext == 'autoencoder':
+            self.cfg.pretext == 'autoencoder' or\
+            self.cfg.pretext == 'metaautoencoder':
             self.train_dataset = CPCDataset(self.train_dataset)
             self.val_dataset = CPCDataset(self.val_dataset)
             self.test_dataset = CPCDataset(self.test_dataset)

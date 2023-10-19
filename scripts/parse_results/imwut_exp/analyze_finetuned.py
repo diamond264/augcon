@@ -73,6 +73,7 @@ def run(args):
     if args.sort:
         if 'ichar' in args.dir:
             sort_list = SORT_LIST_ICHAR
+            sort_list = [f'domain_{d}' for d in sort_list]
         elif 'hhar' in args.dir:
             sort_list = SORT_LIST_HHAR
             sort_list = [f'user_{d.split("-")[0]}_model_{d.split("-")[1]}' for d in sort_list]

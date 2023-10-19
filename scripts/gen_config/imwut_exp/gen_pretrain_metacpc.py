@@ -32,7 +32,7 @@ num_cls = {'ichar': 9,
 def run(args):
     pretext = 'metacpc'
     data_path = data_paths[args.dataset]
-    if args.debug: main_dir = 'main_debug'
+    if args.debug: main_dir = 'main_debug2'
     else: main_dir = 'main'
     config_path = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/{main_dir}/{args.dataset}/pretrain/{pretext}'
     
@@ -107,8 +107,8 @@ log_meta_train: false'''
 pretext: {pretext}
 ## Encoder
 enc_blocks: 4
-kernel_sizes: [4, 1, 1, 1]
-strides: [2, 1, 1, 1]
+kernel_sizes: [8, 4, 2, 1]
+strides: [4, 2, 1, 1]
 ## Aggregator
 agg_blocks: 5
 z_dim: 256

@@ -14,8 +14,6 @@ from torch.utils.data import DistributedSampler
 
 from collections import defaultdict
 
-# reference:
-# https://github.com/facebookresearch/fairseq/blob/176cd934982212a4f75e0669ee81b834ee71dbb0/fairseq/models/wav2vec/wav2vec.py#L431
 class Encoder(nn.Module):
     def __init__(self, input_channels=3, z_dim=256, num_blocks=4, kernel_sizes=[8, 4, 2, 1], strides=[4, 2, 1, 1]):
         super(Encoder, self).__init__()
@@ -34,13 +32,13 @@ class Encoder(nn.Module):
                                   nn.ReLU(), 
                                   nn.Dropout(p=0.2))
             input_channels = filters[i]
-
+            
             w = nn.Parameter(torch.ones_like(block[0].weight))
             torch.nn.init.kaiming_normal_(w)
             b = nn.Parameter(torch.zeros_like(block[0].bias))
             self.vars.append(w)
             self.vars.append(b)
-            
+    
     def forward(self, x, vars=None):
         if vars is None:
             vars = self.vars
@@ -70,85 +68,51 @@ class Encoder(nn.Module):
         return self.vars
 
 
-class LeftZeroPad1d(nn.Module):
-    def __init__(self, k):
-        super().__init__()
-        self.k = k
-        
-    def forward(self, x):
-        # Compute the padding for the left side only
-        padding = [self.k, 0]  # left, right
-        x = F.pad(x, padding, "constant", 0)
-        return x
-
-
-class Aggregator(nn.Module):
-    def __init__(self, num_blocks=5, num_filters=256, residual_scale=0.5):
-        super(Aggregator, self).__init__()
+class Decoder(nn.Module):
+    def __init__(self, input_channels=3, z_dim=256, num_blocks=4, kernel_sizes=[1, 2, 4, 8], strides=[1, 1, 2, 4]):
+        super(Decoder, self).__init__()
         self.num_blocks = num_blocks
         
         self.vars = nn.ParameterList()
-        self.zero_pads = []
         
-        # define convolutional blocks with increasing kernel sizes
-        kernel_sizes = [2, 3, 4, 5, 6, 7]
-        if num_blocks == 9:
-            kernel_sizes = [3, 3, 3, 3, 3, 3, 3, 3, 3]
+        filters = [128, 64, 32, input_channels]
+        self.kernel_sizes = kernel_sizes
+        self.strides = strides
+        
         for i in range(num_blocks):
-            k = kernel_sizes[i]
-            block = nn.Sequential(LeftZeroPad1d(k-1), 
-                                  nn.Conv1d(num_filters, num_filters, kernel_size=k, dilation=1), 
-                                  nn.GroupNorm(1, num_filters),
-                                  nn.ReLU())
-            # LeftZeroPad1d
-            self.zero_pads.append(block[0])
-            # Conv1d
-            w = nn.Parameter(torch.ones_like(block[1].weight))
+            if i == 2: padding = 1
+            else: padding = 0
+            if i == 3: activation = nn.Tanh()
+            else: activation = nn.ReLU()
+            block = nn.Sequential(nn.ConvTranspose1d(z_dim, filters[i],
+                                            kernel_size=self.kernel_sizes[i],
+                                            stride=self.strides[i],
+                                            output_padding=padding), 
+                                  activation)
+            z_dim = filters[i]
+            
+            w = nn.Parameter(torch.ones_like(block[0].weight))
             torch.nn.init.kaiming_normal_(w)
-            b = nn.Parameter(torch.zeros_like(block[1].bias))
+            b = nn.Parameter(torch.zeros_like(block[0].bias))
             self.vars.append(w)
             self.vars.append(b)
-            # GroupNorm
-            w = nn.Parameter(torch.ones_like(block[2].weight))
-            b = nn.Parameter(torch.zeros_like(block[2].bias))
-            self.vars.append(w)
-            self.vars.append(b)
-            
-        # define skip connections
-        self.rproj = nn.ModuleList()
-        for i in range(num_blocks):
-            # rproj = nn.Conv1d(256, 256, kernel_size=1)
-            rproj = None
-            self.rproj.append(rproj)
-        
-        self.residual_scale = math.sqrt(residual_scale)
-            
-    def forward(self, z, vars=None):
+    
+    def forward(self, x, vars=None):
         if vars is None:
             vars = self.vars
         
         idx = 0
         for i in range(self.num_blocks):
-            residual = z
-            z = self.zero_pads[i](z)
-            
+            if i == 2: padding = 1
+            else: padding = 0
             w, b = vars[idx], vars[idx+1]
             idx += 2
-            z = F.conv1d(z, w, b)
+            x = F.conv_transpose1d(x, w, b, self.strides[i], output_padding=padding)
+            if i == 3: x = F.tanh(x)
+            else: x = F.relu(x, True)
             
-            w, b = vars[idx], vars[idx+1]
-            idx += 2
-            z = F.group_norm(z, 1, w, b)
-            
-            z = F.relu(z, True)
-            
-            rproj = self.rproj[i]
-            if rproj != None:
-                residual = rproj(residual)
-            z = (z + residual) * self.residual_scale
-        
-        return z
-    
+        return x
+
     def zero_grad(self, vars=None):
         with torch.no_grad():
             if vars is None:
@@ -164,41 +128,47 @@ class Aggregator(nn.Module):
         return self.vars
 
 
-class Predictor(nn.Module):
-    def __init__(self, z_dim=256, pred_steps=12):
-        super().__init__()
-        self.vars = nn.ParameterList()
-        
-        self.pred_steps = pred_steps
-        predictor = nn.ConvTranspose2d(
-            z_dim, z_dim, (1, pred_steps)
-        )
-        w = nn.Parameter(torch.ones_like(predictor.weight))
-        torch.nn.init.kaiming_normal_(w)
-        b = nn.Parameter(torch.zeros_like(predictor.bias))
-        self.vars.append(w)
-        self.vars.append(b)
-    
-    def forward(self, z, vars=None):
+class AutoEncoderNet(nn.Module):
+    """
+    Build a SimCLR model with: a query encoder, a key encoder, and a queue
+    https://arxiv.org/abs/1911.05722
+    """
+    def __init__(self, input_channels=3, z_dim=96):
+        super(AutoEncoderNet, self).__init__()
+
+        # create the encoders
+        # num_classes is the output fc dimension
+        self.encoder = Encoder(input_channels, z_dim)
+        self.decoder = Decoder(input_channels, z_dim)
+
+    def forward(self, x, vars=None):
         if vars is None:
-            vars = self.vars
+            vars = nn.ParameterList()
+            vars.extend(self.encoder.parameters())
+            vars.extend(self.decoder.parameters())
         
-        z = F.conv_transpose2d(z, vars[0], vars[1])
-        return z
-
+        enc_vars = vars[:len(self.encoder.parameters())]
+        dec_vars = vars[len(self.encoder.parameters()):]
+        
+        z = self.encoder(x, enc_vars)
+        x_hat = self.decoder(z, dec_vars)
+        return x_hat
+    
     def zero_grad(self, vars=None):
         with torch.no_grad():
             if vars is None:
-                for p in self.vars:
-                    if p.grad is not None:
-                        p.grad.zero_()
+                self.encoder.zero_grad()
+                self.decoder.zero_grad()
             else:
                 for p in vars:
                     if p.grad is not None:
                         p.grad.zero_()
-
+    
     def parameters(self):
-        return self.vars
+        vars = nn.ParameterList()
+        vars.extend(self.encoder.parameters())
+        vars.extend(self.decoder.parameters())
+        return vars
 
 
 class ClassificationHead(nn.Module):
@@ -206,9 +176,15 @@ class ClassificationHead(nn.Module):
         super().__init__()
         if mlp:
             self.block = nn.Sequential(
-                nn.Linear(input_size, hidden_size),
+                nn.Linear(input_size, 256),
+                nn.BatchNorm1d(256),
+                nn.Dropout(0.2),
                 nn.ReLU(),
-                nn.Linear(hidden_size, num_cls),
+                nn.Linear(256, 128),
+                nn.BatchNorm1d(128),
+                nn.Dropout(0.2),
+                nn.ReLU(),
+                nn.Linear(128, num_cls),
             )
         else:
             self.block = nn.Sequential(
@@ -220,154 +196,16 @@ class ClassificationHead(nn.Module):
         return x
 
 
-def buffered_arange(max):
-    if not hasattr(buffered_arange, "buf"):
-        buffered_arange.buf = torch.LongTensor()
-    if max > buffered_arange.buf.numel():
-        buffered_arange.buf.resize_(max)
-        torch.arange(max, out=buffered_arange.buf)
-    return buffered_arange.buf[:max]
-
-class CPCNet(nn.Module):
-    def __init__(self, input_channels=3, z_dim=256, enc_blocks=4, kernel_sizes=[8, 4, 2, 1], strides=[4, 2, 1, 1],
-                 agg_blocks=4, pred_steps=12, n_negatives=15, offset=16):
-        super(CPCNet, self).__init__()
-        self.encoder = Encoder(input_channels, z_dim, enc_blocks, kernel_sizes, strides)
-        self.aggregator = Aggregator(agg_blocks, z_dim)
-        self.predictor = Predictor(z_dim, pred_steps)
-        
-        self.z_dim = z_dim
-        self.pred_steps = pred_steps
-        self.n_negatives = n_negatives
-        self.offset = offset
-        
-        self.enc_param_idx = len(self.encoder.parameters())
-        self.agg_param_idx = self.enc_param_idx+len(self.aggregator.parameters())
-        self.pred_param_idx = self.agg_param_idx+len(self.predictor.parameters())
-
-    def sample_negatives(self, y, n_negatives, bsz):
-        _, fsz, tsz = y.shape
-        cross_high = tsz * _
-
-        y = y.transpose(0, 1)  # BCT -> CBT
-        y = y.contiguous().view(fsz, -1)  # CBT => C(BxT)
-
-        with torch.no_grad():
-            # only perform cross-sample sampling
-            if n_negatives > 0:
-                tszs = (
-                    buffered_arange(tsz)
-                    .unsqueeze(-1)
-                    .expand(-1, n_negatives)
-                    .flatten()
-                )
-
-                cross_neg_idxs = torch.randint(
-                    low=0,
-                    high=cross_high - 1,
-                    size=(bsz, n_negatives * tsz),
-                )
-                for i, row in enumerate(cross_neg_idxs):
-                    row[row >= tszs+i*bsz] += 1
-                # cross_neg_idxs[cross_neg_idxs >= tszs] += 1
-        neg_idxs = cross_neg_idxs
-
-        negs = y[..., neg_idxs.view(-1)]
-        negs = negs.view(
-            fsz, bsz, n_negatives, tsz
-        ).permute(
-            2, 1, 0, 3
-        )  # to NxBxCxT
-        return negs
-            
-    def forward(self, x, vars=None, neg_x=None):
-        if vars is None:
-            vars = nn.ParameterList()
-            vars.extend(self.encoder.parameters())
-            vars.extend(self.aggregator.parameters())
-            vars.extend(self.predictor.parameters())
-        
-        enc_vars = vars[:self.enc_param_idx]
-        z = self.encoder(x, enc_vars)
-        
-        agg_vars = vars[self.enc_param_idx:self.agg_param_idx]
-        z_hat = self.aggregator(z, agg_vars)
-        z_hat = z_hat.unsqueeze(-1)
-        
-        pred_vars = vars[self.agg_param_idx:self.pred_param_idx]
-        z_pred = self.predictor(z_hat, pred_vars)
-        
-        targets = z.unsqueeze(0)
-        bsz = z.shape[0]
-        if neg_x:
-            neg_z = self.encoder(neg_x, enc_vars)
-            neg_targets = self.sample_negatives(neg_z, self.n_negatives, bsz)
-            targets = torch.cat([targets, neg_targets], dim=0)
-        else:
-            neg_targets = self.sample_negatives(z, self.n_negatives, bsz)
-            targets = torch.cat([targets, neg_targets], dim=0)
-
-        copies = targets.size(0)
-        bsz, dim, tsz, steps = z_pred.shape
-        steps = min(steps, tsz - self.offset)
-
-        predictions = z_pred.new(
-            bsz * copies * (tsz - self.offset + 1) * steps
-            - ((steps + 1) * steps // 2) * copies * bsz
-        )
-
-        labels = predictions.new_full(
-            (predictions.shape[0] // copies,), 0, dtype=torch.long
-        )
-
-        start = end = 0
-        for i in range(steps):
-            offset = i + self.offset
-            end = start + (tsz - offset) * bsz * copies
-
-            predictions[start:end] = torch.einsum(
-                "bct,nbct->tbn", z_pred[..., :-offset, i], targets[..., offset:]
-            ).flatten()
-
-            start = end
-        assert end == predictions.numel(), "{} != {}".format(end, predictions.numel())
-
-        temp = 1
-        predictions = predictions.view(-1, copies)/temp
-
-        return predictions, labels
-    
-    def zero_grad(self, vars=None):
-        with torch.no_grad():
-            if vars is None:
-                vars = nn.ParameterList()
-                vars.extend(self.encoder.parameters())
-                vars.extend(self.aggregator.parameters())
-                vars.extend(self.predictor.parameters())
-            for p in vars:
-                if p.grad is not None:
-                    p.grad.zero_()
-
-    def parameters(self):
-        vars = nn.ParameterList()
-        vars.extend(self.encoder.parameters())
-        vars.extend(self.aggregator.parameters())
-        vars.extend(self.predictor.parameters())
-        return vars
-
-
-class CPCClassifier(nn.Module):
-    def __init__(self, input_channels=3, z_dim=256, enc_blocks=4, kernel_sizes=[8, 4, 2, 1], strides=[4, 2, 1, 1],
-                 agg_blocks=4, pooling='mean', num_cls=10, mlp=False):
-        super(CPCClassifier, self).__init__()
-        self.encoder = Encoder(input_channels, z_dim, enc_blocks, kernel_sizes, strides)
-        self.aggregator = Aggregator(agg_blocks, z_dim)
-        self.pooling = pooling
+class AutoEncoderClassifier(nn.Module):
+    def __init__(self, input_channels, z_dim, num_cls, mlp=True):
+        super(AutoEncoderClassifier, self).__init__()
+        self.base_model = Encoder(input_channels, z_dim)
         self.classifier = ClassificationHead(z_dim, z_dim, num_cls, mlp)
+        self.pooling = 'mean'
             
     def forward(self, x):
-        x = self.encoder(x)
-        x = self.aggregator(x)
+        x = self.base_model(x)
+        # x = self.aggregator(x)
         if self.pooling == 'mean':
             c = torch.mean(x, dim=2)
         elif self.pooling == 'max':
@@ -380,16 +218,16 @@ class CPCClassifier(nn.Module):
         return pred
 
 
-class MetaCPCLearner:
+class MetaAutoEncoderLearner:
     def __init__(self, cfg, gpu, logger):
         self.cfg = cfg
         self.gpu = gpu
         self.logger = logger
-    
+        
     def run(self, train_dataset, val_dataset, test_dataset):
         num_gpus = len(self.gpu)
         logs = mp.Manager().list([])
-        self.logger.info("Executing MetaCPC")
+        self.logger.info("Executing SimCLR")
         self.logger.info("Logs are skipped during training")
         if num_gpus > 1:
             mp.spawn(self.main_worker,
@@ -400,14 +238,12 @@ class MetaCPCLearner:
         
         for log in logs:
             self.logger.info(log)
-        
+    
     def main_worker(self, rank, world_size, train_dataset, val_dataset, test_dataset, logs):
         # Model initialization
-        net = CPCNet(self.cfg.input_channels, self.cfg.z_dim, self.cfg.enc_blocks, self.cfg.kernel_sizes, self.cfg.strides,
-                         self.cfg.agg_blocks, self.cfg.pred_steps, self.cfg.n_negatives, self.cfg.offset)
-        if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
-            cls_net = CPCClassifier(self.cfg.input_channels, self.cfg.z_dim, self.cfg.enc_blocks, self.cfg.kernel_sizes, self.cfg.strides,
-                                    self.cfg.agg_blocks, self.cfg.pooling, self.cfg.num_cls, self.cfg.mlp)
+        net = AutoEncoderNet(self.cfg.input_channels, self.cfg.z_dim)
+        if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval_finetune':
+            cls_net = AutoEncoderClassifier(self.cfg.input_channels, self.cfg.z_dim, self.cfg.num_cls, self.cfg.mlp)
         
         # DDP setting
         if world_size > 1:
@@ -418,7 +254,7 @@ class MetaCPCLearner:
             torch.cuda.set_device(rank)
             net.cuda()
             net = nn.parallel.DistributedDataParallel(net, device_ids=[rank], find_unused_parameters=True)
-            if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
+            if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval_finetune':
                 cls_net.cuda()
                 cls_net = nn.parallel.DistributedDataParallel(cls_net, device_ids=[rank], find_unused_parameters=True)
             
@@ -459,7 +295,9 @@ class MetaCPCLearner:
                 print(log)
         
         # Define criterion
-        if self.cfg.criterion == 'crossentropy':
+        if self.cfg.criterion == 'mse':
+            criterion = nn.MSELoss().cuda()
+        elif self.cfg.criterion == 'crossentropy':
             criterion = nn.CrossEntropyLoss().cuda()
         
         if self.cfg.mode == 'pretrain':
@@ -526,7 +364,8 @@ class MetaCPCLearner:
                     else:
                         state_dict = net.state_dict()
                     self.save_checkpoint(ckpt_filename, epoch, state_dict, optimizer)
-                    
+        
+        # For finetuning, load pretrained model
         elif self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
             # Freeze the encoder part of the network
             if self.cfg.freeze:
@@ -741,14 +580,13 @@ class MetaCPCLearner:
             
             fast_weights = self.meta_train(rank, net, support, criterion, log_internals=self.cfg.log_meta_train, logs=logs)
             
-            q_logits, q_targets = net(query, fast_weights)
-            q_loss = criterion(q_logits, q_targets)
+            query_hat = net(query, fast_weights)
+            q_loss = criterion(query, query_hat)
             q_losses.append(q_loss)
             
             if task_idx % self.cfg.log_freq == 0:
-                acc1, acc3 = self.accuracy(q_logits, q_targets, topk=(1, 3))
                 log = f'\t({task_idx}/{len(supports)}) '
-                log += f'Loss: {q_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(3): {acc3.item():.2f}'
+                log += f'Loss: {q_loss.item():.4f}'#, Acc(1): {acc1.item():.2f}, Acc(3): {acc3.item():.2f}'
                 if rank == 0:
                     logs.append(log)
                     print(log)
@@ -787,14 +625,13 @@ class MetaCPCLearner:
     def meta_train(self, rank, net, support, criterion, log_internals=False, logs=None):
         fast_weights = list(net.parameters())
         for i in range(self.cfg.task_steps):
-            s_logits, s_targets = net(support, fast_weights)
-            s_loss = criterion(s_logits, s_targets)
+            support_hat = net(support, fast_weights)
+            s_loss = criterion(support, support_hat)
             grad = torch.autograd.grad(s_loss, fast_weights)
             fast_weights = list(map(lambda p: p[1] - self.cfg.task_lr * p[0], zip(grad, fast_weights)))
             
             if log_internals and rank == 0:
-                acc1, acc3 = self.accuracy(s_logits, s_targets, topk=(1, 3))
-                log = f'\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {s_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(3): {acc3.item():.2f}'
+                log = f'\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {s_loss.item():.4f}'#, Acc(1): {acc1.item():.2f}, Acc(3): {acc3.item():.2f}'
                 logs.append(log)
                 print(log)
         
