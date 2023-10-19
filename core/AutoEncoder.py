@@ -10,70 +10,127 @@ import torch.multiprocessing as mp
 # from datautils.SimCLR_dataset import subject_collate
 from torch.utils.data import DataLoader, Dataset, DistributedSampler
 
-class Encoder(nn.Module):
-    def __init__(self, input_channels, z_dim=96):
-        super(Encoder, self).__init__()
+# class Encoder(nn.Module):
+#     def __init__(self, input_channels, z_dim=96):
+#         super(Encoder, self).__init__()
 
-        self.conv1 = nn.Conv1d(input_channels, 32, kernel_size=24)
-        self.relu1 = nn.ReLU()
-        self.dropout1 = nn.Dropout(0.1)
+#         self.conv1 = nn.Conv1d(input_channels, 32, kernel_size=24)
+#         self.relu1 = nn.ReLU()
+#         self.dropout1 = nn.Dropout(0.1)
 
-        self.conv2 = nn.Conv1d(32, 64, kernel_size=16)
-        self.relu2 = nn.ReLU()
-        self.dropout2 = nn.Dropout(0.1)
+#         self.conv2 = nn.Conv1d(32, 64, kernel_size=16)
+#         self.relu2 = nn.ReLU()
+#         self.dropout2 = nn.Dropout(0.1)
 
-        self.conv3 = nn.Conv1d(64, z_dim, kernel_size=8)
-        self.relu3 = nn.ReLU()
-        self.dropout3 = nn.Dropout(0.1)
+#         self.conv3 = nn.Conv1d(64, z_dim, kernel_size=8)
+#         self.relu3 = nn.ReLU()
+#         self.dropout3 = nn.Dropout(0.1)
 
-        self.global_max_pooling = nn.AdaptiveMaxPool1d(1)
+#         self.global_max_pooling = nn.AdaptiveMaxPool1d(1)
 
-    def forward(self, x):
-        x = self.conv1(x)
-        x = self.relu1(x)
-        x = self.dropout1(x)
-        # print(x.shape)
+#     def forward(self, x):
+#         x = self.conv1(x)
+#         x = self.relu1(x)
+#         x = self.dropout1(x)
+#         # print(x.shape)
 
-        x = self.conv2(x)
-        x = self.relu2(x)
-        x = self.dropout2(x)
-        # print(x.shape)
+#         x = self.conv2(x)
+#         x = self.relu2(x)
+#         x = self.dropout2(x)
+#         # print(x.shape)
 
-        x = self.conv3(x)
-        x = self.relu3(x)
-        x = self.dropout3(x)
-        # print(x.shape)
+#         x = self.conv3(x)
+#         x = self.relu3(x)
+#         x = self.dropout3(x)
+#         # print(x.shape)
         
-        x = self.global_max_pooling(x)
-        x = x.squeeze(-1)
+#         x = self.global_max_pooling(x)
+#         x = x.squeeze(-1)
+#         return x
+
+class Encoder(nn.Module):
+    def __init__(self, input_channels=3, z_dim=256, num_blocks=4, kernel_sizes=[8, 4, 2, 1], strides=[4, 2, 1, 1]):
+        super(Encoder, self).__init__()
+        self.num_blocks = num_blocks
+        
+        filters = [32, 64, 128, 256, z_dim]
+        self.kernel_sizes = kernel_sizes
+        self.strides = strides
+        
+        self.blocks = nn.ModuleList()
+        for i in range(num_blocks):
+            block = nn.Sequential(nn.Conv1d(input_channels, filters[i],
+                                            kernel_size=self.kernel_sizes[i],
+                                            stride=self.strides[i]), 
+                                  nn.ReLU(), 
+                                  nn.Dropout(p=0.2))
+            self.blocks.append(block)
+            input_channels = filters[i]
+    
+    def forward(self, x):
+        for i in range(self.num_blocks):
+            x = self.blocks[i](x)
+            # print(x.shape)
+        # assert(0)
         return x
 
 
-class Decoder(nn.Module):
-    def __init__(self, input_channels, z_dim=96):
-        super(Decoder, self).__init__()
-        self.linear = nn.Linear(z_dim, 64*218)
+# class Decoder(nn.Module):
+#     def __init__(self, input_channels, z_dim=96):
+#         super(Decoder, self).__init__()
+#         self.linear = nn.Linear(z_dim, 64*218)
         
-        # self.convt1 = nn.ConvTranspose1d(z_dim, 64, kernel_size=8)
-        self.relu1 = nn.ReLU()
+#         # self.convt1 = nn.ConvTranspose1d(z_dim, 64, kernel_size=8)
+#         self.relu1 = nn.ReLU()
         
-        self.convt2 = nn.ConvTranspose1d(64, 32, kernel_size=16)
-        self.relu2 = nn.ReLU()
+#         self.convt2 = nn.ConvTranspose1d(64, 32, kernel_size=16)
+#         self.relu2 = nn.ReLU()
         
-        self.convt3 = nn.ConvTranspose1d(32, input_channels, kernel_size=24)
-        self.tanh = nn.Tanh()
+#         self.convt3 = nn.ConvTranspose1d(32, input_channels, kernel_size=24)
+#         self.tanh = nn.Tanh()
 
+#     def forward(self, x):
+#         # x = x.unsqueeze(-1)
+#         x = self.linear(x)
+#         # x = self.convt1(x)
+#         x = self.relu1(x)
+#         x = x.view(x.shape[0], 64, 218)
+#         x = self.convt2(x)
+#         x = self.relu2(x)
+#         x = self.convt3(x)
+#         x = self.tanh(x)
+#         # print(torch.mean(x, dim=[0, 2]))
+#         # print(torch.std(x, dim=[0, 2]))
+#         # x = nn.functional.normalize(x, dim=2)
+#         return x
+
+
+class Decoder(nn.Module):
+    def __init__(self, input_channels=3, z_dim=256, num_blocks=4, kernel_sizes=[1, 2, 4, 8], strides=[1, 1, 2, 4]):
+        super(Decoder, self).__init__()
+        self.num_blocks = num_blocks
+        
+        filters = [128, 64, 32, input_channels]
+        self.kernel_sizes = kernel_sizes
+        self.strides = strides
+        
+        self.blocks = nn.ModuleList()
+        for i in range(num_blocks):
+            if i == 2: padding = 1
+            else: padding = 0
+            if i == 3: activation = nn.Tanh()
+            else: activation = nn.ReLU()
+            block = nn.Sequential(nn.ConvTranspose1d(z_dim, filters[i],
+                                            kernel_size=self.kernel_sizes[i],
+                                            stride=self.strides[i],
+                                            output_padding=padding), 
+                                  activation)
+            self.blocks.append(block)
+            z_dim = filters[i]
+    
     def forward(self, x):
-        # x = x.unsqueeze(-1)
-        x = self.linear(x)
-        # x = self.convt1(x)
-        x = self.relu1(x)
-        x = x.view(x.shape[0], 64, 218)
-        x = self.convt2(x)
-        x = self.relu2(x)
-        x = self.convt3(x)
-        x = self.tanh(x)
-        # x = nn.functional.normalize(x, dim=2)
+        for i in range(self.num_blocks):
+            x = self.blocks[i](x)
         return x
 
 
@@ -126,10 +183,20 @@ class AutoEncoderClassifier(nn.Module):
         super(AutoEncoderClassifier, self).__init__()
         self.base_model = Encoder(input_channels, z_dim)
         self.classifier = ClassificationHead(z_dim, z_dim, num_cls, mlp)
-        
+        self.pooling = 'mean'
+            
     def forward(self, x):
         x = self.base_model(x)
-        pred = self.classifier(x)
+        # x = self.aggregator(x)
+        if self.pooling == 'mean':
+            c = torch.mean(x, dim=2)
+        elif self.pooling == 'max':
+            c, _ = torch.max(x, dim=2)
+        elif self.pooling == 'sum':
+            c = torch.sum(x, dim=2)
+        else:
+            raise ValueError("Invalid pooling mode. Please choose from 'mean', 'max', or 'sum'.")
+        pred = self.classifier(c)
         return pred
 
 
@@ -230,10 +297,13 @@ class AutoEncoderLearner:
                     print(log)
                 loc = 'cuda:{}'.format(rank)
                 state = torch.load(self.cfg.pretrained, map_location=loc)['state_dict']
+                print(state.keys())
+                print(net.state_dict().keys())
                 
                 for k, v in list(state.items()):
                     if k.startswith('encoder.'):
                         k = k[len('encoder.'):]
+                        k = 'base_model.' + k
                     if world_size > 1:
                         k = 'module.' + k
                     if k in net.state_dict().keys():
@@ -450,7 +520,7 @@ class AutoEncoderLearner:
 
         for batch_idx, data in enumerate(train_loader):
             features = data[0].cuda()
-            targets = data[3].cuda()
+            targets = data[1].cuda()
             
             logits = net(features)
             loss = criterion(logits, targets)
@@ -477,7 +547,7 @@ class AutoEncoderLearner:
         with torch.no_grad():
             for batch_idx, data in enumerate(val_loader):
                 features = data[0].cuda()
-                targets = data[3].cuda()
+                targets = data[1].cuda()
                 
                 logits = net(features)
                 

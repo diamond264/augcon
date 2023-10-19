@@ -20,7 +20,7 @@ class Encoder(nn.Module):
         super(Encoder, self).__init__()
         self.num_blocks = num_blocks
         
-        filters = [32, 64, 128, 256, z_dim]
+        filters = [32, 64, 128, z_dim]
         self.kernel_sizes = kernel_sizes
         self.strides = strides
         

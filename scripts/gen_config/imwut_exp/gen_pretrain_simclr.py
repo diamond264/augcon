@@ -54,7 +54,7 @@ def run(args):
             gpu = [flag]
             dist_url = f'tcp://localhost:{args.port + flag}'
             flag += 1
-            if flag == 4: flag = 0
+            if flag == 8: flag = 0
 
         default_config = f'''### Default config
 mode: pretrain

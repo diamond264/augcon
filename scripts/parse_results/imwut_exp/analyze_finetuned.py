@@ -7,8 +7,51 @@ def parse_args():
     parser.add_argument('dir', type=str)
     parser.add_argument('--metric', type=str, required=False, default='f1')
     parser.add_argument('--print_scores', action='store_true')
+    parser.add_argument('--sort', action='store_true')
     args = parser.parse_args()
     return args
+
+SORT_LIST_ICHAR = [
+    'WA0002-bkkim',
+    'PH0007-jskim',
+    'WA0003-hskim',
+    'PH0012-thanh',
+    'WA4697-jhryu',
+    'PH0014-wjlee',
+    'PH0034-ykha',
+    'PH0038-iygoo',
+    'PH0041-hmkim',
+    'PH0045-sjlee'
+]
+
+SORT_LIST_HHAR = [
+    'b-lgwatch',
+    'd-lgwatch',
+    'a-nexus4',
+    'c-nexus4',
+    'f-nexus4',
+    'a-s3',
+    'c-s3',
+    'f-s3',
+    'a-s3mini',
+    'c-s3mini',
+    'f-s3mini',
+    'a-lgwatch',
+    'c-lgwatch',
+    'f-lgwatch',
+    'b-nexus4',
+    'd-nexus4',
+    'b-s3',
+    'd-s3',
+    'b-s3mini',
+    'd-s3mini'
+]
+
+SORT_LIST_PAMAP2 = [
+    'wrist',
+    'chest',
+    'ankle'
+]
 
 def run(args):
     res = {}
@@ -26,6 +69,20 @@ def run(args):
             elif args.metric == 'f1':
                 score = float(content.split('F1: ')[1].split(', ')[0])
             res[domain] = score
+    
+    if args.sort:
+        if 'ichar' in args.dir:
+            sort_list = SORT_LIST_ICHAR
+        elif 'hhar' in args.dir:
+            sort_list = SORT_LIST_HHAR
+            sort_list = [f'user_{d.split("-")[0]}_model_{d.split("-")[1]}' for d in sort_list]
+        elif 'pamap2' in args.dir:
+            sort_list = SORT_LIST_PAMAP2
+            sort_list = [f'domain_{d}' for d in sort_list]
+        res_sorted = {}
+        for d in sort_list:
+            res_sorted[d] = res[d]
+        res = res_sorted
     
     for d, s in res.items():
         if args.print_scores:

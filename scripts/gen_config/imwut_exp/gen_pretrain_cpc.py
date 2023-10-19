@@ -12,6 +12,7 @@ def parse_args():
     parser.add_argument('--perdomain', action='store_true')
     parser.add_argument('--port', type=int, required=False, default=10001)
     parser.add_argument('--num_gpus', type=int, required=False, default=4)
+    parser.add_argument('--debug', action='store_true')
     args = parser.parse_args()
     return args
 
@@ -29,7 +30,9 @@ num_cls = {'ichar': 9,
 def run(args):
     pretext = 'cpc'
     data_path = data_paths[args.dataset]
-    config_path = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main/{args.dataset}/pretrain/{pretext}'
+    if args.debug: main_dir = 'main_debug'
+    else: main_dir = 'main'
+    config_path = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/{main_dir}/{args.dataset}/pretrain/{pretext}'
     
     domains = glob(os.path.join(data_path, '*'))
     domains = [os.path.basename(domain) for domain in domains]
@@ -78,9 +81,9 @@ lr: 0.0005
 wd: 0.0
 '''
         save_freq = args.epochs/10
-        ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/without_{domain}'
+        ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/{main_dir}/{args.dataset}/pretrain/{pretext}/without_{domain}'
         if args.perdomain:
-            ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/perdomain_without_{domain}'
+            ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/{main_dir}/{args.dataset}/pretrain/{pretext}/perdomain_without_{domain}'
         if args.target_only:
             ckpt_dir = ckpt_dir.replace('without', 'only')
         log_config = f'''### Logs and checkpoints
@@ -95,8 +98,8 @@ save_freq: {save_freq}
 pretext: {pretext}
 ## Encoder
 enc_blocks: 4
-kernel_sizes: [8, 4, 2, 1]
-strides: [4, 2, 1, 1]
+kernel_sizes: [4, 1, 1, 1]
+strides: [2, 1, 1, 1]
 ## Aggregator
 agg_blocks: 5
 z_dim: 256
