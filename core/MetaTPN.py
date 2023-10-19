@@ -498,7 +498,7 @@ class MetaTPNLearner:
                                     del state_dict[k]
                         self.save_checkpoint(ckpt_filename, epoch, state_dict, optimizer)
 
-            self.validate(rank, cls_net, test_loader, criterion, logs)
+            self.validate_finetune(rank, cls_net, test_loader, criterion, logs)
 
     def split_per_domain(self, dataset):
         indices_per_domain = defaultdict(list)
@@ -684,19 +684,19 @@ class MetaTPNLearner:
             s_logits = net(support, fast_weights)
             s_loss = 0
             # print(support.shape, target_support.shape, s_logits[0].shape)
-            for i in range(len(s_logits)):
+            for j in range(len(s_logits)):
                 # print(s_logits[i].shape)
                 # print(target_support[:,i].shape)
-                s_loss += criterion(s_logits[i], target_support[:,i])
+                s_loss += criterion(s_logits[j], target_support[:,j])
             s_loss /= len(s_logits)
 
             grad = torch.autograd.grad(s_loss, fast_weights)
             fast_weights = list(map(lambda p: p[1] - self.cfg.task_lr * p[0], zip(grad, fast_weights)))
 
             if log_internals and rank == 0:
-                s_logits = torch.cat(s_logits)
-                target_support = torch.tensor(target_support).view(-1, )
-                acc1, acc3 = self.accuracy(s_logits, target_support, topk=(1, 1))
+                TPN_pred = torch.cat(s_logits)
+                TPN_target = torch.tensor(target_support).view(-1, )
+                acc1, acc3 = self.accuracy(TPN_pred, TPN_target, topk=(1, 1))
                 log = f'\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {s_loss.item():.4f}, Acc(1): {acc1.item():.2f}'
                 logs.append(log)
                 print(log)
