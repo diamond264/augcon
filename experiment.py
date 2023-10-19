@@ -34,6 +34,7 @@ from core.TPN import TPNLearner
 from core.MetaCPC import MetaCPCLearner
 from core.MetaSimCLR1D import MetaSimCLR1DLearner
 from core.MetaSimSiam1D import MetaSimSiam1DLearner
+from core.MetaTPN import MetaTPNLearner
 
 class Experiment:
     def __init__(self, cfg, logger):
@@ -94,6 +95,10 @@ class Experiment:
             learner = MetaCPCLearner(self.cfg, self.gpu, self.logger)
         elif self.cfg.pretext == 'metasimclr':
             learner = MetaSimCLR1DLearner(self.cfg, self.gpu, self.logger)
+        elif self.cfg.pretext == 'metatpn':
+            learner = MetaTPNLearner(self.cfg, self.gpu, self.logger)
+        elif self.cfg.pretext == 'metaautoencoder':
+            learner = None
         elif self.cfg.pretext == 'metasimsiam':
             learner = MetaSimSiam1DLearner(self.cfg, self.gpu, self.logger)
         else:
