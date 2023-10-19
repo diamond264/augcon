@@ -547,19 +547,24 @@ class MetaTPNLearner:
                 for _ in range(num_task):
                     dom = random.choice(list(indices_per_domain.keys()))
                     indices = indices_per_domain[dom]
-                    # support = torch.utils.data.Subset(dataset, indices[:task_size])
-                    support = torch.utils.data.Subset(dataset, indices[:len(indices) // 2])
-                    target_support = [torch.tensor(e[2]) for e in support]
+                    random.shuffle(indices)
+                    support_ = torch.utils.data.Subset(dataset, indices[:task_size])
+                    support = []
+                    target_support = []
 
-                    support = [e[1] for e in support]
+                    for e in support_:
+                        support.append(e[1])
+                        target_support.append(torch.tensor(e[2]))
                     if len(support) >= task_size:
-                        support = random.sample(support, task_size)
-                        target_support = random.sample(target_support, task_size)
+                        support = support[:task_size]
+                        target_support = target_support[:task_size]
                     else:
-                        supplementary = random.sample(support, task_size % len(support))
-                        selected_indices = [support.index(element) for element in supplementary]
-                        support = support * (task_size // len(support)) + supplementary
-                        target_support = target_support * (task_size // len(target_support)) + [target_support[index] for index in selected_indices]
+                        support = support * (task_size // len(support)) + support[:task_size % len(support)]
+                        target_support = target_support * (task_size // len(target_support)) + target_support[:task_size % len(target_support)]
+                        # supplementary = random.sample(support, task_size % len(support))
+                        # selected_indices = [support.index(element) for element in supplementary]
+                        # support = support * (task_size // len(support)) + supplementary
+                        # target_support = target_support * (task_size // len(target_support)) + [target_support[index] for index in selected_indices]
 
                     support = torch.stack(support, dim=0)
                     target_support = torch.stack(target_support, dim=0)
@@ -567,18 +572,22 @@ class MetaTPNLearner:
                     # print(target_support.shape)
 
                     # query = torch.utils.data.Subset(dataset, indices[task_size:2*task_size])
-                    query = torch.utils.data.Subset(dataset, indices[len(indices) // 2:])
-                    target_query = [torch.tensor(e[2]) for e in query]
-                    query = [e[1] for e in query]
-
+                    query_ = torch.utils.data.Subset(dataset, indices[task_size:2*task_size])
+                    query = []
+                    target_query = []
+                    for e in query_:
+                        query.append(e[1])
+                        target_query.append(torch.tensor(e[2]))
                     if len(query) >= task_size:
-                        query = random.sample(query, task_size)
-                        target_query = random.sample(target_query, task_size)
+                        query = query[:task_size]
+                        target_query = target_query[:task_size]
                     else:
-                        supplementary = random.sample(query, task_size % len(query))
-                        selected_indices = [query.index(element) for element in supplementary]
-                        query = query * (task_size // len(query)) + supplementary
-                        target_query = target_query * (task_size // len(target_query)) + [target_query[index] for index in selected_indices]
+                        query = query * (task_size // len(query)) + query[:task_size % len(query)]
+                        target_query = target_query * (task_size // len(target_query)) + target_query[:task_size % len(target_query)]
+                        # supplementary = random.sample(query, task_size % len(query))
+                        # selected_indices = [query.index(element) for element in supplementary]
+                        # query = query * (task_size // len(query)) + supplementary
+                        # target_query = target_query * (task_size // len(target_query)) + [target_query[index] for index in selected_indices]
 
                     query = torch.stack(query, dim=0)
                     target_query = torch.stack(target_query, dim=0)
