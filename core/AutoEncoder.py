@@ -11,7 +11,7 @@ import torch.multiprocessing as mp
 from torch.utils.data import DataLoader, Dataset, DistributedSampler
 
 class Encoder(nn.Module):
-    def __init__(self, input_channels=3, z_dim=256, num_blocks=4, kernel_sizes=[8, 4, 2, 1], strides=[4, 2, 1, 1]):
+    def __init__(self, input_channels=3, z_dim=256, num_blocks=4, kernel_sizes=[4, 1, 1, 1], strides=[2, 1, 1, 1]):
         super(Encoder, self).__init__()
         self.num_blocks = num_blocks
         
@@ -32,12 +32,12 @@ class Encoder(nn.Module):
     def forward(self, x):
         for i in range(self.num_blocks):
             x = self.blocks[i](x)
-        
+
         return x
 
 
 class Decoder(nn.Module):
-    def __init__(self, input_channels=3, z_dim=256, num_blocks=4, kernel_sizes=[1, 2, 4, 8], strides=[1, 1, 2, 4]):
+    def __init__(self, input_channels=3, z_dim=256, num_blocks=4, kernel_sizes=[1, 1, 1, 4], strides=[1, 1, 1, 2]):
         super(Decoder, self).__init__()
         self.num_blocks = num_blocks
         
