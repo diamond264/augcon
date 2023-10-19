@@ -47,7 +47,7 @@ class Decoder(nn.Module):
         
         self.blocks = nn.ModuleList()
         for i in range(num_blocks):
-            if i == 2: padding = 1
+            if i == 3: padding = 0
             else: padding = 0
             if i == 3: activation = nn.Tanh()
             else: activation = nn.ReLU()

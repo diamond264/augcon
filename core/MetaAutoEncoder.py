@@ -15,7 +15,7 @@ from torch.utils.data import DistributedSampler
 from collections import defaultdict
 
 class Encoder(nn.Module):
-    def __init__(self, input_channels=3, z_dim=256, num_blocks=4, kernel_sizes=[8, 4, 2, 1], strides=[4, 2, 1, 1]):
+    def __init__(self, input_channels=3, z_dim=256, num_blocks=4, kernel_sizes=[4, 1, 1, 1], strides=[2, 1, 1, 1]):
         super(Encoder, self).__init__()
         self.num_blocks = num_blocks
         
@@ -69,7 +69,7 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, input_channels=3, z_dim=256, num_blocks=4, kernel_sizes=[1, 2, 4, 8], strides=[1, 1, 2, 4]):
+    def __init__(self, input_channels=3, z_dim=256, num_blocks=4, kernel_sizes=[1, 1, 1, 4], strides=[1, 1, 1, 2]):
         super(Decoder, self).__init__()
         self.num_blocks = num_blocks
         
@@ -80,7 +80,7 @@ class Decoder(nn.Module):
         self.strides = strides
         
         for i in range(num_blocks):
-            if i == 2: padding = 1
+            if i == 3: padding = 1
             else: padding = 0
             if i == 3: activation = nn.Tanh()
             else: activation = nn.ReLU()
@@ -103,7 +103,7 @@ class Decoder(nn.Module):
         
         idx = 0
         for i in range(self.num_blocks):
-            if i == 2: padding = 1
+            if i == 3: padding = 1
             else: padding = 0
             w, b = vars[idx], vars[idx+1]
             idx += 2
