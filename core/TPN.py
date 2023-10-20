@@ -7,6 +7,8 @@ import torch.nn.functional as F
 import torchvision.models as models
 import torch.multiprocessing as mp
 
+from collections import defaultdict
+
 # from datautils.SimCLR_dataset import subject_collate
 from torch.utils.data import DataLoader, Dataset, DistributedSampler
 
@@ -353,12 +355,10 @@ class TPNLearner:
                 self.validate_finetune(rank, net, test_loader, criterion, logs)
     
     def split_per_domain(self, dataset):
-        domains = []
-        for d in dataset:
-            if d[3] not in domains:
-                domains.append(d[3])
-        domains = sorted(domains)
-        return domains
+        indices_per_domain = defaultdict(list)
+        for i, d in enumerate(dataset):
+            indices_per_domain[d[4].item()].append(i)
+        return indices_per_domain
     
     def pretrain(self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs):
         net.train()

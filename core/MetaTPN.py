@@ -80,6 +80,7 @@ class TaskspecificHead(nn.Module):
         b = fc2.bias
         self.vars.append(w)
         self.vars.append(b)
+        
     def forward(self, x, vars=None):
         if vars is None:
             vars = self.vars
@@ -117,7 +118,7 @@ class TPNNet(nn.Module):
         self.time_warp_head = TaskspecificHead(z_dim, 256, out_dim)
         self.channel_shuffle_head = TaskspecificHead(z_dim, 256, out_dim)
 
-    def forward(self, x, vars):
+    def forward(self, x, vars=None):
         if vars is None:
             vars = nn.ParameterList()
             vars.extend(self.encoder.parameters())
@@ -133,7 +134,7 @@ class TPNNet(nn.Module):
 
         enc_vars = vars[:len(self.encoder.parameters())]
         noise_vars = vars[len(self.encoder.parameters()):len(self.encoder.parameters()) + 4]
-        scale_vars = vars[len(self.encoder.parameters())+4:len(self.encoder.parameters()) + 8]
+        scale_vars = vars[len(self.encoder.parameters()) + 4:len(self.encoder.parameters()) + 8]
         rotate_vars = vars[len(self.encoder.parameters()) + 8:len(self.encoder.parameters()) + 12]
         negate_vars = vars[len(self.encoder.parameters()) + 12:len(self.encoder.parameters()) + 16]
         flip_vars = vars[len(self.encoder.parameters()) + 16:len(self.encoder.parameters()) + 20]
@@ -527,15 +528,21 @@ class MetaTPNLearner:
             if num_task is None:
                 for _, indices in indices_per_domain.items():
                     random.shuffle(indices)
-                    support = torch.utils.data.Subset(dataset, indices[:task_size])
-                    target_support = [torch.tensor(e[2]) for e in support]
-                    support = [e[1] for e in support]
+                    suppor_ = torch.utils.data.Subset(dataset, indices[:task_size])
+                    target_support = []
+                    support = []
+                    for data in support_:
+                        target_support.append(torch.tensor(data[2]))
+                        support.append(data[1])
                     support = torch.stack(support, dim=0)
                     target_support = torch.stack(target_support, dim=0)
 
-                    query = torch.utils.data.Subset(dataset, indices[task_size:2 * task_size])
-                    target_query = [torch.tensor(e[2]) for e in query]
-                    query = [e[1] for e in query]
+                    query_ = torch.utils.data.Subset(dataset, indices[task_size:2 * task_size])
+                    target_query = []
+                    query = []
+                    for data in query_:
+                        target_query.append(torch.tensor(data[2]))
+                        query.append(data[1])
                     print(query)
                     query = torch.stack(query, dim=0)
                     target_query = torch.stack(target_query, dim=0)
@@ -610,17 +617,23 @@ class MetaTPNLearner:
             st = 0
             ed = task_size
             for _ in range(num_task):
-                support = torch.utils.data.Subset(dataset, indices[st:ed])
-                target_support = [torch.tensor(e[2]) for e in support]
-                support = [e[1] for e in support]
+                support_ = torch.utils.data.Subset(dataset, indices[st:ed])
+                target_support = []
+                support = []
+                for data in support_:
+                    target_support.append(torch.tensor(data[2]))
+                    support.append(data[1])
                 support = torch.stack(support, dim=0)
                 target_support = torch.stack(target_support, dim=0)
                 st += task_size
                 ed += task_size
 
-                query = torch.utils.data.Subset(dataset, indices[st:ed])
-                target_query = [torch.tensor(e[2]) for e in query]
-                query = [e[1] for e in query]
+                query_ = torch.utils.data.Subset(dataset, indices[st:ed])
+                target_query = []
+                query = []
+                for data in query_:
+                    target_query.append(torch.tensor(data[2]))
+                    query.append(data[1])
                 query = torch.stack(query, dim=0)
                 target_query = torch.stack(target_query, dim=0)
                 st += task_size
@@ -643,15 +656,15 @@ class MetaTPNLearner:
 
         q_losses = []
         for task_idx in range(len(supports)):
-            support = supports[task_idx].cuda()
+            support = supports[task_idx].cuda().float()
             query = queries[task_idx].cuda()
-            target_support = target_supports[task_idx].cuda()
+            target_support = target_supports[task_idx].cuda().long()
             target_query = target_queries[task_idx].cuda()
 
             fast_weights = self.meta_train(rank, net, support, target_support, criterion, log_internals=self.cfg.log_meta_train,
                                            logs=logs)
 
-            q_logits= net(query, fast_weights)
+            q_logits = net(query, fast_weights)
             q_loss = 0
             for i in range(len(q_logits)):
                 q_loss += criterion(q_logits[i], target_query[:,i])
@@ -660,7 +673,8 @@ class MetaTPNLearner:
 
             if task_idx % self.cfg.log_freq == 0:
                 q_logits = torch.cat(q_logits)
-                target_query = torch.tensor(target_query).view(-1, )
+                target_query = torch.transpose(target_query, 0, 1)
+                target_query = target_query.reshape(-1, )
                 acc1, acc3 = self.accuracy(q_logits, target_query, topk=(1, 1))
 
                 log = f'\t({task_idx}/{len(supports)}) '
@@ -673,7 +687,7 @@ class MetaTPNLearner:
         loss = torch.sum(q_losses)
         # reg_term = torch.sum((q_losses - torch.mean(q_losses))**2)
         # loss += reg_term * self.cfg.reg_lambda
-        loss = loss / len(supports)
+        loss = loss/len(supports)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -695,7 +709,8 @@ class MetaTPNLearner:
 
             if log_internals and rank == 0:
                 TPN_pred = torch.cat(s_logits)
-                TPN_target = torch.tensor(target_support).view(-1, )
+                TPN_target = torch.transpose(target_support, 0, 1)
+                TPN_target = TPN_target.reshape(-1, )
                 acc1, acc3 = self.accuracy(TPN_pred, TPN_target, topk=(1, 1))
                 log = f'\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {s_loss.item():.4f}, Acc(1): {acc1.item():.2f}'
                 logs.append(log)
