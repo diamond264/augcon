@@ -5,18 +5,22 @@ from glob import glob
 
 def parse_args():
     parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', type=str, required=True)
-    parser.add_argument('--epochs', type=int, required=False, default=100)
-    parser.add_argument('--batch_size', type=int, required=False, default=512)
+    parser.add_argument('--epochs', type=int, required=False, default=1000)
     # recommended batch_size - 512 for target-only setting
     parser.add_argument('--target_only', action='store_true')
     parser.add_argument('--perdomain', action='store_true')
-    parser.add_argument('--port', type=int, required=False, default=10001)
-    parser.add_argument('--num_gpus', type=int, required=False, default=1)
-
+    parser.add_argument('--port', type=int, required=False, default=20001)
     parser.add_argument('--lr', type=float, required=False, default=0.001)
-    parser.add_argument('--wd', type=float, required=False, default=0)
+    parser.add_argument('--optimizer', type=str, required=False, default='adam')
     parser.add_argument('--momentum', type=float, required=False, default=0)
+    parser.add_argument('--wd', type=float, required=False, default=0)
+    parser.add_argument('--task_lr', type=float, required=False, default=0.001)
+    parser.add_argument('--num_task', type=int, required=False, default=8)
+    parser.add_argument('--multi_cond_num_task', type=int, required=False, default=4)
+    parser.add_argument('--task_size', type=int, required=False, default=128)
+    parser.add_argument('--num_gpus', type=int, required=False, default=1)
     parser.add_argument('--prefix', type=str, required=False, default='')
     args = parser.parse_args()
     return args
@@ -28,11 +32,10 @@ data_paths = {'ichar': '/mnt/sting/hjyoon/projects/cross/ICHAR/augcon',
               'realworld': '/mnt/sting/hjyoon/projects/cross/RealWorld/augcon',
               'pamap2': '/mnt/sting/hjyoon/projects/cross/PAMAP2/augcon'}
 
-
 def run(args):
-    pretext = 'autoencoder'
+    pretext = 'metaautoencoder'
     data_path = data_paths[args.dataset]
-    specific_path = f''
+    specific_path = f'{args.prefix}ts{args.task_size}_nt{args.num_task}_mcnt{args.multi_cond_num_task}_lr{args.lr}_tlr{args.task_lr}_m{args.momentum}_wd{args.wd}_opt{args.optimizer}'
     config_path = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main/{args.dataset}/pretrain/{pretext}/{specific_path}'
 
     domains = glob(os.path.join(data_path, '*'))
@@ -54,7 +57,7 @@ def run(args):
             gpu = [flag]
             dist_url = f'tcp://localhost:{args.port + flag}'
             flag += 1
-            if flag == 8: flag = 0
+            if flag == 4: flag = 0
 
         default_config = f'''### Default config
 mode: pretrain
@@ -73,16 +76,15 @@ input_channels: 3
 num_cls: 9 # not important
 '''
         training_config = f'''### Training config
-optimizer: adam
+optimizer: {args.optimizer}
 criterion: mse
 start_epoch: 0
 epochs: {args.epochs}
-batch_size: {args.batch_size}
 lr: {args.lr}
-wd: {args.wd}
 momentum : {args.momentum}
+wd: {args.wd}
 '''
-        save_freq = args.epochs / 10
+        save_freq = 100
         ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/without_{domain}/{specific_path}'
         if args.perdomain:
             ckpt_dir = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/perdomain_without_{domain}/{specific_path}'
@@ -95,7 +97,15 @@ log_freq: 20
 save_freq: {save_freq}
 '''
         neg_per_domain = 'true' if args.perdomain else 'false'
-        learning_config = f'neg_per_domain: {neg_per_domain}'
+        learning_config = f'''### Meta-learning config
+task_per_domain: {neg_per_domain}
+num_task: {args.num_task}
+multi_cond_num_task: {args.multi_cond_num_task}
+task_size: {args.task_size}
+task_steps: 10
+task_lr: {args.task_lr}
+reg_lambda: 0
+log_meta_train: false'''
         model_config = f'''### Model config
 pretext: {pretext}
 

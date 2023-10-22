@@ -51,11 +51,14 @@ class Decoder(nn.Module):
             else: padding = 0
             if i == 3: activation = nn.Tanh()
             else: activation = nn.ReLU()
+            if i != 3: dropout = nn.Dropout(p=0.2)
+            else: dropout = nn.Dropout(p=0)
             block = nn.Sequential(nn.ConvTranspose1d(z_dim, filters[i],
                                             kernel_size=self.kernel_sizes[i],
                                             stride=self.strides[i],
                                             output_padding=padding), 
-                                  activation)
+                                  activation,
+                                  dropout)
             self.blocks.append(block)
             z_dim = filters[i]
     

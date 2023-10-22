@@ -80,15 +80,18 @@ class Decoder(nn.Module):
         self.strides = strides
         
         for i in range(num_blocks):
-            if i == 3: padding = 1
+            if i == 3: padding = 0
             else: padding = 0
             if i == 3: activation = nn.Tanh()
             else: activation = nn.ReLU()
+            if i != 3: dropout = nn.Dropout(p=0.2)
+            else: dropout = nn.Dropout(p=0)
             block = nn.Sequential(nn.ConvTranspose1d(z_dim, filters[i],
                                             kernel_size=self.kernel_sizes[i],
                                             stride=self.strides[i],
                                             output_padding=padding), 
-                                  activation)
+                                  activation,
+                                  dropout)
             z_dim = filters[i]
             
             w = nn.Parameter(torch.ones_like(block[0].weight))
@@ -103,7 +106,7 @@ class Decoder(nn.Module):
         
         idx = 0
         for i in range(self.num_blocks):
-            if i == 3: padding = 1
+            if i == 3: padding = 0
             else: padding = 0
             w, b = vars[idx], vars[idx+1]
             idx += 2
@@ -516,22 +519,23 @@ class MetaAutoEncoderLearner:
                 for _ in range(num_task):
                     dom = random.choice(list(indices_per_domain.keys()))
                     indices = indices_per_domain[dom]
-                    # support = torch.utils.data.Subset(dataset, indices[:task_size])
-                    support = torch.utils.data.Subset(dataset, indices[:len(indices)//2])
+                    random.shuffle(indices)
+                    support = torch.utils.data.Subset(dataset, indices[:task_size])
+                    # support = torch.utils.data.Subset(dataset, indices[:len(indices)//2])
                     support = [e[0] for e in support]
                     if len(support) >= task_size:
-                        support = random.sample(support, task_size)
+                        support = support[:task_size]
                     else:
-                        support = support * (task_size // len(support)) + random.sample(support, task_size % len(support))
+                        support = support * (task_size // len(support)) + support[:task_size % len(support)]
                     support = torch.stack(support, dim=0)
                     
-                    # query = torch.utils.data.Subset(dataset, indices[task_size:2*task_size])
-                    query = torch.utils.data.Subset(dataset, indices[len(indices)//2:])                        
+                    query = torch.utils.data.Subset(dataset, indices[task_size:2*task_size])
+                    # query = torch.utils.data.Subset(dataset, indices[len(indices)//2:])
                     query = [e[0] for e in query]
                     if len(query) >= task_size:
-                        query = random.sample(query, task_size)
+                        query = query[:task_size]
                     else:
-                        query = query * (task_size // len(query)) + random.sample(query, task_size % len(query))
+                        query = query * (task_size // len(query)) + query[:task_size % len(query)]
                     query = torch.stack(query, dim=0)
                     supports.append(support)
                     queries.append(query)
