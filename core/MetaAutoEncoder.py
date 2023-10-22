@@ -29,8 +29,7 @@ class Encoder(nn.Module):
             block = nn.Sequential(nn.Conv1d(input_channels, filters[i],
                                             kernel_size=self.kernel_sizes[i],
                                             stride=self.strides[i]), 
-                                  nn.ReLU(), 
-                                  nn.Dropout(p=0.2))
+                                  )
             input_channels = filters[i]
             
             w = nn.Parameter(torch.ones_like(block[0].weight))
@@ -90,8 +89,7 @@ class Decoder(nn.Module):
                                             kernel_size=self.kernel_sizes[i],
                                             stride=self.strides[i],
                                             output_padding=padding), 
-                                  activation,
-                                  dropout)
+                                  )
             z_dim = filters[i]
             
             w = nn.Parameter(torch.ones_like(block[0].weight))
@@ -113,6 +111,8 @@ class Decoder(nn.Module):
             x = F.conv_transpose1d(x, w, b, self.strides[i], output_padding=padding)
             if i == 3: x = F.tanh(x)
             else: x = F.relu(x, True)
+            if i!= 3: x = F.dropout(x, 0.2)
+            else: x = F.dropout(x, 0)
             
         return x
 
