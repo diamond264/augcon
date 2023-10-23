@@ -111,7 +111,7 @@ class Decoder(nn.Module):
             x = F.conv_transpose1d(x, w, b)#, self.strides[i], output_padding=padding)
             if i == 2: x = F.tanh(x)
             else: x = F.relu(x, True)
-            if i!= 3: x = F.dropout(x, 0.2)
+            if i!= 2: x = F.dropout(x, 0.2)
             else: x = F.dropout(x, 0)
             
         return x

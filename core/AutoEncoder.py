@@ -11,7 +11,7 @@ import torch.multiprocessing as mp
 from torch.utils.data import DataLoader, Dataset, DistributedSampler
 
 class Encoder(nn.Module):
-    def __init__(self, input_channels=3, z_dim=256, num_blocks=4, kernel_sizes=[4, 1, 1, 1], strides=[2, 1, 1, 1]):
+    def __init__(self, input_channels=3, z_dim=128, num_blocks=3, kernel_sizes=[3, 3, 3, 1], strides=[2, 1, 1, 1]):
         super(Encoder, self).__init__()
         self.num_blocks = num_blocks
         
@@ -22,8 +22,8 @@ class Encoder(nn.Module):
         self.blocks = nn.ModuleList()
         for i in range(num_blocks):
             block = nn.Sequential(nn.Conv1d(input_channels, filters[i],
-                                            kernel_size=self.kernel_sizes[i],
-                                            stride=self.strides[i]), 
+                                            kernel_size=self.kernel_sizes[i]),#,
+                                            # stride=self.strides[i]), 
                                   nn.ReLU(), 
                                   nn.Dropout(p=0.2))
             self.blocks.append(block)
@@ -37,26 +37,26 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, input_channels=3, z_dim=256, num_blocks=4, kernel_sizes=[1, 1, 1, 4], strides=[1, 1, 1, 2]):
+    def __init__(self, input_channels=3, z_dim=256, num_blocks=4, kernel_sizes=[3, 3, 3, 4], strides=[1, 1, 1, 2]):
         super(Decoder, self).__init__()
         self.num_blocks = num_blocks
         
-        filters = [128, 64, 32, input_channels]
+        filters = [64, 32, input_channels]
         self.kernel_sizes = kernel_sizes
         self.strides = strides
         
         self.blocks = nn.ModuleList()
         for i in range(num_blocks):
-            if i == 3: padding = 0
+            if i == 2: padding = 0
             else: padding = 0
-            if i == 3: activation = nn.Tanh()
+            if i == 2: activation = nn.Tanh()
             else: activation = nn.ReLU()
-            if i != 3: dropout = nn.Dropout(p=0.2)
+            if i != 2: dropout = nn.Dropout(p=0.2)
             else: dropout = nn.Dropout(p=0)
             block = nn.Sequential(nn.ConvTranspose1d(z_dim, filters[i],
-                                            kernel_size=self.kernel_sizes[i],
-                                            stride=self.strides[i],
-                                            output_padding=padding), 
+                                            kernel_size=self.kernel_sizes[i]),#,
+                                            # stride=self.strides[i],
+                                            # output_padding=padding), 
                                   activation,
                                   dropout)
             self.blocks.append(block)
