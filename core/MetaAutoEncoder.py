@@ -15,7 +15,7 @@ from torch.utils.data import DistributedSampler
 from collections import defaultdict
 
 class Encoder(nn.Module):
-    def __init__(self, input_channels=3, z_dim=256, num_blocks=4, kernel_sizes=[4, 1, 1, 1], strides=[2, 1, 1, 1]):
+    def __init__(self, input_channels=3, z_dim=256, num_blocks=3, kernel_sizes=[3, 3, 3, 1], strides=[2, 1, 1, 1]):
         super(Encoder, self).__init__()
         self.num_blocks = num_blocks
         
@@ -27,8 +27,8 @@ class Encoder(nn.Module):
         
         for i in range(num_blocks):
             block = nn.Sequential(nn.Conv1d(input_channels, filters[i],
-                                            kernel_size=self.kernel_sizes[i],
-                                            stride=self.strides[i]), 
+                                            kernel_size=self.kernel_sizes[i])#,
+                                            # stride=self.strides[i]), 
                                   )
             input_channels = filters[i]
             
@@ -46,7 +46,7 @@ class Encoder(nn.Module):
         for i in range(self.num_blocks):
             w, b = vars[idx], vars[idx+1]
             idx += 2
-            x = F.conv1d(x, w, b, self.strides[i])
+            x = F.conv1d(x, w, b)#, self.strides[i])
             x = F.relu(x, True)
             x = F.dropout(x, 0.2)
             
@@ -68,13 +68,13 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, input_channels=3, z_dim=256, num_blocks=4, kernel_sizes=[1, 1, 1, 4], strides=[1, 1, 1, 2]):
+    def __init__(self, input_channels=3, z_dim=128, num_blocks=3, kernel_sizes=[3, 3, 3, 4], strides=[1, 1, 1, 2]):
         super(Decoder, self).__init__()
         self.num_blocks = num_blocks
         
         self.vars = nn.ParameterList()
         
-        filters = [128, 64, 32, input_channels]
+        filters = [64, 32, input_channels]
         self.kernel_sizes = kernel_sizes
         self.strides = strides
         
@@ -86,9 +86,9 @@ class Decoder(nn.Module):
             if i != 3: dropout = nn.Dropout(p=0.2)
             else: dropout = nn.Dropout(p=0)
             block = nn.Sequential(nn.ConvTranspose1d(z_dim, filters[i],
-                                            kernel_size=self.kernel_sizes[i],
-                                            stride=self.strides[i],
-                                            output_padding=padding), 
+                                            kernel_size=self.kernel_sizes[i])#,
+                                            # stride=self.strides[i],
+                                            # output_padding=padding), 
                                   )
             z_dim = filters[i]
             
@@ -108,8 +108,8 @@ class Decoder(nn.Module):
             else: padding = 0
             w, b = vars[idx], vars[idx+1]
             idx += 2
-            x = F.conv_transpose1d(x, w, b, self.strides[i], output_padding=padding)
-            if i == 3: x = F.tanh(x)
+            x = F.conv_transpose1d(x, w, b)#, self.strides[i], output_padding=padding)
+            if i == 2: x = F.tanh(x)
             else: x = F.relu(x, True)
             if i!= 3: x = F.dropout(x, 0.2)
             else: x = F.dropout(x, 0)
@@ -370,24 +370,6 @@ class MetaAutoEncoderLearner:
         
         # For finetuning, load pretrained model
         elif self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
-            # Freeze the encoder part of the network
-            if self.cfg.freeze:
-                for name, param in cls_net.named_parameters():
-                    if not 'classifier' in name:
-                        param.requires_grad = False
-                    else:
-                        param.requires_grad = True
-            
-            # Defining optimizer for classifier
-            parameters = list(filter(lambda p: p.requires_grad, cls_net.parameters()))
-            if self.cfg.optimizer == 'sgd':
-                optimizer = torch.optim.SGD(parameters, self.cfg.lr,
-                                            momentum=self.cfg.momentum,
-                                            weight_decay=self.cfg.wd)
-            elif self.cfg.optimizer == 'adam':
-                optimizer = torch.optim.Adam(parameters, self.cfg.lr,
-                                            weight_decay=self.cfg.wd)
-            
             if not os.path.isfile(self.cfg.resume):
                 # Load pretrained model to net
                 if os.path.isfile(self.cfg.pretrained):
@@ -411,7 +393,7 @@ class MetaAutoEncoderLearner:
                             if k in net.state_dict().keys():
                                 state[k] = v
                         
-                        msg = net.load_state_dict(state, strict=False)
+                        msg = net.load_state_dict(state, strict=True)
                     if rank == 0:
                         log = "Missing keys: {}".format(msg.missing_keys)
                         logs.append(log)
@@ -419,6 +401,7 @@ class MetaAutoEncoderLearner:
                 
                 # Meta-train the pretrained model for domain adaptation
                 if self.cfg.domain_adaptation:
+                    da_criterion = nn.MSELoss().cuda()
                     if rank == 0:
                         log = "Perform domain adaptation step"
                         logs.append(log)
@@ -429,7 +412,7 @@ class MetaAutoEncoderLearner:
                     net.zero_grad()
                     support = [e[0] for e in meta_train_dataset]
                     support = torch.stack(support, dim=0).cuda()
-                    enc_parameters = self.meta_train(rank, net, support, criterion, log_internals=True, logs=logs)
+                    enc_parameters = self.meta_train(rank, net, support, da_criterion, log_internals=True, logs=logs)
                 else:
                     enc_parameters = list(net.parameters())
                 
@@ -465,6 +448,23 @@ class MetaAutoEncoderLearner:
                 optimizer.load_state_dict(state['optimizer'])
                 self.cfg.start_epoch = state['epoch']
             
+            if self.cfg.freeze:
+                for name, param in cls_net.named_parameters():
+                    if not 'classifier' in name:
+                        param.requires_grad = False
+                    else:
+                        param.requires_grad = True
+            
+            # Defining optimizer for classifier
+            parameters = list(filter(lambda p: p.requires_grad, cls_net.parameters()))
+            if self.cfg.optimizer == 'sgd':
+                optimizer = torch.optim.SGD(parameters, self.cfg.lr,
+                                            momentum=self.cfg.momentum,
+                                            weight_decay=self.cfg.wd)
+            elif self.cfg.optimizer == 'adam':
+                optimizer = torch.optim.Adam(parameters, self.cfg.lr,
+                                            weight_decay=self.cfg.wd)
+            
             if self.cfg.mode == 'finetune':
                 for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
                     if world_size > 1:
@@ -474,8 +474,8 @@ class MetaAutoEncoderLearner:
                         test_sampler.set_epoch(epoch)
                         
                     self.finetune(rank, cls_net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
-                    # if len(val_dataset) > 0:
-                    #     self.validate(rank, cls_net, val_loader, criterion, logs)
+                    if len(val_dataset) > 0:
+                        self.validate(rank, cls_net, val_loader, criterion, logs)
                     
                     if rank == 0 and (epoch+1) % self.cfg.save_freq == 0:
                         ckpt_dir = self.cfg.ckpt_dir
