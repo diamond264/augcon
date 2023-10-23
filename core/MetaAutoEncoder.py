@@ -111,7 +111,7 @@ class Decoder(nn.Module):
             x = F.conv_transpose1d(x, w, b)#, self.strides[i], output_padding=padding)
             if i == 2: x = F.tanh(x)
             else: x = F.relu(x, True)
-            if i!= 2: x = F.dropout(x, 0.2)
+            if i!= 2: x = F.dropout(x, 0)
             else: x = F.dropout(x, 0)
             
         return x
@@ -582,7 +582,8 @@ class MetaAutoEncoderLearner:
             support = supports[task_idx].cuda()
             query = queries[task_idx].cuda()
             
-            fast_weights = self.meta_train(rank, net, support, criterion, log_internals=self.cfg.log_meta_train, logs=logs)
+            log_internals = self.cfg.log_meta_train and (task_idx % self.cfg.log_freq == 0)
+            fast_weights = self.meta_train(rank, net, support, criterion, log_internals=log_internals, logs=logs)
             
             query_hat = net(query, fast_weights)
             q_loss = criterion(query, query_hat)
@@ -631,13 +632,18 @@ class MetaAutoEncoderLearner:
         for i in range(self.cfg.task_steps):
             support_hat = net(support, fast_weights)
             s_loss = criterion(support, support_hat)
+            # print(fast_weights[-1].requires_grad)
             grad = torch.autograd.grad(s_loss, fast_weights)
+            # print(grad[-1])
             fast_weights = list(map(lambda p: p[1] - self.cfg.task_lr * p[0], zip(grad, fast_weights)))
             
             if log_internals and rank == 0:
                 log = f'\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {s_loss.item():.4f}'#, Acc(1): {acc1.item():.2f}, Acc(3): {acc3.item():.2f}'
                 logs.append(log)
                 print(log)
+                # print(support_hat[0, :10])
+            # if i > 2:
+            #     break
         
         return fast_weights
     

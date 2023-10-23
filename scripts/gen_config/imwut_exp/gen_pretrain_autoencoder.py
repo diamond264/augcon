@@ -103,7 +103,7 @@ pretext: {pretext}
 out_dim: 2
 T: 0.1
 mlp: true
-z_dim: 256
+z_dim: 128
 
 {learning_config}
 '''
