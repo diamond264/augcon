@@ -103,6 +103,7 @@ save_freq: {save_freq}
 '''
         learning_config = f'''### Meta-learning
 domain_adaptation: {'true' if args.domain_adaptation else 'false'}
+out_cls_neg_sampling: false
 task_steps: 10
 task_lr: 0.001
 reg_lambda: 0
@@ -110,7 +111,7 @@ no_vars: true
 mlp: false
 freeze: true'''
         model_config = f'''### Model config
-pretext: autoencoder
+pretext: metaautoencoder
 #For tpn
 out_dim: 2
 T: 0.1

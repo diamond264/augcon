@@ -16,7 +16,7 @@ def parse_args():
     parser.add_argument('--optimizer', type=str, required=False, default='adam')
     parser.add_argument('--momentum', type=float, required=False, default=0)
     parser.add_argument('--wd', type=float, required=False, default=0)
-    parser.add_argument('--task_lr', type=float, required=False, default=0.001)
+    parser.add_argument('--task_lr', type=float, required=False, default=0.05)
     parser.add_argument('--num_task', type=int, required=False, default=8)
     parser.add_argument('--multi_cond_num_task', type=int, required=False, default=4)
     parser.add_argument('--task_size', type=int, required=False, default=128)
@@ -113,7 +113,7 @@ pretext: {pretext}
 out_dim: 2
 T: 0.1
 mlp: true
-z_dim: 256
+z_dim: 128
 
 {learning_config}
 '''
