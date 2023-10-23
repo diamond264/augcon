@@ -37,7 +37,7 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, input_channels=3, z_dim=256, num_blocks=4, kernel_sizes=[3, 3, 3, 4], strides=[1, 1, 1, 2]):
+    def __init__(self, input_channels=3, z_dim=256, num_blocks=3, kernel_sizes=[3, 3, 3, 4], strides=[1, 1, 1, 2]):
         super(Decoder, self).__init__()
         self.num_blocks = num_blocks
         
