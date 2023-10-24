@@ -115,7 +115,7 @@ pretext: metaautoencoder
 #For tpn
 out_dim: 2
 T: 0.1
-z_dim: 256
+z_dim: 128
 {learning_config}
 '''
         config = f'''{default_config}

@@ -49,7 +49,7 @@ class Decoder(nn.Module):
         for i in range(num_blocks):
             if i == 2: padding = 0
             else: padding = 0
-            if i == 2: activation = nn.Tanh()
+            if i == 2: activation = nn.Sigmoid()
             else: activation = nn.ReLU()
             if i != 2: dropout = nn.Dropout(p=0)
             else: dropout = nn.Dropout(p=0)

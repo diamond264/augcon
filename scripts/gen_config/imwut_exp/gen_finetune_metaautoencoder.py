@@ -16,7 +16,7 @@ def parse_args():
     parser.add_argument('--perdomain', action='store_true')
     parser.add_argument('--target_only', action='store_true')
     parser.add_argument('--domain_adaptation', action='store_true')
-    parser.add_argument('--task_lr', type=str, required=False, default=0.001)
+    parser.add_argument('--task_lr', type=str, required=False, default=0.05)
     parser.add_argument('--task_step', type=int, required=False, default=10)
     args = parser.parse_args()
     return args
@@ -93,7 +93,7 @@ wd: 0.0
         postfix = f'without'
         if args.target_only: postfix = f'only'
         if args.perdomain: postfix = 'perdomain_' + postfix
-        pretrained = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/{postfix}_{domain}/{specific_path}/checkpoint_1999.pth.tar'
+        pretrained = f'/mnt/sting/hjyoon/projects/aaa/models/imwut/main/{args.dataset}/pretrain/{pretext}/{postfix}_{domain}/{specific_path}/checkpoint_2999.pth.tar'
         if args.domain_adaptation:
             postfix = postfix + f'/da_true_seed_{args.seed}'
         else:
@@ -111,7 +111,7 @@ domain_adaptation: {'true' if args.domain_adaptation else 'false'}
 out_cls_neg_sampling: false
 
 #For tpn
-z_dim: 256
+z_dim: 128
 
 task_steps: {args.task_step}
 task_lr: {args.task_lr}

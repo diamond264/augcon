@@ -7,7 +7,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', type=str, required=True)
-    parser.add_argument('--epochs', type=int, required=False, default=1000)
+    parser.add_argument('--epochs', type=int, required=False, default=5000)
     # recommended batch_size - 512 for target-only setting
     parser.add_argument('--target_only', action='store_true')
     parser.add_argument('--perdomain', action='store_true')

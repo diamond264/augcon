@@ -109,7 +109,7 @@ class Decoder(nn.Module):
             w, b = vars[idx], vars[idx+1]
             idx += 2
             x = F.conv_transpose1d(x, w, b)#, self.strides[i], output_padding=padding)
-            if i == 2: x = F.tanh(x)
+            if i == 2: x = F.sigmoid(x)
             else: x = F.relu(x, True)
             if i!= 2: x = F.dropout(x, 0)
             else: x = F.dropout(x, 0)
@@ -413,6 +413,7 @@ class MetaAutoEncoderLearner:
                     support = [e[0] for e in meta_train_dataset]
                     support = torch.stack(support, dim=0).cuda()
                     enc_parameters = self.meta_train(rank, net, support, da_criterion, log_internals=True, logs=logs)
+                    # assert(0)
                 else:
                     enc_parameters = list(net.parameters())
                 
@@ -586,12 +587,14 @@ class MetaAutoEncoderLearner:
             fast_weights = self.meta_train(rank, net, support, criterion, log_internals=log_internals, logs=logs)
             
             query_hat = net(query, fast_weights)
+            if torch.max(query) > 1 or torch.max(support) > 1: assert(0)
+            if torch.min(query) < 0 or torch.min(support) < 0: assert(0)
             q_loss = criterion(query, query_hat)
             q_losses.append(q_loss)
             
             if task_idx % self.cfg.log_freq == 0:
                 log = f'\t({task_idx}/{len(supports)}) '
-                log += f'Loss: {q_loss.item():.4f}'#, Acc(1): {acc1.item():.2f}, Acc(3): {acc3.item():.2f}'
+                log += f'Loss: {q_loss.item():.8f}'#, Acc(1): {acc1.item():.2f}, Acc(3): {acc3.item():.2f}'
                 if rank == 0:
                     logs.append(log)
                     print(log)
@@ -638,7 +641,7 @@ class MetaAutoEncoderLearner:
             fast_weights = list(map(lambda p: p[1] - self.cfg.task_lr * p[0], zip(grad, fast_weights)))
             
             if log_internals and rank == 0:
-                log = f'\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {s_loss.item():.4f}'#, Acc(1): {acc1.item():.2f}, Acc(3): {acc3.item():.2f}'
+                log = f'\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {s_loss.item():.8f}'#, Acc(1): {acc1.item():.2f}, Acc(3): {acc3.item():.2f}'
                 logs.append(log)
                 print(log)
                 # print(support_hat[0, :10])
