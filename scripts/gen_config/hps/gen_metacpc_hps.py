@@ -64,7 +64,7 @@ def gen_pretrain_config():
                 finetune_config_path = f'{CONFIG_PATH}/{dataset}/{PRETEXT}/finetune/{param_str}/gpu{gpu}_{domain}.yaml'
                 print(f'Generating {finetune_config_path}')
                 
-                finetune_path = f'{MODEL_PATH}/{data_path}finetune/10shot/target'
+                finetune_path = f'{data_path}finetune/10shot/target'
                 finetune_ckpt_path = f'{MODEL_PATH}/{dataset}/{PRETEXT}/finetune/{param_str}/{domain}'
                 pretrained_path = f'{pretrain_ckpt_path}/checkpoint_2999.pth.tar'
                 finetune_config = get_config('finetune', [gpu], port, dataset,
