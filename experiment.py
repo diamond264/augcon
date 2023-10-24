@@ -56,26 +56,26 @@ class Experiment:
         
         # For 1D data (sensors, audio)
         if self.cfg.pretext == 'cpc':
-            learner = CPCLearner(self.cfg, self.gpu, self.logger)
+            learner = CPCLearner(self.cfg, None, self.logger)
         elif self.cfg.pretext == 'simclr':
-            learner = SimCLR1DLearner(self.cfg, self.gpu, self.logger)
+            learner = SimCLR1DLearner(self.cfg, None, self.logger)
         elif self.cfg.pretext == 'autoencoder':
-            learner = AutoEncoderLearner(self.cfg, self.gpu, self.logger)
+            learner = AutoEncoderLearner(self.cfg, None, self.logger)
         elif self.cfg.pretext == 'tpn':
-            learner = TPNLearner(self.cfg, self.gpu, self.logger)
+            learner = TPNLearner(self.cfg, None, self.logger)
         elif self.cfg.pretext == 'simsiam':
-            learner = SimSiam1DLearner(self.cfg, self.gpu, self.logger)
+            learner = SimSiam1DLearner(self.cfg, None, self.logger)
         # Meta learning methods
         elif self.cfg.pretext == 'metacpc':
-            learner = MetaCPCLearner(self.cfg, self.gpu, self.logger)
+            learner = MetaCPCLearner(self.cfg, None, self.logger)
         elif self.cfg.pretext == 'metasimclr':
-            learner = MetaSimCLR1DLearner(self.cfg, self.gpu, self.logger)
+            learner = MetaSimCLR1DLearner(self.cfg, None, self.logger)
         elif self.cfg.pretext == 'metatpn':
-            learner = MetaTPNLearner(self.cfg, self.gpu, self.logger)
+            learner = MetaTPNLearner(self.cfg, None, self.logger)
         elif self.cfg.pretext == 'metaautoencoder':
-            learner = MetaAutoEncoderLearner(self.cfg, self.gpu, self.logger)
+            learner = MetaAutoEncoderLearner(self.cfg, None, self.logger)
         elif self.cfg.pretext == 'metasimsiam':
-            learner = MetaSimSiam1DLearner(self.cfg, self.gpu, self.logger)
+            learner = MetaSimSiam1DLearner(self.cfg, None, self.logger)
         else:
             self.logger.warning('Pretext task not supported')
         
@@ -103,5 +103,5 @@ if __name__ == '__main__':
     cfg.log_config(logger)
     logger.info("==========================================")
     
-    exp = Experiment(cfg, logger)
+    exp = Experiment(cfg, None)
     exp.run()
