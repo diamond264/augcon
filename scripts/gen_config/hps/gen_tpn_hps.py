@@ -1,7 +1,7 @@
 import os
 from glob import glob
 
-PRETEXT = 'cpc'
+PRETEXT = 'tpn'
 PRETRAIN_CRITERION = 'crossentropy'
 PRETRAIN_HPS = {
     'lr': [0.0001, 0.0005, 0.001],
@@ -110,18 +110,11 @@ log_freq: 100
 save_freq: 10
 
 pretext: {PRETEXT if mode == 'pretrain' else 'meta'+PRETEXT}
-enc_blocks: 4
-kernel_sizes: [8, 4, 2, 1]
-strides: [4, 2, 1, 1]
-agg_blocks: 5
-z_dim: 256
-pooling: mean
-pred_steps: 12
-n_negatives: 15
-offset: 4
+out_dim: 2
+z_dim: 96
 neg_per_domain: false
 
-mlp: false
+mlp: {'true' if mode == 'pretrain' else 'false'}
 freeze: true
 domain_adaptation: false
 task_steps: -1

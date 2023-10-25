@@ -1,12 +1,12 @@
 import os
 from glob import glob
 
-PRETEXT = 'cpc'
+PRETEXT = 'metatpn'
 PRETRAIN_CRITERION = 'crossentropy'
 PRETRAIN_HPS = {
-    'lr': [0.0001, 0.0005, 0.001],
+    'lr': [0.0005, 0.001, 0.005],
     'wd': [0.0, 0.0001],
-    'bs': [64, 128, 256],
+    'tlr': [0.001, 0.005, 0.01],
 }
 
 DATASETS = ['ichar', 'hhar', 'pamap2', 'dsa']
@@ -33,28 +33,29 @@ def gen_pretrain_config():
     parameters = []
     for lr in PRETRAIN_HPS['lr']:
         for wd in PRETRAIN_HPS['wd']:
-            for bs in PRETRAIN_HPS['bs']:
-                parameters.append((lr, wd, bs))
+            for tlr in PRETRAIN_HPS['tlr']:
+                parameters.append((lr, wd, tlr))
     
     gpu = 0
     for dataset in DATASETS:
         data_paths = DATA_PATH[dataset]
         for data_path in data_paths:
             domain = data_path.split('/')[-2]
-            port = 8567 + gpu
+            port = 8678 + gpu
             for param in parameters:
-                param_str = f'lr{param[0]}_wd{param[1]}_bs{param[2]}'
+                param_str = f'lr{param[0]}_wd{param[1]}_tlr{param[2]}'
                 pretrain_config_path = f'{CONFIG_PATH}/{dataset}/{PRETEXT}/pretrain/{param_str}/gpu{gpu}_{domain}.yaml'
                 print(f'Generating {pretrain_config_path}')
 
                 pretrain_path = f'{data_path}pretrain'
                 num_cls = NUM_CLS[dataset]
-                epochs = 50
-                lr, wd, bs = param
+                epochs = 3000
+                lr, wd, tlr = param
                 pretrain_ckpt_path = f'{MODEL_PATH}/{dataset}/{PRETEXT}/pretrain/{param_str}/{domain}'
                 pretrain_config = get_config('pretrain', [gpu], port, dataset,
                                              pretrain_path, num_cls, PRETRAIN_CRITERION,
-                                             epochs, bs, lr, wd, pretrain_ckpt_path, None)
+                                             epochs, -1, lr, wd, tlr,
+                                             pretrain_ckpt_path, None)
                 
                 os.makedirs(os.path.dirname(pretrain_config_path), exist_ok=True)
                 with open(pretrain_config_path, 'w') as f:
@@ -65,10 +66,11 @@ def gen_pretrain_config():
                 
                 finetune_path = f'{MODEL_PATH}/{data_path}finetune/10shot/target'
                 finetune_ckpt_path = f'{MODEL_PATH}/{dataset}/{PRETEXT}/finetune/{param_str}/{domain}'
-                pretrained_path = f'{pretrain_ckpt_path}/checkpoint_0049.pth.tar'
+                pretrained_path = f'{pretrain_ckpt_path}/checkpoint_2999.pth.tar'
                 finetune_config = get_config('finetune', [gpu], port, dataset,
                                              finetune_path, num_cls, 'crossentropy',
-                                             50, 4, 0.001, 0.0, finetune_ckpt_path,
+                                             50, 4, 0.001, 0.0, tlr,
+                                             finetune_ckpt_path,
                                              pretrained_path)
                 
                 os.makedirs(os.path.dirname(finetune_config_path), exist_ok=True)
@@ -79,7 +81,7 @@ def gen_pretrain_config():
 
 
 def get_config(mode, gpu, port, dataset_name, data_path, num_cls,
-               criterion, epochs, bs, lr, wd, ckpt_path, pretrained):
+               criterion, epochs, bs, lr, wd, tlr, ckpt_path, pretrained):
     config = f'''mode: {mode}
 seed: 0
 gpu: {gpu}
@@ -107,26 +109,25 @@ resume: ''
 pretrained: {pretrained}
 ckpt_dir: {ckpt_path}
 log_freq: 100
-save_freq: 10
+save_freq: {1000 if mode == 'pretrain' else 10}
 
-pretext: {PRETEXT if mode == 'pretrain' else 'meta'+PRETEXT}
-enc_blocks: 4
-kernel_sizes: [8, 4, 2, 1]
-strides: [4, 2, 1, 1]
-agg_blocks: 5
-z_dim: 256
-pooling: mean
-pred_steps: 12
-n_negatives: 15
-offset: 4
+task_per_domain: true
+num_task: 8
+multi_cond_num_task: 4
+task_size: 128
+task_lr: {tlr}
+reg_lambda: 0
+log_meta_train: false
+
+pretext: {PRETEXT}
+out_dim: 2
+z_dim: 96
 neg_per_domain: false
 
 mlp: false
 freeze: true
-domain_adaptation: false
-task_steps: -1
-task_lr: -1
-reg_lambda: -1
+domain_adaptation: true
+task_steps: 10
 no_vars: true
 '''
     return config
