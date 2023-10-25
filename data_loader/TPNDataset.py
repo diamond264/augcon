@@ -24,13 +24,13 @@ class TPNDataset(Dataset):
     def __getitem__(self, idx):
         features, classes, domains = self.tensor_dataset[idx]
         
-        new_features = features.numpy()
-        new_features, tpn_labels = self.generate_labels(new_features)
-        new_features = torch.from_numpy(new_features).float()
+        # new_features = features.numpy()
+        tpn_labels = self.generate_labels()
+        # new_features = torch.from_numpy(new_features).float()
         
-        return features, new_features, tpn_labels, classes, domains
+        return features, features, tpn_labels, classes, domains
     
-    def generate_labels(self, x):
+    def generate_labels(self):
         label = [0] * 8
         
         # # noise:
@@ -73,4 +73,4 @@ class TPNDataset(Dataset):
         # x = tpn_channel_shuffle(x, choice)
         # label[CHANNEL_SHUFFLE_POS] = choice
         
-        return x.copy(), label
+        return label
