@@ -277,21 +277,26 @@ class CPCNet(nn.Module):
         return negs
             
     def forward(self, x, vars=None, neg_x=None):
+        print("0")
         if vars is None:
             vars = nn.ParameterList()
             vars.extend(self.encoder.parameters())
             vars.extend(self.aggregator.parameters())
             vars.extend(self.predictor.parameters())
         
+        print("1")
         enc_vars = vars[:self.enc_param_idx]
         z = self.encoder(x, enc_vars)
+        print("2")
         
         agg_vars = vars[self.enc_param_idx:self.agg_param_idx]
         z_hat = self.aggregator(z, agg_vars)
         z_hat = z_hat.unsqueeze(-1)
+        print("3")
         
         pred_vars = vars[self.agg_param_idx:self.pred_param_idx]
         z_pred = self.predictor(z_hat, pred_vars)
+        print("4")
         
         targets = z.unsqueeze(0)
         bsz = z.shape[0]
@@ -302,6 +307,7 @@ class CPCNet(nn.Module):
         else:
             neg_targets = self.sample_negatives(z, self.n_negatives, bsz)
             targets = torch.cat([targets, neg_targets], dim=0)
+        print("5")
 
         copies = targets.size(0)
         bsz, dim, tsz, steps = z_pred.shape
