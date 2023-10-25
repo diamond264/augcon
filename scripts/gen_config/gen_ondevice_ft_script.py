@@ -28,6 +28,19 @@ def run(args):
     criterion = ''
     if args.pretext == 'cpc' or args.pretext == 'metacpc':
         criterion = 'crossentropy'
+        learning_config = f'''
+pretext: {pretext}
+# FOR CPC
+enc_blocks: 4
+kernel_sizes: [8, 4, 2, 1]
+strides: [4, 2, 1, 1]
+agg_blocks: 5
+z_dim: 256
+pooling: mean
+pred_steps: 12
+n_negatives: 15
+offset: 4
+'''
     
     config = f'''### On-device finetuning config
 mode: finetune
@@ -51,7 +64,7 @@ lr: 0.001
 wd: 0.0
 
 resume: ''
-pretrained: {pretrained}
+pretrained: ''
 ckpt_dir: '.'
 log_freq: 10
 save_freq: -1
@@ -64,17 +77,7 @@ no_vars: true
 mlp: false
 freeze: {'false' if args.unfreeze else 'true'}
 
-pretext: {pretext}
-# FOR CPC
-enc_blocks: 4
-kernel_sizes: [8, 4, 2, 1]
-strides: [4, 2, 1, 1]
-agg_blocks: 5
-z_dim: 256
-pooling: mean
-pred_steps: 12
-n_negatives: 15
-offset: 4
+{learning_config}
 '''
     filename = f'{pretext}'
     file_path = os.path.join(config_path, f'{filename}.yaml')
