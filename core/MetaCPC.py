@@ -384,7 +384,7 @@ class MetaCPCLearner:
     def run(self, train_dataset, val_dataset, test_dataset):
         self.main_worker(0, 1, train_dataset, val_dataset, test_dataset)
         
-    def main_worker(self, rank, world_size, train_dataset, val_dataset, test_dataset, logs):
+    def main_worker(self, rank, world_size, train_dataset, val_dataset, test_dataset, logs=None):
         # Model initialization
         net = CPCNet(self.cfg.input_channels, self.cfg.z_dim, self.cfg.enc_blocks, self.cfg.kernel_sizes, self.cfg.strides,
                          self.cfg.agg_blocks, self.cfg.pred_steps, self.cfg.n_negatives, self.cfg.offset)
