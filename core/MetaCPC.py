@@ -574,9 +574,12 @@ class MetaCPCLearner:
     
     def meta_train(self, rank, net, support, criterion, log_internals=False, logs=None):
         fast_weights = list(net.parameters())
+        print("??")
         for i in range(self.cfg.task_steps):
+            print("???")
             s_logits, s_targets = net(support, fast_weights)
             s_loss = criterion(s_logits, s_targets)
+            print("????")
             grad = torch.autograd.grad(s_loss, fast_weights)
             fast_weights = list(map(lambda p: p[1] - self.cfg.task_lr * p[0], zip(grad, fast_weights)))
             
