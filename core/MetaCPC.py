@@ -1,5 +1,6 @@
 import os
 import math
+import time
 import sklearn.metrics as metrics
 import random
 
@@ -38,17 +39,14 @@ class Encoder(nn.Module):
             self.vars.append(b)
             
     def forward(self, x, vars=None):
-        print("00")
         if vars is None:
             vars = self.vars
-        print("01")
+
         idx = 0
         for i in range(self.num_blocks):
-            print(f'0 block{i}')
             w, b = vars[idx], vars[idx+1]
             idx += 2
             x = F.conv1d(x, w, b, self.strides[i])
-            print(f'1 block{i}')
             x = F.relu(x, True)
             x = F.dropout(x, 0.2)
             
@@ -280,26 +278,21 @@ class CPCNet(nn.Module):
         return negs
             
     def forward(self, x, vars=None, neg_x=None):
-        print("0")
         if vars is None:
             vars = nn.ParameterList()
             vars.extend(self.encoder.parameters())
             vars.extend(self.aggregator.parameters())
             vars.extend(self.predictor.parameters())
         
-        print("1")
         enc_vars = vars[:self.enc_param_idx]
         z = self.encoder(x, enc_vars)
-        print("2")
         
         agg_vars = vars[self.enc_param_idx:self.agg_param_idx]
         z_hat = self.aggregator(z, agg_vars)
         z_hat = z_hat.unsqueeze(-1)
-        print("3")
         
         pred_vars = vars[self.agg_param_idx:self.pred_param_idx]
         z_pred = self.predictor(z_hat, pred_vars)
-        print("4")
         
         targets = z.unsqueeze(0)
         bsz = z.shape[0]
@@ -310,7 +303,6 @@ class CPCNet(nn.Module):
         else:
             neg_targets = self.sample_negatives(z, self.n_negatives, bsz)
             targets = torch.cat([targets, neg_targets], dim=0)
-        print("5")
 
         copies = targets.size(0)
         bsz, dim, tsz, steps = z_pred.shape
@@ -457,13 +449,17 @@ class MetaCPCLearner:
             
             # Meta-train the pretrained model for domain adaptation
             if self.cfg.domain_adaptation:
-                print("Perform domain adaptation step")
-                
                 net.zero_grad()
                 support = [e[0] for e in meta_train_dataset]
                 support = torch.stack(support, dim=0)
-                print("?")
+                # sleep for 5 seconds
+                time.sleep(3)
+                print("Perform domain adaptation step")
+                start_time = time.time()
                 enc_parameters = self.meta_train(rank, net, support, criterion, log_internals=True, logs=logs)
+                # time in seconds with two floating points
+                print("Time taken for meta-training: {}".format(time.time() - start_time))
+                time.sleep(3)
             else:
                 enc_parameters = list(net.parameters())
             print("Loading encoder parameters to the classifier")
@@ -477,11 +473,15 @@ class MetaCPCLearner:
             print("Missing keys: {}".format(msg.missing_keys))
             
             if self.cfg.mode == 'finetune':
+                time.sleep(3)
+                print("Performing finetuning step")
+                start_time = time.time()
                 for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
-                    print("ft epoch: {}".format(epoch))
+                    # print("ft epoch: {}".format(epoch))
                     self.finetune(rank, cls_net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
                     # if len(val_dataset) > 0:
                     #     self.validate(rank, cls_net, val_loader, criterion, logs)
+                print("Time taken for finetuning: {}".format(time.time() - start_time))
             
             self.validate(rank, cls_net, test_loader, criterion, logs)
     
@@ -570,12 +570,12 @@ class MetaCPCLearner:
             logits = net(features)
             loss = criterion(logits, targets)
             
-            if rank == 0:
-                if batch_idx % self.cfg.log_freq == 0:
-                    acc1, acc3 = self.accuracy(logits, targets, topk=(1, 3))
-                    log = f'Epoch [{epoch+1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) '
-                    log += f'Loss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(3): {acc3.item():.2f}'
-                    print(log)
+            # if rank == 0:
+            #     if batch_idx % self.cfg.log_freq == 0:
+            #         acc1, acc3 = self.accuracy(logits, targets, topk=(1, 3))
+            #         log = f'Epoch [{epoch+1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) '
+            #         log += f'Loss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(3): {acc3.item():.2f}'
+            #         print(log)
             
             optimizer.zero_grad()
             loss.backward()
@@ -583,18 +583,15 @@ class MetaCPCLearner:
     
     def meta_train(self, rank, net, support, criterion, log_internals=False, logs=None):
         fast_weights = list(net.parameters())
-        print("??")
         for i in range(self.cfg.task_steps):
-            print("???")
             s_logits, s_targets = net(support, fast_weights)
             s_loss = criterion(s_logits, s_targets)
-            print("????")
             grad = torch.autograd.grad(s_loss, fast_weights)
             fast_weights = list(map(lambda p: p[1] - self.cfg.task_lr * p[0], zip(grad, fast_weights)))
             
-            if log_internals and rank == 0:
-                acc1, acc3 = self.accuracy(s_logits, s_targets, topk=(1, 3))
-                print(f'\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {s_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(3): {acc3.item():.2f}')
+            # if log_internals and rank == 0:
+            #     acc1, acc3 = self.accuracy(s_logits, s_targets, topk=(1, 3))
+            #     print(f'\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {s_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(3): {acc3.item():.2f}')
         
         return fast_weights
     
