@@ -15,6 +15,7 @@ def run(args):
     CONFIG_PATH = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main_hps/{args.dataset}/{args.pretext}/finetune/'
 
     folders = os.listdir(CONFIG_PATH)
+    assert(len(folders) == 18)
 
     for folder in folders:
         res[folder] = {}
