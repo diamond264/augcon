@@ -468,7 +468,7 @@ class MetaCPCLearner:
             
             if self.cfg.mode == 'finetune':
                 for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
-                        
+                    print("ft epoch: {}".format(epoch))
                     self.finetune(rank, cls_net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
                     # if len(val_dataset) > 0:
                     #     self.validate(rank, cls_net, val_loader, criterion, logs)
