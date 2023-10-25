@@ -453,6 +453,7 @@ class MetaCPCLearner:
                 net.zero_grad()
                 support = [e[0] for e in meta_train_dataset]
                 support = torch.stack(support, dim=0)
+                print("?")
                 enc_parameters = self.meta_train(rank, net, support, criterion, log_internals=True, logs=logs)
             else:
                 enc_parameters = list(net.parameters())
