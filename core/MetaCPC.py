@@ -48,6 +48,7 @@ class Encoder(nn.Module):
             w, b = vars[idx], vars[idx+1]
             idx += 2
             x = F.conv1d(x, w, b, self.strides[i])
+            print(f'1 block{i}')
             x = F.relu(x, True)
             x = F.dropout(x, 0.2)
             
