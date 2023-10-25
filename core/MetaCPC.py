@@ -38,11 +38,13 @@ class Encoder(nn.Module):
             self.vars.append(b)
             
     def forward(self, x, vars=None):
+        print("00")
         if vars is None:
             vars = self.vars
-        
+        print("01")
         idx = 0
         for i in range(self.num_blocks):
+            print(f'0 block{i}')
             w, b = vars[idx], vars[idx+1]
             idx += 2
             x = F.conv1d(x, w, b, self.strides[i])
