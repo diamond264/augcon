@@ -226,22 +226,9 @@ class MetaAutoEncoderLearner:
     def __init__(self, cfg, gpu, logger):
         self.cfg = cfg
         self.gpu = gpu
-        self.logger = logger
         
     def run(self, train_dataset, val_dataset, test_dataset):
-        num_gpus = len(self.gpu)
-        logs = mp.Manager().list([])
-        self.logger.info("Executing SimCLR")
-        self.logger.info("Logs are skipped during training")
-        if num_gpus > 1:
-            mp.spawn(self.main_worker,
-                     args=(num_gpus, train_dataset, val_dataset, test_dataset, logs),
-                     nprocs=num_gpus)
-        else:
-            self.main_worker(0, 1, train_dataset, val_dataset, test_dataset, logs)
-        
-        for log in logs:
-            self.logger.info(log)
+        self.main_worker(0, 1, train_dataset, val_dataset, test_dataset, None)
     
     def main_worker(self, rank, world_size, train_dataset, val_dataset, test_dataset, logs):
         # Model initialization
