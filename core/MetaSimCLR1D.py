@@ -314,8 +314,8 @@ class MetaSimCLR1DLearner:
                 shuffled_idx = torch.randperm(len(meta_train_dataset))
                 meta_train_dataset = torch.utils.data.Subset(meta_train_dataset, shuffled_idx)
                     
-                support = [e[1] for e in meta_train_dataset]
-                pos_support = [e[2] for e in meta_train_dataset]
+                support = [e[0] for e in meta_train_dataset]
+                pos_support = [e[1] for e in meta_train_dataset]
                 support = torch.stack(support, dim=0)
                 pos_support = torch.stack(pos_support, dim=0)
                 time.sleep(3)

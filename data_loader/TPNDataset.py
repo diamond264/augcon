@@ -33,44 +33,44 @@ class TPNDataset(Dataset):
     def generate_labels(self, x):
         label = [0] * 8
         
-        # noise:
-        choice = np.random.choice(2, 1, p=[0.5, 0.5])[0]
-        x = tpn_noise(x, choice)
-        label[NOISE_POS] = choice
+        # # noise:
+        # choice = np.random.choice(2, 1, p=[0.5, 0.5])[0]
+        # x = tpn_noise(x, choice)
+        # label[NOISE_POS] = choice
         
-        # scale:
-        choice = np.random.choice(2, 1, p=[0.5, 0.5])[0]
-        x = tpn_scale(x, choice)
-        label[SCALE_POS] = choice
+        # # scale:
+        # choice = np.random.choice(2, 1, p=[0.5, 0.5])[0]
+        # x = tpn_scale(x, choice)
+        # label[SCALE_POS] = choice
         
-        # rotate:
-        choice = np.random.choice(2, 1, p=[0.5, 0.5])[0]
-        x = tpn_rotate(x, choice)
-        label[ROTATE_POS] = choice
+        # # rotate:
+        # choice = np.random.choice(2, 1, p=[0.5, 0.5])[0]
+        # x = tpn_rotate(x, choice)
+        # label[ROTATE_POS] = choice
         
-        # negate:
-        choice = np.random.choice(2, 1, p=[0.5, 0.5])[0]
-        x = tpn_negate(x, choice)
-        label[NEGATE_POS] = choice
+        # # negate:
+        # choice = np.random.choice(2, 1, p=[0.5, 0.5])[0]
+        # x = tpn_negate(x, choice)
+        # label[NEGATE_POS] = choice
         
-        # time_reversal:
-        choice = np.random.choice(2, 1, p=[0.5, 0.5])[0]
-        x = tpn_flip(x, choice)
-        label[FLIP_POS] = choice
+        # # time_reversal:
+        # choice = np.random.choice(2, 1, p=[0.5, 0.5])[0]
+        # x = tpn_flip(x, choice)
+        # label[FLIP_POS] = choice
         
-        # permutation:
-        choice = np.random.choice(2, 1, p=[0.5, 0.5])[0]
-        x = tpn_permute(x, choice)
-        label[PERMUTE_POS] = choice
+        # # permutation:
+        # choice = np.random.choice(2, 1, p=[0.5, 0.5])[0]
+        # x = tpn_permute(x, choice)
+        # label[PERMUTE_POS] = choice
         
-        # time_warped:
-        choice = np.random.choice(2, 1, p=[0.5, 0.5])[0]
-        x = tpn_time_warp(x, choice)
-        label[TIME_WARP_POS] = choice
+        # # time_warped:
+        # choice = np.random.choice(2, 1, p=[0.5, 0.5])[0]
+        # x = tpn_time_warp(x, choice)
+        # label[TIME_WARP_POS] = choice
         
-        # channel_shuffle:
-        choice = np.random.choice(2, 1, p=[0.5, 0.5])[0]
-        x = tpn_channel_shuffle(x, choice)
-        label[CHANNEL_SHUFFLE_POS] = choice
+        # # channel_shuffle:
+        # choice = np.random.choice(2, 1, p=[0.5, 0.5])[0]
+        # x = tpn_channel_shuffle(x, choice)
+        # label[CHANNEL_SHUFFLE_POS] = choice
         
         return x.copy(), label

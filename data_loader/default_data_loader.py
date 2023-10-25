@@ -23,24 +23,24 @@ class DefaultDataLoader():
             self.val_dataset = pickle.load(f)
     
     def get_datasets(self):
-        if self.cfg.pretext == 'tpn' or \
-           self.cfg.pretext == 'metatpn':
-            self.train_dataset = TPNDataset(self.train_dataset)
-            self.val_dataset = TPNDataset(self.val_dataset)
-            self.test_dataset = TPNDataset(self.test_dataset)
-        if self.cfg.pretext == 'cpc' or \
-            self.cfg.pretext == 'metacpc' or\
-            self.cfg.pretext == 'autoencoder' or\
-            self.cfg.pretext == 'metaautoencoder':
-            self.train_dataset = CPCDataset(self.train_dataset)
-            self.val_dataset = CPCDataset(self.val_dataset)
-            self.test_dataset = CPCDataset(self.test_dataset)
-        if self.cfg.pretext == 'simclr' or \
-            self.cfg.pretext == 'metasimclr' or \
-            self.cfg.pretext == 'simsiam' or \
-            self.cfg.pretext == 'metasimsiam':
-            self.train_dataset = SimCLRDataset(self.train_dataset)
-            self.val_dataset = SimCLRDataset(self.val_dataset)
-            self.test_dataset = SimCLRDataset(self.test_dataset)
+        # if self.cfg.pretext == 'tpn' or \
+        #    self.cfg.pretext == 'metatpn':
+        self.train_dataset = TPNDataset(self.train_dataset)
+        self.val_dataset = TPNDataset(self.val_dataset)
+        self.test_dataset = TPNDataset(self.test_dataset)
+        # if self.cfg.pretext == 'cpc' or \
+        #     self.cfg.pretext == 'metacpc' or\
+        #     self.cfg.pretext == 'autoencoder' or\
+        #     self.cfg.pretext == 'metaautoencoder':
+        #     self.train_dataset = CPCDataset(self.train_dataset)
+        #     self.val_dataset = CPCDataset(self.val_dataset)
+        #     self.test_dataset = CPCDataset(self.test_dataset)
+        # if self.cfg.pretext == 'simclr' or \
+        #     self.cfg.pretext == 'metasimclr' or \
+        #     self.cfg.pretext == 'simsiam' or \
+        #     self.cfg.pretext == 'metasimsiam':
+        #     self.train_dataset = SimCLRDataset(self.train_dataset)
+        #     self.val_dataset = SimCLRDataset(self.val_dataset)
+        #     self.test_dataset = SimCLRDataset(self.test_dataset)
         
         return self.train_dataset, self.val_dataset, self.test_dataset

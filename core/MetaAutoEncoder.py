@@ -310,7 +310,7 @@ class MetaAutoEncoderLearner:
         
         for batch_idx, data in enumerate(train_loader):
             features = data[0]
-            targets = data[1]
+            targets = data[3]
             
             logits = net(features)
             loss = criterion(logits, targets)
@@ -337,7 +337,7 @@ class MetaAutoEncoderLearner:
         total_loss = 0
         for batch_idx, data in enumerate(val_loader):
             features = data[0]
-            targets = data[1]
+            targets = data[3]
             
             logits = net(features)
             total_loss += criterion(logits, targets)
