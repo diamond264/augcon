@@ -120,15 +120,7 @@ reg_lambda: 0
 log_meta_train: false
 
 pretext: {PRETEXT}
-enc_blocks: 4
-kernel_sizes: [8, 4, 2, 1]
-strides: [4, 2, 1, 1]
-agg_blocks: 5
-z_dim: 256
-pooling: mean
-pred_steps: 12
-n_negatives: 15
-offset: 4
+z_dim: 128
 neg_per_domain: false
 
 mlp: false
