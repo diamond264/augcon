@@ -1,5 +1,6 @@
 import os
 import random
+import time
 import sklearn.metrics as metrics
 
 from collections import defaultdict
@@ -227,157 +228,31 @@ class MetaTPNLearner:
     def __init__(self, cfg, gpu, logger):
         self.cfg = cfg
         self.gpu = gpu
-        self.logger = logger
 
     def run(self, train_dataset, val_dataset, test_dataset):
-        num_gpus = len(self.gpu)
-        logs = mp.Manager().list([])
-        self.logger.info("Executing Meta TPN")
-        self.logger.info("Logs are skipped during training")
-        if num_gpus > 1:
-            mp.spawn(self.main_worker,
-                     args=(num_gpus, train_dataset, val_dataset, test_dataset, logs),
-                     nprocs=num_gpus)
-        else:
-            self.main_worker(0, 1, train_dataset, val_dataset, test_dataset, logs)
-
-        for log in logs:
-            self.logger.info(log)
+        self.main_worker(0, 1, train_dataset, val_dataset, test_dataset, None)
 
     def main_worker(self, rank, world_size, train_dataset, val_dataset, test_dataset, logs):
         # Model initialization
         net = TPNNet(self.cfg.input_channels, self.cfg.z_dim, self.cfg.out_dim)
         if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
             cls_net = TPNClassifier(self.cfg.input_channels, self.cfg.z_dim, self.cfg.num_cls, self.cfg.mlp)
-
-        # DDP setting
-        if world_size > 1:
-            dist.init_process_group(backend='nccl',
-                                    init_method=self.cfg.dist_url,
-                                    world_size=world_size,
-                                    rank=rank)
-            torch.cuda.set_device(rank)
-            net.cuda()
-            net = nn.parallel.DistributedDataParallel(net, device_ids=[rank], find_unused_parameters=True)
-            if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
-                cls_net.cuda()
-                cls_net = nn.parallel.DistributedDataParallel(cls_net, device_ids=[rank], find_unused_parameters=True)
-
-            train_sampler = DistributedSampler(train_dataset)
-            if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
-                if len(val_dataset) > 0:
-                    val_sampler = DistributedSampler(val_dataset)
-                test_sampler = DistributedSampler(test_dataset)
-                train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size // world_size,
-                                          shuffle=False, sampler=train_sampler, num_workers=self.cfg.num_workers,
-                                          drop_last=True)
-                if len(val_dataset) > 0:
-                    val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size // world_size,
-                                            shuffle=False, sampler=val_sampler, num_workers=self.cfg.num_workers,
-                                            drop_last=True)
-                test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size // world_size,
-                                         shuffle=False, sampler=test_sampler, num_workers=self.cfg.num_workers,
-                                         drop_last=True)
-            meta_train_dataset = torch.utils.data.Subset(train_dataset, list(train_sampler))
-            if rank == 0:
-                log = "DDP is used for training - training {} instances for each worker".format(
-                    len(list(train_sampler)))
-                logs.append(log)
-                print(log)
-        else:
-            torch.cuda.set_device(rank)
-            net.cuda()
-            if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
-                cls_net.cuda()
-            if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
-                train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size,
-                                          shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
-                if len(val_dataset) > 0:
-                    val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size,
-                                            shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
-                test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size,
-                                         shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
-            meta_train_dataset = train_dataset
-            if rank == 0:
-                log = "Single GPU is used for training - training {} instances for each worker".format(
-                    len(train_dataset))
-                logs.append(log)
-                print(log)
+        
+        if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
+            train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size,
+                                        shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
+            if len(val_dataset) > 0:
+                val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size,
+                                        shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
+            test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size,
+                                        shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
+        meta_train_dataset = train_dataset
 
         # Define criterion
         if self.cfg.criterion == 'crossentropy':
-            criterion = nn.CrossEntropyLoss().cuda()
-
-        if self.cfg.mode == 'pretrain':
-            parameters = list(filter(lambda p: p.requires_grad, net.parameters()))
-            if self.cfg.optimizer == 'sgd':
-                optimizer = torch.optim.SGD(parameters, self.cfg.lr,
-                                            momentum=self.cfg.momentum,
-                                            weight_decay=self.cfg.wd)
-            elif self.cfg.optimizer == 'adam':
-                optimizer = torch.optim.Adam(parameters, self.cfg.lr,
-                                             weight_decay=self.cfg.wd)
-
-            # Load checkpoint if exists
-            if os.path.isfile(self.cfg.resume):
-                if rank == 0:
-                    log = "Loading state_dict from checkpoint - {}".format(self.cfg.resume)
-                    logs.append(log)
-                    print(log)
-                loc = 'cuda:{}'.format(rank)
-                state = torch.load(self.cfg.resume, map_location=loc)
-                for k, v in list(state['state_dict'].items()):
-                    if world_size > 1:
-                        k = 'module.' + k
-                    if k in net.state_dict().keys():
-                        state['state_dict'][k] = v
-
-                net.load_state_dict(state['state_dict'], strict=False)
-                optimizer.load_state_dict(state['optimizer'])
-                self.cfg.start_epoch = state['epoch']
-
-            # Pretrain
-            indices_per_domain = self.split_per_domain(meta_train_dataset)
-
-            for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
-                if world_size > 1:
-                    train_sampler.set_epoch(epoch)
-
-                supports = []
-                queries = []
-                target_supports = []
-                target_queries = []
-                if self.cfg.task_per_domain:
-                    supports, queries, target_supports, target_queries = self.gen_per_domain_tasks(
-                        meta_train_dataset,
-                        indices_per_domain,
-                        self.cfg.task_size,
-                        self.cfg.num_task
-                    )
-                if self.cfg.multi_cond_num_task > 0:
-                    multi_cond_supports, multi_cond_queries, target_multi_cond_supports, target_multi_cond_queries = self.gen_random_tasks(
-                        meta_train_dataset,
-                        self.cfg.task_size,
-                        self.cfg.multi_cond_num_task
-                    )
-                    supports = supports + multi_cond_supports
-                    queries = queries + multi_cond_queries
-                    target_supports = target_supports + target_multi_cond_supports
-                    target_queries = target_queries + target_multi_cond_queries
-
-                self.pretrain(rank, net, supports, queries, target_supports, target_queries, criterion, optimizer, epoch, self.cfg.epochs, logs)
-
-                if rank == 0 and (epoch + 1) % self.cfg.save_freq == 0:
-                    ckpt_dir = self.cfg.ckpt_dir
-                    ckpt_filename = 'checkpoint_{:04d}.pth.tar'.format(epoch)
-                    ckpt_filename = os.path.join(ckpt_dir, ckpt_filename)
-                    if world_size > 1:
-                        state_dict = net.module.state_dict()
-                    else:
-                        state_dict = net.state_dict()
-                    self.save_checkpoint(ckpt_filename, epoch, state_dict, optimizer)
-
-        elif self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
+            criterion = nn.CrossEntropyLoss()
+            
+        if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
             # Freeze the encoder part of the network
             if self.cfg.freeze:
                 for name, param in cls_net.named_parameters():
@@ -396,347 +271,67 @@ class MetaTPNLearner:
                 optimizer = torch.optim.Adam(parameters, self.cfg.lr,
                                              weight_decay=self.cfg.wd)
 
-            if not os.path.isfile(self.cfg.resume):
-                # Load pretrained model to net
-                if os.path.isfile(self.cfg.pretrained):
-                    if rank == 0:
-                        log = "Loading pretrained model from checkpoint - {}".format(self.cfg.pretrained)
-                        logs.append(log)
-                        print(log)
-                    loc = 'cuda:{}'.format(rank)
-                    state = torch.load(self.cfg.pretrained, map_location=loc)['state_dict']
-
-                    if self.cfg.no_vars:
-                        enc_dict = {}
-                        for idx, k in enumerate(list(net.state_dict().keys())):
-                            if not 'classifier' in k:
-                                enc_dict[k] = list(state.items())[idx][1]
-                        msg = net.load_state_dict(enc_dict, strict=False)
-                    else:
-                        for k, v in list(state.items()):
-                            if world_size > 1:
-                                k = 'module.' + k
-                            if k in net.state_dict().keys():
-                                state[k] = v
-
-                        msg = net.load_state_dict(state, strict=False)
-                    if rank == 0:
-                        log = "Missing keys: {}".format(msg.missing_keys)
-                        logs.append(log)
-                        print(log)
-
-                # Meta-train the pretrained model for domain adaptation
-                if self.cfg.domain_adaptation:
-                    if rank == 0:
-                        log = "Perform domain adaptation step"
-                        logs.append(log)
-                        print(log)
-                    if world_size > 1:
-                        train_sampler.set_epoch(0)
-                    # net.train()
-                    net.zero_grad()
-                    support = []
-                    target_support = []
-                    for e in meta_train_dataset:
-                        support.append(e[1])
-                        target_support.append(torch.tensor(e[2]))
-                    support = torch.stack(support, dim=0).cuda()
-                    target_support = torch.stack(target_support, dim=0).cuda()
-                    enc_parameters = self.meta_train(rank, net, support, target_support, criterion, log_internals=True, logs=logs)
-                else:
-                    enc_parameters = list(net.parameters())
-
-                if rank == 0:
-                    log = "Loading encoder parameters to the classifier"
-                    logs.append(log)
-                    print(log)
-
-                enc_dict = {}
-                for idx, k in enumerate(list(cls_net.state_dict().keys())):
-                    if not 'classifier' in k:
-                        enc_dict[k] = enc_parameters[idx]
-
-                msg = cls_net.load_state_dict(enc_dict, strict=False)
-                if rank == 0:
-                    log = "Missing keys: {}".format(msg.missing_keys)
-                    logs.append(log)
-                    print(log)
-            else:
-                if rank == 0:
-                    log = "Loading state_dict from checkpoint - {}".format(self.cfg.resume)
-                    logs.append(log)
-                    print(log)
-                loc = 'cuda:{}'.format(rank)
-                state = torch.load(self.cfg.resume, map_location=loc)
-                for k, v in list(state['state_dict'].items()):
-                    if world_size > 1:
-                        k = 'module.' + k
-                    if k in cls_net.state_dict().keys():
-                        state['state_dict'][k] = v
-
-                cls_net.load_state_dict(state['state_dict'], strict=False)
-                optimizer.load_state_dict(state['optimizer'])
-                self.cfg.start_epoch = state['epoch']
-
-            if self.cfg.mode == 'finetune':
-                for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
-                    if world_size > 1:
-                        train_sampler.set_epoch(epoch)
-                        if len(val_dataset) > 0:
-                            val_sampler.set_epoch(epoch)
-                        test_sampler.set_epoch(epoch)
-
-                    self.finetune(rank, cls_net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
-                    # if len(val_dataset) > 0:
-                    #     self.validate(rank, cls_net, val_loader, criterion, logs)
-
-                    if rank == 0 and (epoch + 1) % self.cfg.save_freq == 0:
-                        ckpt_dir = self.cfg.ckpt_dir
-                        ckpt_filename = 'checkpoint_{:04d}.pth.tar'.format(epoch)
-                        ckpt_filename = os.path.join(ckpt_dir, ckpt_filename)
-                        state_dict = cls_net.state_dict()
-                        if world_size > 1:
-                            for k, v in list(state_dict.items()):
-                                if 'module.' in k:
-                                    state_dict[k.replace('module.', '')] = v
-                                    del state_dict[k]
-                        self.save_checkpoint(ckpt_filename, epoch, state_dict, optimizer)
-
-            self.validate_finetune(rank, cls_net, test_loader, criterion, logs)
-
-    def split_per_domain(self, dataset):
-        indices_per_domain = defaultdict(list)
-        for i, d in enumerate(dataset):
-            indices_per_domain[d[4].item()].append(i)
-        return indices_per_domain
-
-    def split_per_class(self, dataset):
-        indices_per_class = defaultdict(list)
-        opp_indices_per_class = defaultdict(list)
-        for i, d in enumerate(dataset):
-            indices_per_class[d[3].item()].append(i)
-        for cls, indices in indices_per_class.items():
-            for i in range(len(dataset)):
-                if i not in indices:
-                    opp_indices_per_class[cls].append(i)
-        return indices_per_class, opp_indices_per_class
-
-    def gen_per_domain_tasks(self, dataset, indices_per_domain, task_size, num_task=None):
-        supports = []
-        queries = []
-        target_supports = []
-        target_queries = []
-
-        with torch.no_grad():
-            if num_task is None:
-                for _, indices in indices_per_domain.items():
-                    random.shuffle(indices)
-                    suppor_ = torch.utils.data.Subset(dataset, indices[:task_size])
-                    target_support = []
-                    support = []
-                    for data in support_:
-                        target_support.append(torch.tensor(data[2]))
-                        support.append(data[1])
-                    support = torch.stack(support, dim=0)
-                    target_support = torch.stack(target_support, dim=0)
-
-                    query_ = torch.utils.data.Subset(dataset, indices[task_size:2 * task_size])
-                    target_query = []
-                    query = []
-                    for data in query_:
-                        target_query.append(torch.tensor(data[2]))
-                        query.append(data[1])
-                    print(query)
-                    query = torch.stack(query, dim=0)
-                    target_query = torch.stack(target_query, dim=0)
-                    supports.append(support)
-                    queries.append(query)
-                    target_supports.append(target_support)
-                    target_queries.append(target_query)
-            else:
-                for _ in range(num_task):
-                    dom = random.choice(list(indices_per_domain.keys()))
-                    indices = indices_per_domain[dom]
-                    random.shuffle(indices)
-                    support_ = torch.utils.data.Subset(dataset, indices[:task_size])
-                    support = []
-                    target_support = []
-
-                    for e in support_:
-                        support.append(e[1])
-                        target_support.append(torch.tensor(e[2]))
-                    if len(support) >= task_size:
-                        support = support[:task_size]
-                        target_support = target_support[:task_size]
-                    else:
-                        support = support * (task_size // len(support)) + support[:task_size % len(support)]
-                        target_support = target_support * (task_size // len(target_support)) + target_support[:task_size % len(target_support)]
-                        # supplementary = random.sample(support, task_size % len(support))
-                        # selected_indices = [support.index(element) for element in supplementary]
-                        # support = support * (task_size // len(support)) + supplementary
-                        # target_support = target_support * (task_size // len(target_support)) + [target_support[index] for index in selected_indices]
-
-                    support = torch.stack(support, dim=0)
-                    target_support = torch.stack(target_support, dim=0)
-                    # print(target_support)
-                    # print(target_support.shape)
-
-                    # query = torch.utils.data.Subset(dataset, indices[task_size:2*task_size])
-                    query_ = torch.utils.data.Subset(dataset, indices[task_size:2*task_size])
-                    query = []
-                    target_query = []
-                    for e in query_:
-                        query.append(e[1])
-                        target_query.append(torch.tensor(e[2]))
-                    if len(query) >= task_size:
-                        query = query[:task_size]
-                        target_query = target_query[:task_size]
-                    else:
-                        query = query * (task_size // len(query)) + query[:task_size % len(query)]
-                        target_query = target_query * (task_size // len(target_query)) + target_query[:task_size % len(target_query)]
-                        # supplementary = random.sample(query, task_size % len(query))
-                        # selected_indices = [query.index(element) for element in supplementary]
-                        # query = query * (task_size // len(query)) + supplementary
-                        # target_query = target_query * (task_size // len(target_query)) + [target_query[index] for index in selected_indices]
-
-                    query = torch.stack(query, dim=0)
-                    target_query = torch.stack(target_query, dim=0)
-                    supports.append(support)
-                    queries.append(query)
-                    target_supports.append(target_support)
-                    target_queries.append(target_query)
-
-        return supports, queries, target_supports, target_queries
-
-    def gen_random_tasks(self, dataset, task_size, num_task):
-        supports = []
-        queries = []
-        target_supports = []
-        target_queries = []
-        with torch.no_grad():
-            indices = list(range(len(dataset)))
-            random.shuffle(indices)
-
-            st = 0
-            ed = task_size
-            for _ in range(num_task):
-                support_ = torch.utils.data.Subset(dataset, indices[st:ed])
-                target_support = []
+            # Meta-train the pretrained model for domain adaptation
+            if self.cfg.domain_adaptation:
+                net.zero_grad()
                 support = []
-                for data in support_:
-                    target_support.append(torch.tensor(data[2]))
-                    support.append(data[1])
+                target_support = []
+                for e in meta_train_dataset:
+                    support.append(e[1])
+                    target_support.append(torch.tensor(e[2]))
                 support = torch.stack(support, dim=0)
                 target_support = torch.stack(target_support, dim=0)
-                st += task_size
-                ed += task_size
+                time.sleep(3)
+                print("Perform domain adaptation step")
+                start_time = time.time()
+                enc_parameters = self.meta_train(rank, net, support, target_support, criterion, log_internals=True, logs=logs)
+                print("Time taken for meta-training: {}".format(time.time() - start_time))
+                time.sleep(3)
+            else:
+                enc_parameters = list(net.parameters())
+            print("Loading encoder parameters to the classifier")
 
-                query_ = torch.utils.data.Subset(dataset, indices[st:ed])
-                target_query = []
-                query = []
-                for data in query_:
-                    target_query.append(torch.tensor(data[2]))
-                    query.append(data[1])
-                query = torch.stack(query, dim=0)
-                target_query = torch.stack(target_query, dim=0)
-                st += task_size
-                ed += task_size
-                supports.append(support)
-                queries.append(query)
-                target_supports.append(target_support)
-                target_queries.append(target_query)
+            enc_dict = {}
+            for idx, k in enumerate(list(cls_net.state_dict().keys())):
+                if not 'classifier' in k:
+                    enc_dict[k] = enc_parameters[idx]
 
-        return supports, queries, target_supports, target_queries
+            msg = cls_net.load_state_dict(enc_dict, strict=False)
+            print("Missing keys: {}".format(msg.missing_keys))
 
-    def pretrain(self, rank, net, supports, queries, target_supports, target_queries, criterion, optimizer, epoch, num_epochs, logs):
-        net.train()
-        net.zero_grad()
-
-        log = f'Epoch [{epoch + 1}/{num_epochs}]'
-        if rank == 0:
-            logs.append(log)
-            print(log)
-
-        q_losses = []
-        for task_idx in range(len(supports)):
-            support = supports[task_idx].cuda().float()
-            query = queries[task_idx].cuda()
-            target_support = target_supports[task_idx].cuda().long()
-            target_query = target_queries[task_idx].cuda()
-
-            fast_weights = self.meta_train(rank, net, support, target_support, criterion, log_internals=self.cfg.log_meta_train,
-                                           logs=logs)
-
-            q_logits = net(query, fast_weights)
-            q_loss = 0
-            for i in range(len(q_logits)):
-                q_loss += criterion(q_logits[i], target_query[:,i])
-            q_loss /= len(q_logits)
-            q_losses.append(q_loss)
-
-            if task_idx % self.cfg.log_freq == 0:
-                q_logits = torch.cat(q_logits)
-                target_query = torch.transpose(target_query, 0, 1)
-                target_query = target_query.reshape(-1, )
-                acc1, acc3 = self.accuracy(q_logits, target_query, topk=(1, 1))
-
-                log = f'\t({task_idx}/{len(supports)}) '
-                log += f'Loss: {q_loss.item():.4f}, Acc(1): {acc1.item():.2f}'
-                if rank == 0:
-                    logs.append(log)
-                    print(log)
-
-        q_losses = torch.stack(q_losses, dim=0)
-        loss = torch.sum(q_losses)
-        # reg_term = torch.sum((q_losses - torch.mean(q_losses))**2)
-        # loss += reg_term * self.cfg.reg_lambda
-        loss = loss/len(supports)
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+            if self.cfg.mode == 'finetune':
+                time.sleep(3)
+                print("Performing finetuning step")
+                start_time = time.time()
+                for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
+                    self.finetune(rank, cls_net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
+                print("Time taken for finetuning: {}".format(time.time() - start_time))
+                
+            self.validate_finetune(rank, cls_net, test_loader, criterion, logs)
 
     def meta_train(self, rank, net, support, target_support, criterion, log_internals=False, logs=None):
         fast_weights = list(net.parameters())
         for i in range(self.cfg.task_steps):
             s_logits = net(support, fast_weights)
             s_loss = 0
-            # print(support.shape, target_support.shape, s_logits[0].shape)
             for j in range(len(s_logits)):
-                # print(s_logits[i].shape)
-                # print(target_support[:,i].shape)
                 s_loss += criterion(s_logits[j], target_support[:,j])
             s_loss /= len(s_logits)
 
             grad = torch.autograd.grad(s_loss, fast_weights)
             fast_weights = list(map(lambda p: p[1] - self.cfg.task_lr * p[0], zip(grad, fast_weights)))
 
-            if log_internals and rank == 0:
-                TPN_pred = torch.cat(s_logits)
-                TPN_target = torch.transpose(target_support, 0, 1)
-                TPN_target = TPN_target.reshape(-1, )
-                acc1, acc3 = self.accuracy(TPN_pred, TPN_target, topk=(1, 1))
-                log = f'\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {s_loss.item():.4f}, Acc(1): {acc1.item():.2f}'
-                logs.append(log)
-                print(log)
-
         return fast_weights
+    
     def finetune(self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs):
         net.eval()
 
         for batch_idx, data in enumerate(train_loader):
-            features = data[0].cuda()
-            targets = data[3].cuda()
+            features = data[0]
+            targets = data[3]
 
             logits = net(features)
             loss = criterion(logits, targets)
-
-            if rank == 0:
-                if batch_idx % self.cfg.log_freq == 0:
-                    acc1, acc5 = self.accuracy(logits, targets, topk=(1, 5))
-                    log = f'Epoch [{epoch + 1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) '
-                    log += f'\tLoss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
-                    logs.append(log)
-                    print(log)
 
             optimizer.zero_grad()
             loss.backward()
@@ -751,8 +346,8 @@ class MetaTPNLearner:
         total_loss = 0
         with torch.no_grad():
             for batch_idx, data in enumerate(val_loader):
-                features = data[0].cuda()
-                targets = data[3].cuda()
+                features = data[0]
+                targets = data[3]
 
                 logits = net(features)
 
@@ -766,24 +361,6 @@ class MetaTPNLearner:
                 acc1, acc5 = self.accuracy(total_logits, total_targets, topk=(1, 5))
                 f1, recall, precision = self.scores(total_logits, total_targets)
             total_loss /= len(val_loader)
-
-            if rank == 0:
-                log = f'[Finetune] Validation Loss: {total_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
-                log += f', F1: {f1.item():.2f}, Recall: {recall.item():.2f}, Precision: {precision.item():.2f}'
-                logs.append(log)
-                print(log)
-
-    def save_checkpoint(self, filename, epoch, state_dict, optimizer):
-        directory = os.path.dirname(filename)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-
-        state = {
-            'epoch': epoch + 1,
-            'state_dict': state_dict,
-            'optimizer': optimizer.state_dict()
-        }
-        torch.save(state, filename)
 
     def accuracy(self, output, target, topk=(1,)):
         with torch.no_grad():

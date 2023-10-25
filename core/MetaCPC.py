@@ -425,27 +425,6 @@ class MetaCPCLearner:
             elif self.cfg.optimizer == 'adam':
                 optimizer = torch.optim.Adam(parameters, self.cfg.lr,
                                             weight_decay=self.cfg.wd)
-                
-            # Load pretrained model to net
-            if os.path.isfile(self.cfg.pretrained):
-                print("Loading pretrained model from checkpoint - {}".format(self.cfg.pretrained))
-                state = torch.load(self.cfg.pretrained)['state_dict']
-                
-                if self.cfg.no_vars:
-                    enc_dict = {}
-                    for idx, k in enumerate(list(net.state_dict().keys())):
-                        if not 'classifier' in k:
-                            enc_dict[k] = list(state.items())[idx][1]
-                    msg = net.load_state_dict(enc_dict, strict=False)
-                else:
-                    for k, v in list(state.items()):
-                        if world_size > 1:
-                            k = 'module.' + k
-                        if k in net.state_dict().keys():
-                            state[k] = v
-                    
-                    msg = net.load_state_dict(state, strict=False)
-                print("Missing keys: {}".format(msg.missing_keys))
             
             # Meta-train the pretrained model for domain adaptation
             if self.cfg.domain_adaptation:
@@ -484,81 +463,6 @@ class MetaCPCLearner:
                 print("Time taken for finetuning: {}".format(time.time() - start_time))
             
             self.validate(rank, cls_net, test_loader, criterion, logs)
-    
-    def split_per_domain(self, dataset):
-        indices_per_domain = defaultdict(list)
-        for i, d in enumerate(dataset):
-            indices_per_domain[d[2].item()].append(i)
-        return indices_per_domain
-    
-    def gen_per_domain_tasks(self, dataset, indices_per_domain, task_size, num_task=None):
-        supports = []
-        queries = []
-        
-        with torch.no_grad():
-            if num_task is None:
-                for _, indices in indices_per_domain.items():
-                    random.shuffle(indices)
-                    support = torch.utils.data.Subset(dataset, indices[:task_size])
-                    support = [e[0] for e in support]
-                    support = torch.stack(support, dim=0)
-                    
-                    query = torch.utils.data.Subset(dataset, indices[task_size:2*task_size])
-                    query = [e[0] for e in query]
-                    query = torch.stack(query, dim=0)
-                    supports.append(support)
-                    queries.append(query)
-            else:
-                for _ in range(num_task):
-                    dom = random.choice(list(indices_per_domain.keys()))
-                    indices = indices_per_domain[dom]
-                    # support = torch.utils.data.Subset(dataset, indices[:task_size])
-                    support = torch.utils.data.Subset(dataset, indices[:len(indices)//2])
-                    support = [e[0] for e in support]
-                    if len(support) >= task_size:
-                        support = random.sample(support, task_size)
-                    else:
-                        support = support * (task_size // len(support)) + random.sample(support, task_size % len(support))
-                    support = torch.stack(support, dim=0)
-                    
-                    # query = torch.utils.data.Subset(dataset, indices[task_size:2*task_size])
-                    query = torch.utils.data.Subset(dataset, indices[len(indices)//2:])                        
-                    query = [e[0] for e in query]
-                    if len(query) >= task_size:
-                        query = random.sample(query, task_size)
-                    else:
-                        query = query * (task_size // len(query)) + random.sample(query, task_size % len(query))
-                    query = torch.stack(query, dim=0)
-                    supports.append(support)
-                    queries.append(query)
-        
-        return supports, queries
-
-    def gen_random_tasks(self, dataset, task_size, num_task):
-        supports = []
-        queries = []
-        with torch.no_grad():
-            indices = list(range(len(dataset)))
-            random.shuffle(indices)
-            
-            st = 0
-            ed = task_size
-            for _ in range(num_task):
-                support = torch.utils.data.Subset(dataset, indices[st:ed])
-                support = [e[0] for e in support]
-                support = torch.stack(support, dim=0)
-                st += task_size
-                ed += task_size
-                
-                query = torch.utils.data.Subset(dataset, indices[st:ed])
-                query = [e[0] for e in query]
-                query = torch.stack(query, dim=0)
-                st += task_size
-                ed += task_size
-                supports.append(support)
-                queries.append(query)
-            
-        return supports, queries
     
     def finetune(self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs):
         net.eval()
