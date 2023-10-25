@@ -28,6 +28,10 @@ def parse(input, output=None):
             accumulated_cpu = 0
             accumulated_mem = 0
     
+    # resample from 2Hz to 1Hz (by averaging)
+    # average every two rows
+    df = df.groupby(df.index // 2).mean()
+    
     if output is not None:
         df.to_csv(output, index=False)
     
