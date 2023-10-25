@@ -25,9 +25,8 @@ def run(args):
     config_path = f'{CONFIG_PATH}/{args.shot}shot/'
     data_path = f'{DATA_PATH}/{args.shot}shot'
     
-    criterion = ''
+    criterion = 'crossentropy'
     if args.pretext == 'cpc' or args.pretext == 'metacpc':
-        criterion = 'crossentropy'
         learning_config = f'''
 pretext: {pretext}
 # FOR CPC
@@ -40,6 +39,27 @@ pooling: mean
 pred_steps: 12
 n_negatives: 15
 offset: 4
+'''
+    if args.pretext == 'autoencoder' or args.pretext == 'metaautoencoder':
+        learning_config = f'''
+pretext: {pretext}
+# FOR AUTOENCODER
+z_dim: 128
+'''
+    if args.pretext == 'simclr' or args.pretext == 'metasimclr':
+        learning_config = f'''
+pretext: {pretext}
+# FOR SIMCLR
+out_dim: 50
+T: 0.1
+z_dim: 96
+'''
+    if args.pretext == 'tpn' or args.pretext == 'metatpn':
+        learning_config = f'''
+pretext: {pretext}
+# FOR TPN
+out_dim: 2
+z_dim: 96
 '''
     
     config = f'''### On-device finetuning config
@@ -76,6 +96,7 @@ reg_lambda: 0
 no_vars: true
 mlp: false
 freeze: {'false' if args.unfreeze else 'true'}
+neg_per_domain: false
 
 {learning_config}
 '''
