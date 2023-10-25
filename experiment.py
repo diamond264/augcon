@@ -77,13 +77,13 @@ class Experiment:
         elif self.cfg.pretext == 'metasimsiam':
             learner = MetaSimSiam1DLearner(self.cfg, None, self.logger)
         else:
-            self.logger.warning('Pretext task not supported')
+            print('Pretext task not supported')
         
         # Loading dataset
         if self.cfg.mode == 'finetune': episodes = self.cfg.episodes
         else: episodes = 1
         for episode in range(episodes):
-            self.logger.info(f'================= Episode {episode} =================')
+            print(f'================= Episode {episode} =================')
             default_data_loader = DefaultDataLoader(self.cfg, self.logger)
             train_dataset, val_dataset, test_dataset = default_data_loader.get_datasets()
 
