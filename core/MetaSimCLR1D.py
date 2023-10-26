@@ -573,8 +573,8 @@ class MetaSimCLR1DLearner:
                     
                 elif self.cfg.mode == 'finetune':
                     self.finetune(rank, net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
-                    if len(val_dataset) > 0:
-                        self.validate_finetune(rank, net, val_loader, criterion, logs)
+                    # if len(val_dataset) > 0:
+                    #     self.validate_finetune(rank, net, val_loader, criterion, logs)
                 
                 if rank == 0 and (epoch+1) % self.cfg.save_freq == 0:
                     ckpt_dir = self.cfg.ckpt_dir

@@ -1,13 +1,13 @@
 import os
 from glob import glob
 
-PRETEXT = 'simclr'
+PRETEXT = 'tpn'
 PRETRAIN_CRITERION = 'crossentropy'
 PRETRAIN_HPS = {
-    'ichar': {'lr': 0.001, 'wd': 0.0001, 'bs': 1024//8},
-    'hhar': {'lr': 0.001, 'wd': 0.0, 'bs': 1024//8},
-    'pamap2': {'lr': 0.0005, 'wd': 0.0001, 'bs': 1024//8},
-    'dsa': {'lr': 0.001, 'wd': 0.0001, 'bs': 1024//8}
+    'ichar': {'lr': 0.0005, 'wd': 0.0, 'bs': 64},
+    'hhar': {'lr': 0.0005, 'wd': 0.0, 'bs': 128},	
+    'pamap2': {'lr': 0.0005, 'wd': 0.0, 'bs': 64},
+    'dsa': {'lr': 0.0005, 'wd': 0.0, 'bs': 128}
 }
 
 DATASETS = ['ichar', 'hhar', 'pamap2', 'dsa']
@@ -26,7 +26,6 @@ NUM_CLS = {'ichar': 9,
 CONFIG_PATH = '/mnt/sting/hjyoon/projects/aaa/configs/imwut/main_eval'
 MODEL_PATH = '/mnt/sting/hjyoon/projects/aaa/models/imwut/main_eval'
 
-
 def gen_pretrain_config():
     for dataset in DATASETS:
         data_path = DATA_PATH[dataset]
@@ -36,37 +35,37 @@ def gen_pretrain_config():
         gpu = 0
         for domain in domains:
             port = 8367 + gpu
-            pretrain_config_path = f'{CONFIG_PATH}/{dataset}/{PRETEXT}/pretrain_target/gpu{gpu}_{domain}.yaml'
+            pretrain_config_path = f'{CONFIG_PATH}/{dataset}/{PRETEXT}/pretrain/gpu{gpu}_{domain}.yaml'
             print(f'Generating {pretrain_config_path}')
 
-            pretrain_path = f'{data_path}{domain}/pretrain_target'
+            pretrain_path = f'{data_path}{domain}/pretrain'
             num_cls = NUM_CLS[dataset]
             epochs = 100
             lr, wd, bs = param['lr'], param['wd'], param['bs']
-            pretrain_ckpt_path = f'{MODEL_PATH}/{dataset}/{PRETEXT}/pretrain_target/{domain}'
+            pretrain_ckpt_path = f'{MODEL_PATH}/{dataset}/{PRETEXT}/pretrain/{domain}'
             pretrain_config = get_config('pretrain', [gpu], port, dataset,
-                                         pretrain_path, num_cls, PRETRAIN_CRITERION,
-                                         epochs, bs, lr, wd, pretrain_ckpt_path, None, True, 0)
-
+                                            pretrain_path, num_cls, PRETRAIN_CRITERION,
+                                            epochs, bs, lr, wd, pretrain_ckpt_path, None, True, 0)
+            
             os.makedirs(os.path.dirname(pretrain_config_path), exist_ok=True)
             with open(pretrain_config_path, 'w') as f:
                 f.write(pretrain_config)
-
-            for seed in [0, 1, 2, 3, 4]:
-                for shot in [10]:
-                    for freeze in [True]:
+            
+            for seed in [0,1,2,3,4]:
+                for shot in [1, 2, 5, 10, 20]:
+                    for freeze in [True, False]:
                         setting = 'linear' if freeze else 'endtoend'
-                        finetune_config_path = f'{CONFIG_PATH}/{dataset}/{PRETEXT}/finetune_target/{shot}shot/{setting}/seed{seed}/gpu{gpu}_{domain}.yaml'
+                        finetune_config_path = f'{CONFIG_PATH}/{dataset}/{PRETEXT}/finetune/{shot}shot/{setting}/seed{seed}/gpu{gpu}_{domain}.yaml'
                         print(f'Generating {finetune_config_path}')
-
+                        
                         finetune_path = f'{data_path}{domain}/finetune/{shot}shot/target'
-                        finetune_ckpt_path = f'{MODEL_PATH}/{dataset}/{PRETEXT}/finetune_target/{shot}shot/{setting}/seed{seed}/{domain}'
+                        finetune_ckpt_path = f'{MODEL_PATH}/{dataset}/{PRETEXT}/finetune/{shot}shot/{setting}/seed{seed}/{domain}'
                         pretrained_path = f'{pretrain_ckpt_path}/checkpoint_0099.pth.tar'
                         finetune_config = get_config('finetune', [gpu], port, dataset,
-                                                    finetune_path, num_cls, 'crossentropy',
-                                                    50, 4, 0.001, 0.0, finetune_ckpt_path,
-                                                    pretrained_path, freeze, seed)
-
+                                                        finetune_path, num_cls, 'crossentropy',
+                                                        50, 4, 0.001, 0.0, finetune_ckpt_path,
+                                                        pretrained_path, freeze, seed)
+                        
                         os.makedirs(os.path.dirname(finetune_config_path), exist_ok=True)
                         with open(finetune_config_path, 'w') as f:
                             f.write(finetune_config)
@@ -105,9 +104,8 @@ ckpt_dir: {ckpt_path}
 log_freq: 100
 save_freq: 10
 
-pretext: {PRETEXT if mode == 'pretrain' else 'meta' + PRETEXT}
-out_dim: 50
-T: 0.1
+pretext: {PRETEXT if mode == 'pretrain' else 'meta'+PRETEXT}
+out_dim: 2
 z_dim: 96
 neg_per_domain: false
 
@@ -120,7 +118,6 @@ reg_lambda: -1
 no_vars: true
 '''
     return config
-
 
 if __name__ == '__main__':
     gen_pretrain_config()
