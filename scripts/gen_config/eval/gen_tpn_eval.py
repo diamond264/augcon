@@ -1,13 +1,13 @@
 import os
 from glob import glob
 
-PRETEXT = 'autoencoder'
-PRETRAIN_CRITERION = 'mse'
+PRETEXT = 'tpn'
+PRETRAIN_CRITERION = 'crossentropy'
 PRETRAIN_HPS = {
-    'ichar': {'lr': 0.001, 'wd': 0.0, 'bs': 64},
-    'hhar': {'lr': 0.001, 'wd': 0.0, 'bs': 64},	
-    'pamap2': {'lr': 0.0001, 'wd': 0.0, 'bs': 128},
-    'dsa': {'lr': 0.0005, 'wd': 0.0, 'bs': 64}
+    'ichar': {'lr': 0.0005, 'wd': 0.0, 'bs': 64},
+    'hhar': {'lr': 0.0005, 'wd': 0.0, 'bs': 128},	
+    'pamap2': {'lr': 0.0005, 'wd': 0.0, 'bs': 64},
+    'dsa': {'lr': 0.0005, 'wd': 0.0, 'bs': 128}
 }
 
 DATASETS = ['ichar', 'hhar', 'pamap2', 'dsa']
@@ -38,7 +38,7 @@ def gen_pretrain_config():
             pretrain_config_path = f'{CONFIG_PATH}/{dataset}/{PRETEXT}/pretrain/gpu{gpu}_{domain}.yaml'
             print(f'Generating {pretrain_config_path}')
 
-            pretrain_path = f'{data_path}pretrain'
+            pretrain_path = f'{data_path}{domain}/pretrain'
             num_cls = NUM_CLS[dataset]
             epochs = 100
             lr, wd, bs = param['lr'], param['wd'], param['bs']
@@ -57,7 +57,7 @@ def gen_pretrain_config():
                     finetune_config_path = f'{CONFIG_PATH}/{dataset}/{PRETEXT}/finetune/{shot}shot/{setting}/gpu{gpu}_{domain}.yaml'
                     print(f'Generating {finetune_config_path}')
                     
-                    finetune_path = f'{data_path}finetune/{shot}shot/target'
+                    finetune_path = f'{data_path}{domain}/finetune/{shot}shot/target'
                     finetune_ckpt_path = f'{MODEL_PATH}/{dataset}/{PRETEXT}/finetune/{shot}shot/{setting}/{domain}'
                     pretrained_path = f'{pretrain_ckpt_path}/checkpoint_0099.pth.tar'
                     finetune_config = get_config('finetune', [gpu], port, dataset,
@@ -104,7 +104,8 @@ log_freq: 100
 save_freq: 10
 
 pretext: {PRETEXT if mode == 'pretrain' else 'meta'+PRETEXT}
-z_dim: 128
+out_dim: 2
+z_dim: 96
 neg_per_domain: false
 
 mlp: {'true' if mode == 'pretrain' else 'false'}
