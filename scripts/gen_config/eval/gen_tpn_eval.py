@@ -45,7 +45,7 @@ def gen_pretrain_config():
             pretrain_ckpt_path = f'{MODEL_PATH}/{dataset}/{PRETEXT}/pretrain/{domain}'
             pretrain_config = get_config('pretrain', [gpu], port, dataset,
                                             pretrain_path, num_cls, PRETRAIN_CRITERION,
-                                            epochs, bs, lr, wd, pretrain_ckpt_path, None, True)
+                                            epochs, bs, lr, wd, pretrain_ckpt_path, None, True, 0)
             
             os.makedirs(os.path.dirname(pretrain_config_path), exist_ok=True)
             with open(pretrain_config_path, 'w') as f:
