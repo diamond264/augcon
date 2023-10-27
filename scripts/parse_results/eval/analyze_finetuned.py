@@ -5,7 +5,7 @@ from glob import glob
 # /mnt/sting/hjyoon/projects/aaa/configs/imwut/main_eval/ichar/simclr/finetune/5shot/linear/seed0
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--pretext', type=str, default='simclr')
+    # parser.add_argument('--pretext', type=str, default='simclr')
     parser.add_argument('--dataset', type=str, default='ichar')
     parser.add_argument('--shot', type=int, default=10)
     parser.add_argument('--seed', type=int, default=0)
@@ -19,6 +19,8 @@ domain_num = {
     'pamap2' : 3,
     'dsa' : 5
 }
+
+PRETEXTS = ["cpc", "simclr", "tpn", "autoencoder"]
 
 SORT_LIST_ICHAR = [
     'WA0002-bkkim',
@@ -70,50 +72,53 @@ SORT_LIST_DSA = [
     'LL'
 ]
 def run(args):
-    res = {}
-    CONFIG_PATH = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main_eval/{args.dataset}/{args.pretext}/finetune/{args.shot}shot/{args.setting}/seed{args.seed}'
+    res = {"cpc" : {}, "simclr" : {}, "tpn" : {}, "autoencoder" : {}}
+    for pretext in PRETEXTS:
+        CONFIG_PATH = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main_eval/{args.dataset}/{pretext}/finetune/{args.shot}shot/{args.setting}/seed{args.seed}'
 
-    files = glob(os.path.join(CONFIG_PATH, '*.log'))
-    print(files)
-    # assert(len(files) == domain_num[args.dataset])
+        files = glob(os.path.join(CONFIG_PATH, '*.log'))
+        print(files)
+        # assert(len(files) == domain_num[args.dataset])
 
-    for log in files:
-        domain = log.split('target_')[1].split('.yaml')[0]
-        # print(domain)
-        with open(log, 'r') as f:
-            content = f.read()
-            content = content.split('\n')[-2]
-            # print(content)
-            try:
-                score = float(content.split('F1: ')[1].split(', ')[0])
-                res[domain] = score
-            except:
-                res[domain] = -1
+        for log in files:
+            domain = log.split('target_')[1].split('.yaml')[0]
+            # print(domain)
+            with open(log, 'r') as f:
+                content = f.read()
+                content = content.split('\n')[-2]
+                # print(content)
+                try:
+                    score = float(content.split('F1: ')[1].split(', ')[0])
+                    res[pretext][domain] = score
+                except:
+                    res[pretext][domain] = -1
 
-    if 'ichar' in CONFIG_PATH:
-        sort_list = SORT_LIST_ICHAR
-        sort_list = [f'domain_{d}' for d in sort_list]
-    elif 'hhar' in CONFIG_PATH:
-        sort_list = SORT_LIST_HHAR
-        sort_list = [f'user_{d.split("-")[0]}_model_{d.split("-")[1]}' for d in sort_list]
-    elif 'pamap2' in CONFIG_PATH:
-        sort_list = SORT_LIST_PAMAP2
-        sort_list = [f'domain_{d}' for d in sort_list]
-    elif 'dsa' in CONFIG_PATH:
-        sort_list = SORT_LIST_DSA
-        sort_list = [f'domain_{d}' for d in sort_list]
-    print(sort_list)
-    print(res)
-    res_sorted = {}
-    for d in sort_list:
-        if d in res:
-            res_sorted[d] = res[d]
-    res = res_sorted
+        if 'ichar' in CONFIG_PATH:
+            sort_list = SORT_LIST_ICHAR
+            sort_list = [f'domain_{d}' for d in sort_list]
+        elif 'hhar' in CONFIG_PATH:
+            sort_list = SORT_LIST_HHAR
+            sort_list = [f'user_{d.split("-")[0]}_model_{d.split("-")[1]}' for d in sort_list]
+        elif 'pamap2' in CONFIG_PATH:
+            sort_list = SORT_LIST_PAMAP2
+            sort_list = [f'domain_{d}' for d in sort_list]
+        elif 'dsa' in CONFIG_PATH:
+            sort_list = SORT_LIST_DSA
+            sort_list = [f'domain_{d}' for d in sort_list]
+        print(sort_list)
+        print(res)
+        res_sorted = {}
+        for d in sort_list:
+            if d in res[pretext]:
+                res_sorted[d] = res[pretext][d]
+        res[pretext] = res_sorted
 
-    for d, s in res.items():
-        print(d)
-    for d, s in res.items():
-        print(s)
+    for d1, d2, d3, d4 in zip(res[PRETEXTS[0]].keys(), res[PRETEXTS[1]].keys(), res[PRETEXTS[2]].keys(),
+                              res[PRETEXTS[3]].keys()):
+        print(f'{d1} {d2} {d3} {d4}')
+    print("------------------------------------------------")
+    for s1, s2, s3, s4 in zip(res[PRETEXTS[0]].values(), res[PRETEXTS[1]].values(), res[PRETEXTS[2]].values(), res[PRETEXTS[3]].values()):
+        print(f'{s1} {s2} {s3} {s4}')
 
 
 
