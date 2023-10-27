@@ -6,7 +6,7 @@ from glob import glob
 def parse_args():
     parser = argparse.ArgumentParser()
     # parser.add_argument('--pretext', type=str, default='simclr')
-    parser.add_argument('--dataset', type=str, default='ichar')
+    parser.add_argument('--dataset', type=str, default='i')
     parser.add_argument('--shot', type=int, default=10)
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--setting', type=str, default='endtoend')
@@ -73,11 +73,20 @@ SORT_LIST_DSA = [
 ]
 def run(args):
     res = {"cpc" : {}, "simclr" : {}, "tpn" : {}, "autoencoder" : {}}
+
+    if args.dataset.startswith('i'):
+        dataset = 'ichar'
+    elif args.dataset.startswith('h'):
+        dataset = 'hhar'
+    elif args.dataset.startswith('p'):
+        dataset = 'pamap2'
+    elif args.dataset.startswith('d'):
+        dataset = 'dsa'
+
     for pretext in PRETEXTS:
-        CONFIG_PATH = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main_eval/{args.dataset}/{pretext}/finetune/{args.shot}shot/{args.setting}/seed{args.seed}'
+        CONFIG_PATH = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main_eval/{dataset}/{pretext}/finetune/{args.shot}shot/{args.setting}/seed{args.seed}'
 
         files = glob(os.path.join(CONFIG_PATH, '*.log'))
-        print(files)
         # assert(len(files) == domain_num[args.dataset])
 
         for log in files:
@@ -105,14 +114,13 @@ def run(args):
         elif 'dsa' in CONFIG_PATH:
             sort_list = SORT_LIST_DSA
             sort_list = [f'domain_{d}' for d in sort_list]
-        print(sort_list)
-        print(res)
         res_sorted = {}
         for d in sort_list:
             if d in res[pretext]:
                 res_sorted[d] = res[pretext][d]
         res[pretext] = res_sorted
 
+    print(f'{PRETEXTS[0]} {PRETEXTS[1]} {PRETEXTS[2]} {PRETEXTS[3]}')
     for d1, d2, d3, d4 in zip(res[PRETEXTS[0]].keys(), res[PRETEXTS[1]].keys(), res[PRETEXTS[2]].keys(),
                               res[PRETEXTS[3]].keys()):
         print(f'{d1} {d2} {d3} {d4}')
