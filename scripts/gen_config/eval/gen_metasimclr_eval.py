@@ -65,7 +65,7 @@ def gen_pretrain_config():
                         pretrained_path = f'{pretrain_ckpt_path}/checkpoint_4999.pth.tar'
                         finetune_config = get_config('finetune', [gpu], port, dataset,
                                                     finetune_path, num_cls, 'crossentropy',
-                                                    50, 4, 0.001, 0.0, tlr,
+                                                    100, 4, 0.001, 0.0, tlr,
                                                     finetune_ckpt_path,
                                                     pretrained_path, freeze, seed)
 

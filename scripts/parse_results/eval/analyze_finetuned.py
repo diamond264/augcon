@@ -5,11 +5,11 @@ from glob import glob
 # /mnt/sting/hjyoon/projects/aaa/configs/imwut/main_eval/ichar/simclr/finetune/5shot/linear/seed0
 def parse_args():
     parser = argparse.ArgumentParser()
-    # parser.add_argument('--pretext', type=str, default='simclr')
+    parser.add_argument('--pretext', type=str, choices=['base', 'ours'], default='base')
     parser.add_argument('--dataset', type=str, default='i')
     parser.add_argument('--shot', type=int, default=10)
     parser.add_argument('--seed', type=int, default=0)
-    parser.add_argument('--setting', type=str, default='endtoend')
+    parser.add_argument('--setting', type=str, default='linear')
     args = parser.parse_args()
     return args
 
@@ -21,6 +21,10 @@ domain_num = {
 }
 
 PRETEXTS = ["cpc", "simclr", "tpn", "autoencoder"]
+OURPRETEXTS = ["metacpc", "metasimclr", "metatpn", "metaautoencoder"]
+#todo
+SETSIMCLRPRETEXTS = [None]
+DARLINGPRETEXTS = [None]
 
 SORT_LIST_ICHAR = [
     'WA0002-bkkim',
@@ -72,7 +76,12 @@ SORT_LIST_DSA = [
     'LL'
 ]
 def run(args):
-    res = {"cpc" : {}, "simclr" : {}, "tpn" : {}, "autoencoder" : {}}
+    if args.pretext == 'base':
+        PRETEXT = PRETEXTS
+    elif args.pretext == 'ours':
+        PRETEXT = OURPRETEXTS
+    elif args.pretext == 'set-simclr':
+        pass
 
     if args.dataset.startswith('i'):
         dataset = 'ichar'
@@ -83,10 +92,14 @@ def run(args):
     elif args.dataset.startswith('d'):
         dataset = 'dsa'
 
-    for pretext in PRETEXTS:
+    res = {}
+    for pretext in PRETEXT:
+        res[pretext] = {}
         CONFIG_PATH = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main_eval/{dataset}/{pretext}/finetune/{args.shot}shot/{args.setting}/seed{args.seed}'
 
         files = glob(os.path.join(CONFIG_PATH, '*.log'))
+        # if len(files) == 0:
+        #     break
         # assert(len(files) == domain_num[args.dataset])
 
         for log in files:
@@ -120,13 +133,30 @@ def run(args):
                 res_sorted[d] = res[pretext][d]
         res[pretext] = res_sorted
 
-    print(f'{PRETEXTS[0]} {PRETEXTS[1]} {PRETEXTS[2]} {PRETEXTS[3]}')
-    for d1, d2, d3, d4 in zip(res[PRETEXTS[0]].keys(), res[PRETEXTS[1]].keys(), res[PRETEXTS[2]].keys(),
-                              res[PRETEXTS[3]].keys()):
-        print(f'{d1} {d2} {d3} {d4}')
-    print("------------------------------------------------")
-    for s1, s2, s3, s4 in zip(res[PRETEXTS[0]].values(), res[PRETEXTS[1]].values(), res[PRETEXTS[2]].values(), res[PRETEXTS[3]].values()):
-        print(f'{s1} {s2} {s3} {s4}')
+    if args.pretext == 'base':
+        print(f'{PRETEXT[0]} {PRETEXT[1]} {PRETEXT[2]} {PRETEXT[3]}')
+        for d1, d2, d3, d4 in zip(res[PRETEXT[0]].keys(), res[PRETEXT[1]].keys(), res[PRETEXT[2]].keys(),
+                                  res[PRETEXT[3]].keys()):
+            print(f'{d1} {d2} {d3} {d4}')
+        print("------------------------------------------------")
+        for s1, s2, s3, s4 in zip(res[PRETEXT[0]].values(), res[PRETEXT[1]].values(), res[PRETEXT[2]].values(),
+                                  res[PRETEXT[3]].values()):
+            print(f'{s1} {s2} {s3} {s4}')
+    elif args.pretext == 'ours':
+        print(f'{PRETEXT[0]} {PRETEXT[1]} {PRETEXT[2]} {PRETEXT[3]}')
+        for d2, d3, d4 in zip(res[PRETEXT[1]].keys(), res[PRETEXT[2]].keys(),
+                                  res[PRETEXT[3]].keys()):
+            print(f'{d2} {d3} {d4}')
+        print("------------------------------------------------")
+        for s2, s3, s4 in zip(res[PRETEXT[1]].values(), res[PRETEXT[2]].values(),
+                                  res[PRETEXT[3]].values()):
+            print(f'{s2} {s3} {s4}')
+
+
+
+    # for s in res[PRETEXT[1]].values():
+    #     print(f'{s}')
+
 
 
 

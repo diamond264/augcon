@@ -39,9 +39,10 @@ def run(args):
         dataset = 'pamap2'
     elif args.dataset.startswith('d'):
         dataset = 'dsa'
-    CONFIG_PATH = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main_hps_finetune_fix/{dataset}/{args.pretext}/finetune/{args.setting}'
+    CONFIG_PATH = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main_hps_finetune_fix/{dataset}/{args.pretext}/finetune/'
 
     folders = os.listdir(CONFIG_PATH)
+    print(folders)
 
     for folder in folders:
         res[folder] = {}
@@ -86,5 +87,5 @@ def run(args):
 if __name__ == '__main__':
     args = parse_args()
     run(args)
-
-    #  python scripts/parse_results/imwut_exp/analyze_finetuned_hps.py --pretext tpn --setting endtoend --dataset i
+    # /mnt/sting/hjyoon/projects/aaa/configs/imwut/main_hps_finetune/pamap2/metatpn/finetune/lr0.1_ep0999/gpu6_target_domain_chest.yaml
+    #  python scripts/parse_results/imwut_exp/analyze_finetuned_hps_meta.py --pretext metaautoencoder --dataset h
