@@ -4,7 +4,7 @@ from glob import glob
 PRETEXT = 'metacpc'
 PRETRAIN_CRITERION = 'crossentropy'
 PRETRAIN_HPS = {
-    'lr': [0.001, 0.005, 0.01],
+    'lr': [0.0005, 0.005, 0.001],
     'wd': [0.0, 0.0001],
     'tlr': [0.005, 0.001, 0.01],
 }
