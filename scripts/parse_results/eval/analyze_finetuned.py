@@ -75,6 +75,8 @@ SORT_LIST_DSA = [
     'RL',
     'LL'
 ]
+
+DATASET = ['ichar', 'hhar', 'pamap2', 'dsa']
 def run(args):
     if args.pretext == 'base':
         PRETEXT = PRETEXTS
@@ -92,69 +94,69 @@ def run(args):
     elif args.dataset.startswith('d'):
         dataset = 'dsa'
 
-    res = {}
-    for pretext in PRETEXT:
-        res[pretext] = {}
-        CONFIG_PATH = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main_eval/{dataset}/{pretext}/finetune/{args.shot}shot/{args.setting}/seed{args.seed}'
+    for dataset in DATASET:
+        res = {}
+        for pretext in PRETEXT:
+            res[pretext] = {}
+            CONFIG_PATH = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main_eval/{dataset}/{pretext}/finetune/{args.shot}shot/{args.setting}/seed{args.seed}'
 
-        files = glob(os.path.join(CONFIG_PATH, '*.log'))
-        # if len(files) == 0:
-        #     break
-        # assert(len(files) == domain_num[args.dataset])
+            files = glob(os.path.join(CONFIG_PATH, '*.log'))
+            # if len(files) == 0:
+            #     break
+            # assert(len(files) == domain_num[args.dataset])
 
-        for log in files:
-            domain = log.split('target_')[1].split('.yaml')[0]
-            # print(domain)
-            with open(log, 'r') as f:
-                content = f.read()
-                content = content.split('\n')[-2]
-                # print(content)
-                try:
-                    score = float(content.split('F1: ')[1].split(', ')[0])
-                    res[pretext][domain] = score
-                except:
-                    res[pretext][domain] = -1
+            for log in files:
+                domain = log.split('target_')[1].split('.yaml')[0]
+                # print(domain)
+                with open(log, 'r') as f:
+                    content = f.read()
+                    content = content.split('\n')[-2]
+                    # print(content)
+                    try:
+                        score = float(content.split('F1: ')[1].split(', ')[0])
+                        res[pretext][domain] = score
+                    except:
+                        res[pretext][domain] = -1
 
-        if 'ichar' in CONFIG_PATH:
-            sort_list = SORT_LIST_ICHAR
-            sort_list = [f'domain_{d}' for d in sort_list]
-        elif 'hhar' in CONFIG_PATH:
-            sort_list = SORT_LIST_HHAR
-            sort_list = [f'user_{d.split("-")[0]}_model_{d.split("-")[1]}' for d in sort_list]
-        elif 'pamap2' in CONFIG_PATH:
-            sort_list = SORT_LIST_PAMAP2
-            sort_list = [f'domain_{d}' for d in sort_list]
-        elif 'dsa' in CONFIG_PATH:
-            sort_list = SORT_LIST_DSA
-            sort_list = [f'domain_{d}' for d in sort_list]
-        res_sorted = {}
-        for d in sort_list:
-            if d in res[pretext]:
-                res_sorted[d] = res[pretext][d]
-        res[pretext] = res_sorted
+            if 'ichar' in CONFIG_PATH:
+                sort_list = SORT_LIST_ICHAR
+                sort_list = [f'domain_{d}' for d in sort_list]
+            elif 'hhar' in CONFIG_PATH:
+                sort_list = SORT_LIST_HHAR
+                sort_list = [f'user_{d.split("-")[0]}_model_{d.split("-")[1]}' for d in sort_list]
+            elif 'pamap2' in CONFIG_PATH:
+                sort_list = SORT_LIST_PAMAP2
+                sort_list = [f'domain_{d}' for d in sort_list]
+            elif 'dsa' in CONFIG_PATH:
+                sort_list = SORT_LIST_DSA
+                sort_list = [f'domain_{d}' for d in sort_list]
+            res_sorted = {}
+            for d in sort_list:
+                if d in res[pretext]:
+                    res_sorted[d] = res[pretext][d]
+            res[pretext] = res_sorted
 
-    if args.pretext == 'base':
-        print(f'{PRETEXT[0]} {PRETEXT[1]} {PRETEXT[2]} {PRETEXT[3]}')
-        for d1, d2, d3, d4 in zip(res[PRETEXT[0]].keys(), res[PRETEXT[1]].keys(), res[PRETEXT[2]].keys(),
-                                  res[PRETEXT[3]].keys()):
-            print(f'{d1} {d2} {d3} {d4}')
-        print("------------------------------------------------")
-        for s1, s2, s3, s4 in zip(res[PRETEXT[0]].values(), res[PRETEXT[1]].values(), res[PRETEXT[2]].values(),
-                                  res[PRETEXT[3]].values()):
-            print(f'{s1} {s2} {s3} {s4}')
-    elif args.pretext == 'ours':
-        print(f'{PRETEXT[0]} {PRETEXT[1]} {PRETEXT[2]} {PRETEXT[3]}')
-        for d2, d3, d4 in zip(res[PRETEXT[1]].keys(), res[PRETEXT[2]].keys(),
-                                  res[PRETEXT[3]].keys()):
-            print(f'{d2} {d3} {d4}')
-        print("------------------------------------------------")
-        for s2, s3, s4 in zip(res[PRETEXT[1]].values(), res[PRETEXT[2]].values(),
-                                  res[PRETEXT[3]].values()):
-            print(f'{s2} {s3} {s4}')
-
+        if args.pretext == 'base':
+            print(f'{PRETEXT[0]} {PRETEXT[1]} {PRETEXT[2]} {PRETEXT[3]}')
+            for d1, d2, d3, d4 in zip(res[PRETEXT[0]].keys(), res[PRETEXT[1]].keys(), res[PRETEXT[2]].keys(),
+                                      res[PRETEXT[3]].keys()):
+                print(f'{d1} {d2} {d3} {d4}')
+            print("------------------------------------------------")
+            for s1, s2, s3, s4 in zip(res[PRETEXT[0]].values(), res[PRETEXT[1]].values(), res[PRETEXT[2]].values(),
+                                      res[PRETEXT[3]].values()):
+                print(f'{s1} {s2} {s3} {s4}')
+        elif args.pretext == 'ours':
+            print(f'{PRETEXT[0]} {PRETEXT[1]} {PRETEXT[2]} {PRETEXT[3]}')
+            for d2, d3 in zip(res[PRETEXT[1]].keys(), res[PRETEXT[2]].keys()):
+                print(f'{d2} {d3}')
+                break
+            print("------------------------------------------------")
+            for s2, s3 in zip(res[PRETEXT[1]].values(), res[PRETEXT[2]].values()):
+                print(f'{s2} {s3}')
 
 
-    # for s in res[PRETEXT[1]].values():
+
+    # for s in res[PRETEXT[3]].values():
     #     print(f'{s}')
 
 
