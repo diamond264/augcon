@@ -9,7 +9,7 @@ fi
 # Directory containing your YAML files
 pretext="$1"
 shot="$2"
-seed="$2"
+seed="$3"
 
 # Loop through each .yaml file in the directory
 for config_file in /mnt/sting/hjyoon/projects/aaa/configs/imwut/main_eval/*/"$pretext"/finetune/"$shot"/*/"$seed"/*.yaml; do
