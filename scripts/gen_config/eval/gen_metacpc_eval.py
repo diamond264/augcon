@@ -66,7 +66,7 @@ def gen_pretrain_config():
                         ft_lr = 0.005 if freeze else 0.001
                         finetune_config = get_config('finetune', [gpu], port, dataset,
                                                         finetune_path, num_cls, 'crossentropy',
-                                                        50, 4, ft_lr, 0.0, tlr,
+                                                        20, 4, ft_lr, 0.0, tlr,
                                                         finetune_ckpt_path,
                                                         pretrained_path, freeze, seed)
 
