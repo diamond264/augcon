@@ -2,16 +2,16 @@
 
 # Check if the config directory argument is provided
 if [ $# -ne 2 ]; then
-  echo "Usage: $0 <pretext> <gpu>"
+  echo "Usage: $0 <pretext> <seed>"
   exit 1
 fi
 
 # Directory containing your YAML files
 pretext="$1"
-gpu="$2"
+seed="$2"
 
 # Loop through each .yaml file in the directory
-for config_file in /mnt/sting/hjyoon/projects/aaa/configs/imwut/main_eval/*/"$pretext"/finetune_target/*/*/*/"$gpu"*.yaml; do
+for config_file in /mnt/sting/hjyoon/projects/aaa/configs/imwut/main_eval/*/"$pretext"/finetune_target/*/*/"$seed"/*.yaml; do
   # Check if the file exists
   if [ -e "$config_file" ]; then
     # Run your Python script with the config file as an argument serially
