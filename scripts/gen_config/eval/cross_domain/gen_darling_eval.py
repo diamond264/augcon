@@ -51,13 +51,13 @@ def gen_pretrain_config():
             transfer_dataset = 'dsa'
             pretrain_path = '/mnt/sting/hjyoon/projects/cross/DSA/augcon_transfer'
         port = 8367 + pretrain_gpu
-        pretrain_config_path = f'{CONFIG_PATH}/{dataset}/{PRETEXT}/pretrain_transfer/gpu{pretrain_gpu}_{transfer_dataset}.yaml'
+        pretrain_config_path = f'{CONFIG_PATH}/{dataset}/darling/pretrain_transfer/gpu{pretrain_gpu}_{transfer_dataset}.yaml'
         print(f'Generating {pretrain_config_path}')
         
         num_cls = NUM_CLS[dataset]
         epochs = 100
         lr, wd, bs = param['lr'], param['wd'], param['bs']
-        pretrain_ckpt_path = f'{MODEL_PATH}/{dataset}/{PRETEXT}/pretrain_transfer/{transfer_dataset}'
+        pretrain_ckpt_path = f'{MODEL_PATH}/{dataset}/darling/pretrain_transfer/{transfer_dataset}'
         pretrain_config = get_config('pretrain', [pretrain_gpu], port, dataset,
                                         pretrain_path, num_cls, PRETRAIN_CRITERION,
                                         epochs, bs, lr, wd, pretrain_ckpt_path, None, True, 0)
