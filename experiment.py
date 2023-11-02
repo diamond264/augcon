@@ -94,7 +94,7 @@ class Experiment:
         # Meta learning methods
         elif self.cfg.pretext == 'metacpc':
             learner = MetaCPCLearner(self.cfg, self.gpu, self.logger)
-        elif self.cfg.pretext == 'metasimclr':
+        elif self.cfg.pretext in ['metasimclr', 'setsimclr']:
             learner = MetaSimCLR1DLearner(self.cfg, self.gpu, self.logger)
         elif self.cfg.pretext == 'metatpn':
             learner = MetaTPNLearner(self.cfg, self.gpu, self.logger)

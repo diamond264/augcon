@@ -38,7 +38,8 @@ class DefaultDataLoader():
         if self.cfg.pretext == 'simclr' or \
             self.cfg.pretext == 'metasimclr' or \
             self.cfg.pretext == 'simsiam' or \
-            self.cfg.pretext == 'metasimsiam':
+            self.cfg.pretext == 'metasimsiam'or \
+            self.cfg.pretext == 'setsimclr':
             self.train_dataset = SimCLRDataset(self.train_dataset)
             self.val_dataset = SimCLRDataset(self.val_dataset)
             self.test_dataset = SimCLRDataset(self.test_dataset)
