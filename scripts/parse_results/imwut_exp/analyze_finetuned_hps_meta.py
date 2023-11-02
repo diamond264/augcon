@@ -39,7 +39,7 @@ def run(args):
         dataset = 'pamap2'
     elif args.dataset.startswith('d'):
         dataset = 'dsa'
-    CONFIG_PATH = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main_hps_finetune_fix/{dataset}/{args.pretext}/finetune/'
+    CONFIG_PATH = f'/mnt/sting/hjyoon/projects/aaa/configs/imwut/main_hps/{dataset}/{args.pretext}/finetune/'
 
     folders = os.listdir(CONFIG_PATH)
     print(folders)
