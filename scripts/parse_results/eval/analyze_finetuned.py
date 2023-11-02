@@ -141,6 +141,7 @@ def run(args):
             for d1, d2, d3, d4 in zip(res[PRETEXT[0]].keys(), res[PRETEXT[1]].keys(), res[PRETEXT[2]].keys(),
                                       res[PRETEXT[3]].keys()):
                 print(f'{d1} {d2} {d3} {d4}')
+                break
             print("------------------------------------------------")
             for s1, s2, s3, s4 in zip(res[PRETEXT[0]].values(), res[PRETEXT[1]].values(), res[PRETEXT[2]].values(),
                                       res[PRETEXT[3]].values()):

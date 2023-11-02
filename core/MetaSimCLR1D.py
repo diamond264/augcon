@@ -380,7 +380,10 @@ class MetaSimCLR1DLearner:
                     logs.append(log)
                     print(log)
                 loc = 'cuda:{}'.format(rank)
-                state = torch.load(self.cfg.pretrained, map_location=loc)['state_dict']
+                if self.cfg.pretext == 'setsimclr':
+                    state = torch.load(self.cfg.pretrained, map_location=loc)
+                else:
+                    state = torch.load(self.cfg.pretrained, map_location=loc)['state_dict']
                 
                 # for k, v in list(state.items()):
                 #     if k.startswith('encoder.'):
