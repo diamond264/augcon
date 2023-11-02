@@ -53,6 +53,15 @@ SORT_LIST_PAMAP2 = [
     'ankle'
 ]
 
+SORT_LIST_DSA = [
+    'T',
+    'RA',
+    'LA',
+    'RL',
+    'LL'
+]
+
+
 def run(args):
     res = {}
     logs = glob(os.path.join(args.dir, '*.log'))
@@ -79,6 +88,9 @@ def run(args):
             sort_list = [f'user_{d.split("-")[0]}_model_{d.split("-")[1]}' for d in sort_list]
         elif 'pamap2' in args.dir:
             sort_list = SORT_LIST_PAMAP2
+            sort_list = [f'domain_{d}' for d in sort_list]
+        elif 'dsa' in args.dir:
+            sort_list = SORT_LIST_DSA
             sort_list = [f'domain_{d}' for d in sort_list]
         res_sorted = {}
         for d in sort_list:
