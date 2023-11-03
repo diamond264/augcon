@@ -11,11 +11,11 @@ pretext="$1"
 gpu="$2"
 
 # Loop through each .yaml file in the directory
-for config_file in /mnt/sting/hjyoon/projects/aaa/configs/imwut/main_eval/*/"$pretext"/finetune/*/*/*/"$gpu"*.yaml; do
+for config_file in /mnt/sting/hjyoon/projects/aaa/configs/imwut/main_eval/ichar/"$pretext"/finetune/*/*/seed0/*.yaml; do
   # Check if the file exists
   if [ -e "$config_file" ]; then
     # Run your Python script with the config file as an argument serially
-    ./experiment.py --config "$config_file"
+    ./experiment.py --config "$config_file" &
   fi
 done
 

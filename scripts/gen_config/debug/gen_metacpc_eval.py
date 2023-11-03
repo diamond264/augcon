@@ -4,10 +4,16 @@ from glob import glob
 PRETEXT = 'metacpc'
 PRETRAIN_CRITERION = 'crossentropy'
 PRETRAIN_HPS = {
+    'ichar': {'lr': 0.0005, 'wd': 0.0, 'tlr': 0.001},
+    'hhar': {'lr': 0.0005, 'wd': 0.0001, 'tlr': 0.001},
+    'pamap2': {'lr': 0.001, 'wd': 0.0001, 'tlr': 0.001},
+    'dsa': {'lr': 0.001, 'wd': 0.0001, 'tlr': 0.001},
+}
+PRETRAIN_HPS = {
     'ichar': {'lr': 0.001, 'wd': 0.0001, 'tlr': 0.005},
     'hhar': {'lr': 0.001, 'wd': 0.0001, 'tlr': 0.001},
     'pamap2': {'lr': 0.001, 'wd': 0.0001, 'tlr': 0.001},
-    'dsa': {'lr': 0.001, 'wd': 0.0001, 'tlr': 0.001},
+    'dsa': {'lr': 0.0005, 'wd': 0.0001, 'tlr': 0.001},
 }
 
 DATASETS = ['ichar', 'hhar', 'pamap2', 'dsa']
@@ -43,7 +49,7 @@ def gen_pretrain_config():
             num_cls = NUM_CLS[dataset]
             epochs = 5000
             lr, wd, tlr = param['lr'], param['wd'], param['tlr']
-            pretrain_ckpt_path = f'{MODEL_PATH}/{dataset}/{PRETEXT}/_prev_hps_pretrain/{domain}'
+            pretrain_ckpt_path = f'{MODEL_PATH}/{dataset}/{PRETEXT}/pretrain/{domain}'
             pretrain_config = get_config('pretrain', [gpu], port, dataset,
                                          pretrain_path, num_cls, PRETRAIN_CRITERION,
                                          epochs, -1, lr, wd, tlr,
@@ -58,8 +64,8 @@ def gen_pretrain_config():
 
                         finetune_path = f'{data_path}{domain}/finetune/{shot}shot/target'
                         finetune_ckpt_path = f'{MODEL_PATH}/{dataset}/{PRETEXT}/finetune/{shot}shot/{setting}/seed{seed}/{domain}'
-                        pretrained_path = f'{pretrain_ckpt_path}/checkpoint_4999.pth.tar'
-                        ft_lr = 0.001 if freeze else 0.0001
+                        pretrained_path = f'{pretrain_ckpt_path}/checkpoint_1999.pth.tar'
+                        ft_lr = 0.005 if freeze else 0.001
                         finetune_config = get_config('finetune', [gpu], port, dataset,
                                                         finetune_path, num_cls, 'crossentropy',
                                                         20, 4, ft_lr, 0.0, tlr,
