@@ -10,6 +10,19 @@ PRETRAIN_HPS = {
     'dsa': {'lr': 0.001, 'wd': 0.0001, 'tlr': 0.001},
 }
 
+EPOCHS = {
+    'target_domain_WA0002-bkkim': 3999,
+    'target_domain_PH0007-jskim': 3999,
+    'target_domain_WA0003-hskim': 4999,
+    'target_domain_PH0012-thanh': 2999,
+    'target_domain_WA4697-jhryu': 1999,
+    'target_domain_PH0014-wjlee': 2999,
+    'target_domain_PH0034-ykha': 1999,
+    'target_domain_PH0038-iygoo': 2999,
+    'target_domain_PH0041-hmkim': 2999,
+    'target_domain_PH0045-sjlee': 3999
+}
+
 DATASETS = ['ichar', 'hhar', 'pamap2', 'dsa']
 DATA_PATH = {
     'ichar': '/mnt/sting/hjyoon/projects/cross/ICHAR/augcon/',
@@ -62,7 +75,10 @@ def gen_pretrain_config():
 
                         finetune_path = f'{data_path}{domain}/finetune/{shot}shot/target'
                         finetune_ckpt_path = f'{MODEL_PATH}/{dataset}/{PRETEXT}/finetune/{shot}shot/{setting}/seed{seed}/{domain}'
-                        pretrained_path = f'{pretrain_ckpt_path}/checkpoint_4999.pth.tar'
+                        ep = 4999
+                        if domain in EPOCHS:
+                            ep = EPOCHS[domain]
+                        pretrained_path = f'{pretrain_ckpt_path}/checkpoint_{ep}.pth.tar'
                         ft_lr = 0.005 if freeze else 0.001
                         finetune_config = get_config('finetune', [gpu], port, dataset,
                                                         finetune_path, num_cls, 'crossentropy',

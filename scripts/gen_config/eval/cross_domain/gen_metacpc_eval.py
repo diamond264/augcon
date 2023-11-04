@@ -4,8 +4,8 @@ from glob import glob
 PRETEXT = 'metacpc'
 PRETRAIN_CRITERION = 'crossentropy'
 PRETRAIN_HPS = {
-    'ichar': {'lr': 0.0005, 'wd': 0.0, 'tlr': 0.001},
-    'hhar': {'lr': 0.0005, 'wd': 0.0001, 'tlr': 0.001},
+    'ichar': {'lr': 0.001, 'wd': 0.0001, 'tlr': 0.005},
+    'hhar': {'lr': 0.001, 'wd': 0.0001, 'tlr': 0.001},
     'pamap2': {'lr': 0.001, 'wd': 0.0001, 'tlr': 0.001},
     'dsa': {'lr': 0.001, 'wd': 0.0001, 'tlr': 0.001},
 }

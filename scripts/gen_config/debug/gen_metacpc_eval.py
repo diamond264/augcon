@@ -29,6 +29,19 @@ NUM_CLS = {'ichar': 9,
            'pamap2': 12,
            'dsa': 19}
 
+EPOCHS = {
+    'target_domain_WA0002-bkkim': 3999,
+    'target_domain_PH0007-jskim': 3999,
+    'target_domain_WA0003-hskim': 4999,
+    'target_domain_PH0012-thanh': 2999,
+    'target_domain_WA4697-jhryu': 1999,
+    'target_domain_PH0014-wjlee': 2999,
+    'target_domain_PH0034-ykha': 1999,
+    'target_domain_PH0038-iygoo': 2999,
+    'target_domain_PH0041-hmkim': 2999,
+    'target_domain_PH0045-sjlee': 3999
+}
+
 CONFIG_PATH = '/mnt/sting/hjyoon/projects/aaa/configs/imwut/main_eval'
 MODEL_PATH = '/mnt/sting/hjyoon/projects/aaa/models/imwut/main_eval'
 
@@ -64,7 +77,10 @@ def gen_pretrain_config():
 
                         finetune_path = f'{data_path}{domain}/finetune/{shot}shot/target'
                         finetune_ckpt_path = f'{MODEL_PATH}/{dataset}/{PRETEXT}/finetune/{shot}shot/{setting}/seed{seed}/{domain}'
-                        pretrained_path = f'{pretrain_ckpt_path}/checkpoint_4999.pth.tar'
+                        epoch = 4999
+                        if domain in EPOCHS.keys():
+                            epoch = EPOCHS[domain]
+                        pretrained_path = f'{pretrain_ckpt_path}/checkpoint_{epoch}.pth.tar'
                         ft_lr = 0.005 if freeze else 0.001
                         finetune_config = get_config('finetune', [gpu], port, dataset,
                                                         finetune_path, num_cls, 'crossentropy',
