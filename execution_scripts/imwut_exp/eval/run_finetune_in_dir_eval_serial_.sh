@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Check if the config directory argument is provided
-if [ $# -ne 4 ]; then
+if [ $# -ne 3 ]; then
   echo "Usage: $0 <pretext> <setting> <seed> <gpu>"
   exit 1
 fi
@@ -10,7 +10,6 @@ fi
 pretext="$1"
 setting="$2"
 seed="$3"
-gpu="$4"
 
 # Loop through each .yaml file in the directory
 for i in {0..7}; do
