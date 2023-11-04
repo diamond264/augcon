@@ -39,7 +39,7 @@ def gen_pretrain_config():
 
                         finetune_path = f'{data_path}{domain}/finetune/{shot}shot/target'
                         finetune_ckpt_path = f'{MODEL_PATH}/{dataset}/random/finetune/{shot}shot/{setting}/seed{seed}/{domain}'
-                        pretrained_path = f''
+                        pretrained_path = f'.'
                         ft_lr = 0.005 if freeze else 0.001
                         finetune_config = get_config('finetune', [gpu], port, dataset,
                                                         finetune_path, num_cls, 'crossentropy',
