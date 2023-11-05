@@ -44,7 +44,7 @@ class Encoder(nn.Module):
             idx += 2
             x = F.conv1d(x, w, b)
             x = F.relu(x, True)
-            # x = F.dropout(x, 0.1)
+            x = F.dropout(x, 0.1)
 
         x = F.adaptive_max_pool1d(x, 1)
         x = x.squeeze(-1)
