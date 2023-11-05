@@ -49,14 +49,10 @@ def gen_pretrain_config():
                                          epochs, -1, lr, wd, tlr,
                                          pretrain_ckpt_path, None, True, 0)
 
-            os.makedirs(os.path.dirname(pretrain_config_path), exist_ok=True)
-            with open(pretrain_config_path, 'w') as f:
-                f.write(pretrain_config)
-
             for seed in [0,1,2,3,4]:
                 for shot in [1, 2, 5, 10, 20]:
-                    for freeze in [True]:
-                        setting = 'linear' if freeze else 'endtoend'
+                    for freeze in [True, False]:
+                        setting = 'wo_adapt' if freeze else 'endtoend'
                         finetune_config_path = f'{CONFIG_PATH}/{dataset}/{PRETEXT}/finetune/{shot}shot/{setting}/seed{seed}/gpu{gpu}_{domain}.yaml'
                         print(f'Generating {finetune_config_path}')
 
@@ -123,7 +119,7 @@ mlp: false
 
 neg_per_domain: false
 freeze: {'true' if freeze else 'false'}
-domain_adaptation: true
+domain_adaptation: false
 out_cls_neg_sampling: false
 task_steps: 10
 no_vars: true

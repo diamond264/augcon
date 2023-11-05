@@ -115,6 +115,7 @@ task_steps: 10
 task_lr: {tlr}
 reg_lambda: 0
 no_vars: true
+out_cls_neg_sampling: false
 '''
     return config
 
