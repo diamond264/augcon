@@ -20,7 +20,28 @@ EPOCHS = {
     'target_domain_PH0034-ykha': 1999,
     'target_domain_PH0038-iygoo': 2999,
     'target_domain_PH0041-hmkim': 2999,
-    'target_domain_PH0045-sjlee': 3999
+    'target_domain_PH0045-sjlee': 3999,
+
+    'target_user_b_model_lgwatch': 3999,
+    'target_user_d_model_lgwatch': 3999,
+    'target_user_a_model_nexus4': 4999,
+    'target_user_c_model_nexus4': 2999,
+    'target_user_f_model_nexus4': 4999,
+    'target_user_a_model_s3': 4999,
+    'target_user_c_model_s3': 4999,
+    'target_user_f_model_s3': 2999,
+    'target_user_a_model_s3mini': 2999,
+    'target_user_c_model_s3mini': 4999,
+    'target_user_f_model_s3mini': 4999,
+    'target_user_a_model_lgwatch': 4999,
+    'target_user_c_model_lgwatch': 4999,
+    'target_user_f_model_lgwatch': 3999,
+    'target_user_b_model_nexus4': 4999,
+    'target_user_d_model_nexus4': 4999,
+    'target_user_b_model_s3': 4999,
+    'target_user_d_model_s3': 4999,
+    'target_user_b_model_s3mini': 3999,
+    'target_user_d_model_s3mini': 4999,
 }
 
 DATASETS = ['ichar', 'hhar', 'pamap2', 'dsa']

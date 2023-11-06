@@ -2,7 +2,7 @@
 
 # Check if the config directory argument is provided
 if [ $# -ne 3 ]; then
-  echo "Usage: $0 <pretext> <setting> <seed> <gpu>"
+  echo "Usage: $0 <pretext> <setting> <seed>"
   exit 1
 fi
 
