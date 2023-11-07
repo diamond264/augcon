@@ -25,7 +25,7 @@ EPOCHS = {
     'target_user_b_model_lgwatch': 4999,
     'target_user_d_model_lgwatch': 4999,
     'target_user_a_model_nexus4': 4999,
-    'target_user_c_model_nexus4': 2999,
+    'target_user_c_model_nexus4': 4999,
     'target_user_f_model_nexus4': 4999,
     'target_user_a_model_s3': 4999,
     'target_user_c_model_s3': 4999,
@@ -88,7 +88,7 @@ def gen_pretrain_config():
                 f.write(pretrain_config)
 
             for seed in [0,1,2,3,4]:
-                for shot in [1, 2, 5, 10, 20]:
+                for shot in [1, 2, 5, 10]:
                     for freeze in [True]:
                         setting = 'linear' if freeze else 'endtoend'
                         finetune_config_path = f'{CONFIG_PATH}/{dataset}/{PRETEXT}/finetune/{shot}shot/{setting}/seed{seed}/gpu{gpu}_{domain}.yaml'
@@ -169,7 +169,7 @@ mlp: false
 freeze: {'true' if freeze else 'false'}
 domain_adaptation: true
 out_cls_neg_sampling: false
-task_steps: 10
+task_steps: 20
 no_vars: true
 '''
     return config

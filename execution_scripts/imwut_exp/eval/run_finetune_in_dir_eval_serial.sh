@@ -13,7 +13,7 @@ seed="$3"
 gpu="$4"
 
 # Loop through each .yaml file in the directory
-for config_file in /mnt/sting/hjyoon/projects/aaa/configs/imwut/main_eval/*/"$pretext"/finetune/*/"$setting"/"$seed"/"$gpu"*.yaml; do
+for config_file in /mnt/sting/hjyoon/projects/aaa/configs/imwut/main_eval/*/"$pretext"/finetune_transfer/*/"$setting"/"$seed"/"$gpu"*.yaml; do
   # Check if the file exists
   if [ -e "$config_file" ]; then
     # Run your Python script with the config file as an argument serially

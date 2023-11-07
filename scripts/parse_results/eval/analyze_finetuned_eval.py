@@ -72,7 +72,7 @@ def run(args):
         for dataset in args.datasets:
             res = defaultdict(list)
             for pretext in args.pretext:
-                logs = glob(os.path.join(args.dir, dataset, pretext, 'finetune', f'{shot}shot', args.setting, f'seed{args.seed}', '*.log'))
+                logs = glob(os.path.join(args.dir, dataset, pretext, 'finetune_target', f'{shot}shot', args.setting, f'seed{args.seed}', '*.log'))
                 logs.sort()
                 for log in logs:
                     domain = log.split('target_')[1].split('.yaml')[0]

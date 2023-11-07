@@ -585,7 +585,11 @@ class MetaCPCLearner:
                         train_sampler.set_epoch(0)
                     # net.train()
                     net.zero_grad()
-                    support = [e[0] for e in meta_train_dataset]
+                    support = []
+                    iter = 1+self.cfg.task_size//len(meta_train_dataset)
+                    for i in range(iter):
+                        for e in meta_train_dataset:
+                            support.append(e[0])
                     random.shuffle(support)
                     support = torch.stack(support, dim=0).cuda()
                     enc_parameters = self.meta_train(rank, net, support, criterion, log_internals=True, logs=logs)
