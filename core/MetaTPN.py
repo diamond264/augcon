@@ -437,11 +437,9 @@ class MetaTPNLearner:
                     net.zero_grad()
                     support = []
                     target_support = []
-                    iter = 1+self.cfg.task_size//len(meta_train_dataset)
-                    for i in range(iter):
-                        for e in meta_train_dataset:
-                            support.append(e[1])
-                            target_support.append(torch.tensor(e[2]))
+                    for e in meta_train_dataset:
+                        support.append(e[1])
+                        target_support.append(torch.tensor(e[2]))
                     support = torch.stack(support, dim=0).cuda()
                     target_support = torch.stack(target_support, dim=0).cuda()
                     enc_parameters = self.meta_train(rank, net, support, target_support, criterion, log_internals=True, logs=logs)

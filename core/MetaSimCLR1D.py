@@ -433,13 +433,8 @@ class MetaSimCLR1DLearner:
                     enc_parameters = self.adapt(rank, net, meta_train_dataset, criterion, log_steps=True, logs=logs)
                     self.meta_eval(rank, net, test_dataset, criterion, enc_parameters, logs)
                 else:
-                    support = []
-                    pos_support = []
-                    iter = 1+self.cfg.task_size//len(meta_train_dataset)
-                    for i in range(iter):
-                        for e in meta_train_dataset:
-                            support.append(e[1])
-                            pos_support.append(e[2])
+                    support = [e[1] for e in meta_train_dataset]
+                    pos_support = [e[2] for e in meta_train_dataset]
                     support = torch.stack(support, dim=0).cuda()
                     pos_support = torch.stack(pos_support, dim=0).cuda()
                     enc_parameters = self.meta_train(rank, net, support, pos_support, criterion, log_steps=True, logs=logs)

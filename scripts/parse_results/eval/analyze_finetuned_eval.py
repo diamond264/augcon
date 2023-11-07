@@ -72,7 +72,11 @@ def run(args):
         for dataset in args.datasets:
             res = defaultdict(list)
             for pretext in args.pretext:
-                logs = glob(os.path.join(args.dir, dataset, pretext, 'finetune_target', f'{shot}shot', args.setting, f'seed{args.seed}', '*.log'))
+                if args.setting == 'motivation': setting = 'linear'
+                else: setting = args.setting
+                finetune_dir = 'finetune'
+                if args.setting == 'motivation': finetune_dir = 'finetune_target'
+                logs = glob(os.path.join(args.dir, dataset, pretext, finetune_dir, f'{shot}shot', setting, f'seed{args.seed}', '*.log'))
                 logs.sort()
                 for log in logs:
                     domain = log.split('target_')[1].split('.yaml')[0]
@@ -82,9 +86,15 @@ def run(args):
                         content = content.split('\n')[-2]
                         # print(content)
                         if args.metric == 'acc':
-                            score = float(content.split('Acc(1): ')[1].split(', ')[0])
+                            try:
+                                score = float(content.split('Acc(1): ')[1].split(', ')[0])
+                            except:
+                                score = -1
                         elif args.metric == 'f1':
-                            score = float(content.split('F1: ')[1].split(', ')[0])
+                            try:
+                                score = float(content.split('F1: ')[1].split(', ')[0])
+                            except:
+                                score = -1
                         res[domain].append(str(score))
             
             args.sort = True
@@ -107,13 +117,18 @@ def run(args):
                 res = res_sorted
             
             sum = [0]*len(res[list(res.keys())[0]])
+            cnt = [0]*len(res[list(res.keys())[0]])
             for d, s in res.items():
                 if not args.print_domains:
                     print(' '.join(s))
                 else:
                     print(d, s)
-                sum = [float(x) + float(y) for x, y in zip(sum, s)]
-            print(' '.join([str(s/len(res)) for s in sum]))
+                for i in range(len(s)):
+                    if float(s[i]) == -1:
+                        continue
+                    sum[i] = sum[i] + float(s[i])
+                    cnt[i] += 1
+            print(' '.join([str(sum[i]/cnt[i]) for i in range(len(sum))]))
     
 if __name__ == '__main__':
     args = parse_args()
