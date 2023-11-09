@@ -18,6 +18,13 @@ DATA_PATH = {
     'dsa': '/mnt/sting/hjyoon/projects/cross/DSA/augcon/'
 }
 
+SOURCE_DATA_PATH = {
+    'ichar': '/mnt/sting/bini/fair_setting/ICHAR/augcon/',
+    'hhar': '/mnt/sting/bini/fair_setting/HHAR/augcon/',
+    'pamap2': '/mnt/sting/bini/fair_setting/PAMAP2/augcon/',
+    'dsa': '/mnt/sting/bini/fair_setting/DSA/augcon/'
+}
+
 NUM_CLS = {'ichar': 9,
            'hhar': 6,
            'pamap2': 12,
@@ -30,12 +37,29 @@ MODEL_PATH = '/mnt/sting/hjyoon/projects/aaa/models/imwut/main_eval'
 def gen_pretrain_config():
     for dataset in DATASETS:
         data_path = DATA_PATH[dataset]
+        source_path = SOURCE_DATA_PATH[dataset]
         param = PRETRAIN_HPS[dataset]
         domains = glob(os.path.join(data_path, '*'))
         domains = [os.path.basename(domain) for domain in domains]
         gpu = 0
         for domain in domains:
             port = 8367 + gpu
+            source_pretrain_config_path = f'{CONFIG_PATH}/{dataset}/{PRETEXT}/pretrain_source/gpu{gpu}_{domain}.yaml'
+            print(f'Generating {source_pretrain_config_path}')
+            
+            source_pretrain_path = f'{source_path}{domain}/pretrain'
+            num_cls = NUM_CLS[dataset]
+            epochs = 100
+            lr, wd, bs = param['lr'], param['wd'], param['bs']
+            source_pretrain_ckpt_path = f'{MODEL_PATH}/{dataset}/{PRETEXT}/pretrain_source/{domain}'
+            pretrain_config = get_config('pretrain', [gpu], port, dataset,
+                                         source_pretrain_path, num_cls, PRETRAIN_CRITERION,
+                                         epochs, bs, lr, wd, source_pretrain_ckpt_path, None, True, 0)
+
+            os.makedirs(os.path.dirname(source_pretrain_config_path), exist_ok=True)
+            with open(source_pretrain_config_path, 'w') as f:
+                f.write(pretrain_config)
+            
             pretrain_config_path = f'{CONFIG_PATH}/{dataset}/{PRETEXT}/pretrain_target/gpu{gpu}_{domain}.yaml'
             print(f'Generating {pretrain_config_path}')
 
@@ -56,6 +80,22 @@ def gen_pretrain_config():
                 for shot in [10]:
                     for freeze in [True]:
                         setting = 'linear' if freeze else 'endtoend'
+                        
+                        source_finetune_config_path = f'{CONFIG_PATH}/{dataset}/{PRETEXT}/finetune_source/{shot}shot/{setting}/seed{seed}/gpu{gpu}_{domain}.yaml'
+                        print(f'Generating {source_finetune_config_path}')
+
+                        finetune_path = f'{data_path}{domain}/finetune/{shot}shot/target'
+                        source_finetune_ckpt_path = f'{MODEL_PATH}/{dataset}/{PRETEXT}/finetune_source/{shot}shot/{setting}/seed{seed}/{domain}'
+                        source_pretrained_path = f'{source_pretrain_ckpt_path}/checkpoint_0099.pth.tar'
+                        finetune_config = get_config('finetune', [gpu], port, dataset,
+                                                    finetune_path, num_cls, 'crossentropy',
+                                                    20, 4, 0.005, 0.0, source_finetune_ckpt_path,
+                                                    source_pretrained_path, freeze, seed)
+
+                        os.makedirs(os.path.dirname(source_finetune_config_path), exist_ok=True)
+                        with open(source_finetune_config_path, 'w') as f:
+                            f.write(finetune_config)
+                        
                         finetune_config_path = f'{CONFIG_PATH}/{dataset}/{PRETEXT}/finetune_target/{shot}shot/{setting}/seed{seed}/gpu{gpu}_{domain}.yaml'
                         print(f'Generating {finetune_config_path}')
 
