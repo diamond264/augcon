@@ -4,10 +4,10 @@ from glob import glob
 PRETEXT = 'simclr'
 PRETRAIN_CRITERION = 'crossentropy'
 PRETRAIN_HPS = {
-    'ichar': {'lr': 0.001, 'wd': 0.0001, 'bs': 1024//8},
-    'hhar': {'lr': 0.001, 'wd': 0.0, 'bs': 1024//8},
-    'pamap2': {'lr': 0.0005, 'wd': 0.0001, 'bs': 1024//8},
-    'dsa': {'lr': 0.001, 'wd': 0.0001, 'bs': 1024//8}
+    'ichar': {'lr': 0.0005, 'wd': 0.0001, 'bs': 1024//16},
+    'hhar': {'lr': 0.0005, 'wd': 0.0, 'bs': 1024//16},
+    'pamap2': {'lr': 0.0005, 'wd': 0.0001, 'bs': 1024//16},
+    'dsa': {'lr': 0.0005, 'wd': 0.0001, 'bs': 1024//16}
 }
 
 DATASETS = ['ichar', 'hhar', 'pamap2', 'dsa']

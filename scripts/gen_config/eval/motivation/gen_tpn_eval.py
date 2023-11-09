@@ -4,9 +4,9 @@ from glob import glob
 PRETEXT = 'tpn'
 PRETRAIN_CRITERION = 'crossentropy'
 PRETRAIN_HPS = {
-    'ichar': {'lr': 0.0005, 'wd': 0.0, 'bs': 64},
+    'ichar': {'lr': 0.005, 'wd': 0.0, 'bs': 32},
     'hhar': {'lr': 0.0005, 'wd': 0.0, 'bs': 128},	
-    'pamap2': {'lr': 0.0005, 'wd': 0.0, 'bs': 64},
+    'pamap2': {'lr': 0.005, 'wd': 0.0, 'bs': 32},
     'dsa': {'lr': 0.0005, 'wd': 0.0, 'bs': 128}
 }
 
