@@ -101,9 +101,10 @@ def gen_pretrain_config():
                             ep = EPOCHS[domain]
                         pretrained_path = f'{pretrain_ckpt_path}/checkpoint_{ep}.pth.tar'
                         ft_lr = 0.005 if freeze else 0.001
+                        bs = 4 if shot != 1 else 1
                         finetune_config = get_config('finetune', [gpu], port, dataset,
                                                         finetune_path, num_cls, 'crossentropy',
-                                                        20, 4, ft_lr, 0.0, tlr,
+                                                        20, bs, ft_lr, 0.0, tlr,
                                                         finetune_ckpt_path,
                                                         pretrained_path, freeze, seed)
 
@@ -169,7 +170,7 @@ mlp: false
 freeze: {'true' if freeze else 'false'}
 domain_adaptation: true
 out_cls_neg_sampling: false
-task_steps: 20
+task_steps: 30
 no_vars: true
 '''
     return config

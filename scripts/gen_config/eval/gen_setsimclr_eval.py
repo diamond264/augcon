@@ -1,13 +1,13 @@
 import os
 from glob import glob
 
-PRETEXT = 'metasimclr'
+PRETEXT = 'setsimclr'
 PRETRAIN_CRITERION = 'crossentropy'
 PRETRAIN_HPS = {
-    'ichar': {'lr': 0.001, 'wd': 0.0, 'tlr': 0.001},
-    'hhar': {'lr': 0.001, 'wd': 0.0001, 'tlr': 0.01},
-    'pamap2': {'lr': 0.001, 'wd': 0.0, 'tlr': 0.01},
-    'dsa': {'lr': 0.005, 'wd': 0.0, 'tlr': 0.001},
+    'ichar': {'lr': 0.0001, 'wd': 0.0001},
+    'hhar': {'lr': 0.0001, 'wd': 0},
+    'pamap2': {'lr': 0.0001, 'wd': 0},
+    'dsa': {'lr': 0.0001, 'wd': 0.0001}
 }
 
 DATASETS = ['ichar', 'hhar', 'pamap2', 'dsa']
@@ -30,41 +30,29 @@ MODEL_PATH = '/mnt/sting/hjyoon/projects/aaa/models/imwut/main_eval'
 def gen_pretrain_config():
     for dataset in DATASETS:
         data_path = DATA_PATH[dataset]
-        param = PRETRAIN_HPS[dataset]
         domains = glob(os.path.join(data_path, '*'))
         domains = [os.path.basename(domain) for domain in domains]
         gpu = 0
         for domain in domains:
             port = 8367 + gpu
-            pretrain_config_path = f'{CONFIG_PATH}/{dataset}/{PRETEXT}/pretrain/gpu{gpu}_{domain}.yaml'
-            print(f'Generating {pretrain_config_path}')
-
-            pretrain_path = f'{data_path}{domain}/pretrain'
             num_cls = NUM_CLS[dataset]
-            epochs = 5000
-            lr, wd, tlr = param['lr'], param['wd'], param['tlr']
             pretrain_ckpt_path = f'{MODEL_PATH}/{dataset}/{PRETEXT}/pretrain/{domain}'
-            pretrain_config = get_config('pretrain', [gpu], port, dataset,
-                                         pretrain_path, num_cls, PRETRAIN_CRITERION,
-                                         epochs, -1, lr, wd, tlr,
-                                         pretrain_ckpt_path, None, True, 0)
 
             for seed in [0,1,2,3,4]:
                 for shot in [1, 2, 5, 10, 20]:
                     for freeze in [True, False]:
-                        setting = 'wo_adapt' if freeze else 'endtoend'
+                        setting = 'linear' if freeze else 'endtoend'
                         finetune_config_path = f'{CONFIG_PATH}/{dataset}/{PRETEXT}/finetune/{shot}shot/{setting}/seed{seed}/gpu{gpu}_{domain}.yaml'
                         print(f'Generating {finetune_config_path}')
 
                         finetune_path = f'{data_path}{domain}/finetune/{shot}shot/target'
                         finetune_ckpt_path = f'{MODEL_PATH}/{dataset}/{PRETEXT}/finetune/{shot}shot/{setting}/seed{seed}/{domain}'
-                        pretrained_path = f'{pretrain_ckpt_path}/checkpoint_4999.pth.tar'
+                        pretrained_path = f'{pretrain_ckpt_path}/encoder_400.pth'
                         ft_lr = 0.005 if freeze else 0.001
                         bs = 4 if shot != 1 else 1
                         finetune_config = get_config('finetune', [gpu], port, dataset,
                                                         finetune_path, num_cls, 'crossentropy',
-                                                        20, bs, ft_lr, 0.0, tlr,
-                                                        finetune_ckpt_path,
+                                                        20, bs, ft_lr, 0.0, finetune_ckpt_path,
                                                         pretrained_path, freeze, seed)
 
                         os.makedirs(os.path.dirname(finetune_config_path), exist_ok=True)
@@ -75,7 +63,7 @@ def gen_pretrain_config():
 
 
 def get_config(mode, gpu, port, dataset_name, data_path, num_cls,
-               criterion, epochs, bs, lr, wd, tlr, ckpt_path, pretrained, freeze, seed):
+               criterion, epochs, bs, lr, wd, ckpt_path, pretrained, freeze, seed):
     config = f'''mode: {mode}
 seed: {seed}
 gpu: {gpu}
@@ -103,27 +91,20 @@ resume: ''
 pretrained: {pretrained}
 ckpt_dir: {ckpt_path}
 log_freq: 100
-save_freq: {1000 if mode == 'pretrain' else 10}
+save_freq: 10
 
-task_per_domain: true
-num_task: 8
-multi_cond_num_task: 4
-task_size: 128
-task_lr: {tlr}
-reg_lambda: 0
-log_meta_train: false
-
-pretext: {PRETEXT}
+pretext: setsimclr
 out_dim: 50
 T: 0.1
 z_dim: 96
-mlp: {'true' if mode == 'pretrain' else 'false'}
-
 neg_per_domain: false
+
+mlp: {'true' if mode == 'pretrain' else 'false'}
 freeze: {'true' if freeze else 'false'}
 domain_adaptation: false
-out_cls_neg_sampling: false
-task_steps: 10
+task_steps: -1
+task_lr: -1
+reg_lambda: -1
 no_vars: true
 '''
     return config

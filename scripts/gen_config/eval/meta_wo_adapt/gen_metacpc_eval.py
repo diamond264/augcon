@@ -22,26 +22,26 @@ EPOCHS = {
     'target_domain_PH0041-hmkim': 2999,
     'target_domain_PH0045-sjlee': 3999,
 
-    'target_user_b_model_lgwatch': 3999,
-    'target_user_d_model_lgwatch': 3999,
-    'target_user_a_model_nexus4': 4999,
-    'target_user_c_model_nexus4': 2999,
-    'target_user_f_model_nexus4': 4999,
-    'target_user_a_model_s3': 4999,
-    'target_user_c_model_s3': 4999,
-    'target_user_f_model_s3': 2999,
-    'target_user_a_model_s3mini': 2999,
-    'target_user_c_model_s3mini': 4999,
-    'target_user_f_model_s3mini': 4999,
-    'target_user_a_model_lgwatch': 4999,
-    'target_user_c_model_lgwatch': 4999,
-    'target_user_f_model_lgwatch': 3999,
-    'target_user_b_model_nexus4': 4999,
-    'target_user_d_model_nexus4': 4999,
-    'target_user_b_model_s3': 4999,
-    'target_user_d_model_s3': 4999,
-    'target_user_b_model_s3mini': 3999,
-    'target_user_d_model_s3mini': 4999,
+    # 'target_user_b_model_lgwatch': 4999,
+    # 'target_user_d_model_lgwatch': 4999,
+    # 'target_user_a_model_nexus4': 4999,
+    # 'target_user_c_model_nexus4': 2999,
+    # 'target_user_f_model_nexus4': 4999,
+    # 'target_user_a_model_s3': 4999,
+    # 'target_user_c_model_s3': 4999,
+    # 'target_user_f_model_s3': 2999,
+    # 'target_user_a_model_s3mini': 2999,
+    # 'target_user_c_model_s3mini': 4999,
+    # 'target_user_f_model_s3mini': 4999,
+    # 'target_user_a_model_lgwatch': 4999,
+    # 'target_user_c_model_lgwatch': 4999,
+    # 'target_user_f_model_lgwatch': 3999,
+    # 'target_user_b_model_nexus4': 4999,
+    # 'target_user_d_model_nexus4': 4999,
+    # 'target_user_b_model_s3': 4999,
+    # 'target_user_d_model_s3': 4999,
+    # 'target_user_b_model_s3mini': 3999,
+    # 'target_user_d_model_s3mini': 4999,
 }
 
 DATASETS = ['ichar', 'hhar', 'pamap2', 'dsa']
@@ -97,9 +97,10 @@ def gen_pretrain_config():
                             ep = EPOCHS[domain]
                         pretrained_path = f'{pretrain_ckpt_path}/checkpoint_{ep}.pth.tar'
                         ft_lr = 0.005 if freeze else 0.001
+                        bs = 4 if shot != 1 else 1
                         finetune_config = get_config('finetune', [gpu], port, dataset,
                                                         finetune_path, num_cls, 'crossentropy',
-                                                        20, 4, ft_lr, 0.0, tlr,
+                                                        20, bs, ft_lr, 0.0, tlr,
                                                         finetune_ckpt_path,
                                                         pretrained_path, freeze, seed)
 

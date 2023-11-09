@@ -37,7 +37,7 @@ def gen_pretrain_config():
         for domain in domains:
             port = 8367 + gpu
             pretrain_config_path = f'{CONFIG_PATH}/{dataset}/{PRETEXT}/pretrain/gpu{gpu}_{domain}.yaml'
-            print(f'Generating {pretrain_config_path}')
+            # print(f'Generating {pretrain_config_path}')
 
             pretrain_path = f'{data_path}{domain}/pretrain'
             num_cls = NUM_CLS[dataset]
@@ -49,9 +49,9 @@ def gen_pretrain_config():
                                          epochs, -1, lr, wd, tlr,
                                          pretrain_ckpt_path, None, True, 0)
 
-            os.makedirs(os.path.dirname(pretrain_config_path), exist_ok=True)
-            with open(pretrain_config_path, 'w') as f:
-                f.write(pretrain_config)
+            # os.makedirs(os.path.dirname(pretrain_config_path), exist_ok=True)
+            # with open(pretrain_config_path, 'w') as f:
+            #     f.write(pretrain_config)
 
             for seed in [0,1,2,3,4]:
                 for shot in [1, 2, 5, 10, 20]:
@@ -62,11 +62,13 @@ def gen_pretrain_config():
 
                         finetune_path = f'{data_path}{domain}/finetune/{shot}shot/target'
                         finetune_ckpt_path = f'{MODEL_PATH}/{dataset}/{PRETEXT}/finetune/{shot}shot/{setting}/seed{seed}/{domain}'
-                        pretrained_path = f'{pretrain_ckpt_path}/checkpoint_4999.pth.tar'
+                        epoch = 4999
+                        pretrained_path = f'{pretrain_ckpt_path}/checkpoint_{epoch}.pth.tar'
                         ft_lr = 0.005 if freeze else 0.001
+                        bs = 4 if shot != 1 else 1
                         finetune_config = get_config('finetune', [gpu], port, dataset,
                                                         finetune_path, num_cls, 'crossentropy',
-                                                        20, 4, ft_lr, 0.0, tlr,
+                                                        20, bs, ft_lr, 0.0, tlr,
                                                         finetune_ckpt_path,
                                                         pretrained_path, freeze, seed)
 
