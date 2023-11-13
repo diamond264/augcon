@@ -14,6 +14,8 @@ from torch.utils.data import DistributedSampler
 
 from collections import defaultdict
 
+from torch.utils.tensorboard import SummaryWriter
+
 # reference:
 # https://github.com/facebookresearch/fairseq/blob/176cd934982212a4f75e0669ee81b834ee71dbb0/fairseq/models/wav2vec/wav2vec.py#L431
 class Encoder(nn.Module):
@@ -596,17 +598,31 @@ class MetaCPCLearner:
                     log = "Loading encoder parameters to the classifier"
                     logs.append(log)
                     print(log)
-                
+
                 enc_dict = {}
                 for idx, k in enumerate(list(cls_net.state_dict().keys())):
                     if not 'classifier' in k:
                         enc_dict[k] = enc_parameters[idx]
-                
+
                 msg = cls_net.load_state_dict(enc_dict, strict=False)
                 if rank == 0:
                     log = "Missing keys: {}".format(msg.missing_keys)
                     logs.append(log)
                     print(log)
+
+                if self.cfg.visualization:
+                    is_meta = True if "meta" in self.cfg.pretrained else False
+                    tag = f'{self.cfg.dataset_name}_{self.cfg.pretext}_{self.cfg.domain_adaptation}_meta{is_meta}'
+                    writer = SummaryWriter(f'./logs/{tag}')
+
+                    if rank == 0:
+                        log = "Missing keys: {}".format(msg.missing_keys)
+                        logs.append(log)
+                        print(log)
+
+                    self.visualize(rank, cls_net, test_loader, criterion, logs, writer, tag)
+                    print(f"Visualization finished")
+                    exit(0)
             else:
                 if rank == 0:
                     log = "Loading state_dict from checkpoint - {}".format(self.cfg.resume)
@@ -827,7 +843,27 @@ class MetaCPCLearner:
             log += f', F1: {f1.item():.2f}, Recall: {recall.item():.2f}, Precision: {precision.item():.2f}'
             logs.append(log)
             print(log)
-    
+
+    def visualize(self, rank, net, val_loader, criterion, logs, writer, tag):
+        net.eval()
+
+        total_targets = []
+        total_logits = []
+        for batch_idx, data in enumerate(val_loader):
+            features = data[0].cuda()
+            targets = data[1].cuda()
+
+            logits = net.encoder(features)
+
+            # print(logits.shape)
+            # print(targets.shape)
+
+            total_targets.append(targets)
+            total_logits.append(logits.view(targets.shape[0], -1))
+
+        total_targets = torch.cat(total_targets, dim=0)
+        total_logits = torch.cat(total_logits, dim=0)
+        writer.add_embedding(total_logits, metadata=total_targets, global_step=0, tag="feature")
     def save_checkpoint(self, filename, epoch, state_dict, optimizer):
         directory = os.path.dirname(filename)
         if not os.path.exists(directory):
