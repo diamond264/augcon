@@ -1,559 +1,357 @@
- 5366 u0_a488      10 -10  11M 7.5M 4.6M R  210   0.0   0:00.12 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 485M  70M  40M R 76.0   0.6   0:01.17 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 523M 131M  63M t 64.0   1.2   0:01.55 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 534M 142M  63M R 62.0   1.3   0:01.87 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 544M 152M  64M R 58.0   1.4   0:02.18 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 553M 161M  64M R 66.0   1.5   0:02.47 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 565M 174M  65M R 68.0   1.6   0:02.80 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 576M 185M  65M R 68.0   1.7   0:03.14 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 589M 197M  65M t  202   1.8   0:03.48 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 892M 218M  71M t 64.0   2.0   0:04.49 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 921M 235M  77M R 54.0   2.2   0:04.81 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 927M 240M  77M R 50.0   2.2   0:05.08 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 941M 244M  79M R 62.0   2.2   0:05.33 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 949M 251M  80M t 64.0   2.3   0:05.64 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 965M 261M  82M R 70.0   2.4   0:05.96 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 993M 277M  85M R 28.0   2.6   0:06.31 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.0G 293M  92M S  0.0   2.7   0:06.45 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.0G 293M  92M S  0.0   2.7   0:06.45 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.0G 293M  92M S  0.0   2.7   0:06.45 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.0G 293M  92M S  0.0   2.7   0:06.45 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.0G 293M  92M S  0.0   2.7   0:06.45 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.0G 293M  92M S  198   2.7   0:06.45 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 401M 104M S  324   3.7   0:07.44 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 449M 104M R  296   4.2   0:09.06 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 456M 104M R  302   4.3   0:10.54 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 462M 104M R  344   4.3   0:12.05 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 456M 104M R  332   4.3   0:13.77 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 456M 104M R  328   4.3   0:15.43 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 441M 104M S  264   4.1   0:17.07 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 469M 104M R  286   4.4   0:18.39 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 485M 104M R  290   4.5   0:19.82 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 409M 104M S  0.0   3.8   0:21.27 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 409M 104M S  0.0   3.8   0:21.27 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 409M 104M S  0.0   3.8   0:21.27 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 409M 104M S  0.0   3.8   0:21.27 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 409M 104M S  0.0   3.8   0:21.27 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 409M 104M S  2.0   3.8   0:21.27 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 409M 104M S  0.0   3.8   0:21.28 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 409M 104M S  0.0   3.8   0:21.28 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 409M 104M S  0.0   3.8   0:21.28 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 409M 104M S  0.0   3.8   0:21.28 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 409M 104M S  0.0   3.8   0:21.28 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 409M 104M S  6.0   3.8   0:21.28 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 406M 105M R 94.0   3.8   0:21.31 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 388M 105M S  104   3.6   0:21.78 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5428 u0_a488      10 -10 1.7G 310M  27M S 52.0   2.9   0:00.26 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 388M 105M R 84.0   3.6   0:22.30 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 388M 105M R  104   3.6   0:22.72 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5517 u0_a488      10 -10 1.8G 309M  26M R 48.0   2.9   0:00.19 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 388M 105M S 90.0   3.6   0:23.24 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 388M 105M S  100   3.6   0:23.69 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5604 u0_a488      10 -10 1.8G 310M  26M R 44.0   2.9   0:00.12 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.8G 388M 105M R  108   3.6   0:24.19 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 388M 105M S  104   3.6   0:24.73 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5705 u0_a488      10 -10 1.8G 308M  24M R 50.0   2.9   0:00.01 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 388M 105M R  110   3.6   0:25.25 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5705 u0_a488      10 -10 1.8G 310M  26M R 46.0   2.9   0:00.26 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 388M 105M S 90.0   3.6   0:25.80 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 52.0   3.6   0:26.25 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5794 u0_a488      10 -10 1.8G 310M  27M S 34.0   2.9   0:00.25 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 60.0   3.6   0:26.51 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5794 u0_a488      10 -10 1.8G 310M  26M R 38.0   2.9   0:00.42 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 56.0   3.6   0:26.81 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5794 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.61 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 50.0   3.6   0:27.09 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5794 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.78 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 60.0   3.6   0:27.34 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5884 u0_a488      10 -10 1.8G 297M  14M R 42.0   2.8   0:00.01 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 40.0   3.6   0:27.64 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 54.0   3.6   0:27.84 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5884 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.22 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 50.0   3.6   0:28.11 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5884 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.39 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 54.0   3.6   0:28.36 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5884 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.57 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 388M 105M R 56.0   3.6   0:28.63 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5884 u0_a488      10 -10 1.8G 310M  26M R 36.0   2.9   0:00.74 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 388M 105M S 54.0   3.6   0:28.91 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5884 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:00.92 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 388M 105M S 60.0   3.6   0:29.18 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5884 u0_a488      10 -10 1.8G 310M  27M t 34.0   2.9   0:01.08 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 388M 105M S 32.0   3.6   0:29.48 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 388M 105M R 54.0   3.6   0:29.64 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5979 u0_a488      10 -10 1.8G 310M  27M S 38.0   2.9   0:00.21 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 388M 105M t 56.0   3.6   0:29.91 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5979 u0_a488      10 -10 1.8G 310M  26M S 38.0   2.9   0:00.40 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 388M 105M R 60.0   3.6   0:30.19 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5979 u0_a488      10 -10 1.8G 310M  27M S 34.0   2.9   0:00.59 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   0:30.49 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5979 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.76 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 58.0   3.6   0:30.76 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5979 u0_a488      10 -10 1.8G 310M  27M S 36.0   2.9   0:00.94 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 50.0   3.6   0:31.05 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5979 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:01.12 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 56.0   3.6   0:31.30 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6063 u0_a488      10 -10 1.8G 295M  11M t 42.0   2.7   0:00.00 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 388M 105M S 40.0   3.6   0:31.58 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 56.0   3.6   0:31.78 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6063 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.21 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 60.0   3.6   0:32.06 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6063 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.38 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 50.0   3.6   0:32.36 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6063 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.55 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 54.0   3.6   0:32.61 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6063 u0_a488      10 -10 1.8G 309M  26M S 34.0   2.9   0:00.72 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 52.0   3.6   0:32.88 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6063 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.89 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 56.0   3.6   0:33.14 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6063 u0_a488      10 -10 1.8G 310M  26M S 30.0   2.9   0:01.07 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 44.0   3.6   0:33.42 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 52.0   3.6   0:33.64 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6180 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.16 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 58.0   3.6   0:33.90 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6180 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.34 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 52.0   3.6   0:34.19 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6180 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.52 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 58.0   3.6   0:34.45 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6180 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.70 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 54.0   3.6   0:34.74 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6180 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.88 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 60.0   3.6   0:35.01 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6180 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:01.05 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 56.0   3.6   0:35.31 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 50.0   3.6   0:35.59 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6274 u0_a488      10 -10 1.8G 309M  26M R 34.0   2.9   0:00.05 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   0:35.84 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6274 u0_a488      10 -10 1.8G 310M  26M S 38.0   2.9   0:00.22 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 58.0   3.6   0:36.11 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6274 u0_a488      10 -10 1.8G 310M  26M S 38.0   2.9   0:00.41 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 50.0   3.6   0:36.40 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6274 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:00.60 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 52.0   3.6   0:36.65 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6274 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.76 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 52.0   3.6   0:36.91 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6274 u0_a488      10 -10 1.8G 310M  26M S 40.0   2.9   0:00.93 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 62.0   3.6   0:37.17 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6274 u0_a488      10 -10 1.8G 310M  26M S 26.0   2.9   0:01.13 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 34.0   3.6   0:37.48 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 50.0   3.6   0:37.65 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6358 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.20 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 52.0   3.6   0:37.90 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6358 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:00.37 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 56.0   3.6   0:38.16 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6358 u0_a488      10 -10 1.8G 310M  26M S 38.0   2.9   0:00.53 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 56.0   3.6   0:38.44 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6358 u0_a488      10 -10 1.8G 309M  26M S 34.0   2.9   0:00.72 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 56.0   3.6   0:38.72 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6358 u0_a488      10 -10 1.8G 310M  26M S 38.0   2.9   0:00.89 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 56.0   3.6   0:39.00 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6358 u0_a488      10 -10 1.8G 309M  26M S 34.0   2.9   0:01.08 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 54.0   3.6   0:39.28 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 58.0   3.6   0:39.55 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6450 u0_a488      10 -10 1.8G 309M  26M S 38.0   2.9   0:00.06 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 54.0   3.6   0:39.84 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6450 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.25 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 56.0   3.6   0:40.11 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6450 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.42 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 56.0   3.6   0:40.39 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6450 u0_a488      10 -10 1.8G 310M  26M S 38.0   2.9   0:00.60 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 56.0   3.6   0:40.67 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6450 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:00.79 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 56.0   3.6   0:40.95 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6450 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.95 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 52.0   3.6   0:41.23 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 46.0   3.6   0:41.49 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   0:41.72 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6541 u0_a488      10 -10 1.8G 310M  26M S 38.0   2.9   0:00.17 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 54.0   3.6   0:41.99 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6541 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:00.36 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   0:42.26 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6541 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.52 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 50.0   3.6   0:42.53 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6541 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.69 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 62.0   3.6   0:42.78 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6541 u0_a488      10 -10 1.8G 310M  26M S 38.0   2.9   0:00.86 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 56.0   3.6   0:43.09 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6541 u0_a488      10 -10 1.8G 310M  27M S 32.0   2.9   0:01.05 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 44.0   3.6   0:43.37 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   0:43.59 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6648 u0_a488      10 -10 1.8G 310M  26M S 38.0   2.9   0:00.12 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 56.0   3.6   0:43.86 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6648 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:00.31 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 48.0   3.6   0:44.14 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6648 u0_a488      10 -10 1.8G 310M  26M S 38.0   2.9   0:00.47 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   0:44.38 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6648 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:00.66 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   0:44.65 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6648 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.82 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 70.0   3.6   0:44.92 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t  110   3.6   0:45.27 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6751 u0_a488      10 -10 1.8G 310M  26M S 48.0   2.9   0:00.08 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 80.0   3.6   0:45.82 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S  104   3.6   0:46.22 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6848 u0_a488      10 -10 1.8G 309M  26M S 52.0   2.9   0:00.15 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 78.0   3.6   0:46.74 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R  108   3.6   0:47.13 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 6933 u0_a488      10 -10 1.8G 310M  26M S 48.0   2.9   0:00.09 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S  106   3.6   0:47.67 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S  112   3.6   0:48.20 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7015 u0_a488      10 -10 1.8G 307M  24M R 52.0   2.8   0:00.01 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S  108   3.6   0:48.76 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7015 u0_a488      10 -10 1.8G 310M  26M t 44.0   2.9   0:00.27 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 98.0   3.6   0:49.30 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 96.0   3.6   0:49.79 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7094 u0_a488      10 -10 1.8G 310M  26M S 54.0   2.9   0:00.24 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 56.0   3.6   0:50.27 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7094 u0_a488      10 -10 1.8G 309M  26M S 28.0   2.9   0:00.51 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 40.0   3.6   0:50.55 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 58.0   3.6   0:50.75 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7193 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:00.21 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 52.0   3.6   0:51.04 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7193 u0_a488      10 -10 1.8G 310M  27M S 36.0   2.9   0:00.37 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   0:51.30 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7193 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:00.55 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 52.0   3.6   0:51.57 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7193 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.71 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 50.0   3.6   0:51.83 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7193 u0_a488      10 -10 1.8G 310M  26M S 38.0   2.9   0:00.89 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 62.0   3.6   0:52.08 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 38.0   3.6   0:52.39 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 54.0   3.6   0:52.58 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7278 u0_a488      10 -10 1.8G 310M  26M S 38.0   2.9   0:00.20 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 52.0   3.6   0:52.85 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7278 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.39 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   0:53.11 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7278 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.56 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 56.0   3.6   0:53.38 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7278 u0_a488      10 -10 1.8G 310M  27M S 38.0   2.9   0:00.73 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 54.0   3.6   0:53.66 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7278 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:00.92 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 58.0   3.6   0:53.93 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7278 u0_a488      10 -10 1.8G 310M  26M S 30.0   2.9   0:01.08 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 36.0   3.6   0:54.22 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 52.0   3.6   0:54.40 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7379 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.18 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 52.0   3.6   0:54.66 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7379 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.36 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 58.0   3.6   0:54.92 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7379 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.53 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 52.0   3.6   0:55.21 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7379 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.70 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 56.0   3.6   0:55.47 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7379 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.87 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 54.0   3.6   0:55.75 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7379 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:01.05 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 42.0   3.6   0:56.02 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   0:56.23 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7458 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.09 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 50.0   3.6   0:56.50 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7458 u0_a488      10 -10 1.8G 310M  26M S 30.0   2.9   0:00.27 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 54.0   3.6   0:56.75 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7458 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.42 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 48.0   3.6   0:57.02 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7458 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.59 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 52.0   3.6   0:57.26 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7458 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.76 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 54.0   3.6   0:57.52 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7458 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.94 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 60.0   3.6   0:57.79 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7458 u0_a488      10 -10 1.8G 310M  27M R 30.0   2.9   0:01.11 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 38.0   3.6   0:58.09 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   0:58.28 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7536 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.21 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 54.0   3.6   0:58.55 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7536 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.38 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 54.0   3.6   0:58.82 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7536 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.55 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 56.0   3.6   0:59.09 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7536 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:00.72 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 58.0   3.6   0:59.37 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7536 u0_a488      10 -10 1.8G 310M  26M R 38.0   2.9   0:00.88 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 56.0   3.6   0:59.66 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7536 u0_a488      10 -10 1.8G 310M  26M S 30.0   2.9   0:01.07 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 48.0   3.6   0:59.94 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 54.0   3.6   1:00.18 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7620 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.18 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 50.0   3.6   1:00.45 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7620 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.35 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 56.0   3.6   1:00.70 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7620 u0_a488      10 -10 1.8G 310M  26M R 34.0   2.9   0:00.52 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 50.0   3.6   1:00.98 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7620 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.69 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 56.0   3.6   1:01.23 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7620 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:00.87 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 52.0   3.6   1:01.51 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 52.0   3.6   1:01.77 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7710 u0_a488      10 -10 1.8G 309M  26M S 36.0   2.9   0:00.06 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 54.0   3.6   1:02.03 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7710 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.24 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 54.0   3.6   1:02.30 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7710 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.42 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S  102   3.6   1:02.57 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S  118   3.6   1:03.08 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7796 u0_a488      10 -10 1.8G 310M  26M R 50.0   2.9   0:00.07 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R  106   3.6   1:03.67 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S  106   3.6   1:04.20 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R  126   3.6   1:04.73 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 7967 u0_a488      10 -10 1.8G 310M  26M S 50.0   2.9   0:00.09 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S  102   3.6   1:05.36 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t  118   3.6   1:05.87 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S  116   3.6   1:06.46 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8125 u0_a488      10 -10 1.9G 293M 8.9M S 56.0   2.7   0:00.00 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R  104   3.6   1:07.04 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R  124   3.6   1:07.56 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8207 u0_a488      10 -10 1.8G 310M  26M S 48.0   2.9   0:00.13 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 36.0   3.6   1:08.18 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 50.0   3.6   1:08.36 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8287 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:00.20 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   1:08.61 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8287 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.36 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 52.0   3.6   1:08.88 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8287 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.54 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   1:09.14 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8287 u0_a488      10 -10 1.8G 310M  26M S 38.0   2.9   0:00.72 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 50.0   3.6   1:09.41 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8287 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:00.91 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   1:09.66 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8287 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:01.07 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 42.0   3.6   1:09.93 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 58.0   3.6   1:10.14 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8366 u0_a488      10 -10 1.8G 310M  26M t 38.0   2.9   0:00.11 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 56.0   3.6   1:10.43 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8366 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.30 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 58.0   3.6   1:10.71 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8366 u0_a488      10 -10 1.8G 310M  26M R 38.0   2.9   0:00.47 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 56.0   3.6   1:11.00 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8366 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.66 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   1:11.28 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8366 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.84 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   1:11.55 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8366 u0_a488      10 -10 1.8G 310M  26M S 38.0   2.9   0:01.01 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 42.0   3.6   1:11.82 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 58.0   3.6   1:12.03 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8469 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:00.10 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 58.0   3.6   1:12.32 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8469 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.26 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 56.0   3.6   1:12.61 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8469 u0_a488      10 -10 1.8G 310M  27M S 38.0   2.9   0:00.43 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 52.0   3.6   1:12.89 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8469 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.62 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 56.0   3.6   1:13.15 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8469 u0_a488      10 -10 1.8G 310M  27M S 36.0   2.9   0:00.80 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 58.0   3.6   1:13.43 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8469 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.98 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 52.0   3.6   1:13.72 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8548 u0_a488      10 -10 1.9G 293M  10M R 42.0   2.7   0:00.00 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 36.0   3.6   1:13.98 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 50.0   3.6   1:14.16 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8548 u0_a488      10 -10 1.8G 310M  26M S 38.0   2.9   0:00.21 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 56.0   3.6   1:14.41 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8548 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:00.40 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 54.0   3.6   1:14.69 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8548 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.56 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 56.0   3.6   1:14.96 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8548 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.74 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 52.0   3.6   1:15.24 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8548 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.92 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 58.0   3.6   1:15.50 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8625 u0_a488      10 -10 1.8G 295M  11M t 44.0   2.7   0:00.00 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 38.0   3.6   1:15.79 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 52.0   3.6   1:15.98 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8625 u0_a488      10 -10 1.8G 310M  26M S 30.0   2.9   0:00.22 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   1:16.24 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8625 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.37 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 52.0   3.6   1:16.51 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8625 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:00.55 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 54.0   3.6   1:16.77 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8625 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.71 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   1:17.04 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8625 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.88 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 52.0   3.6   1:17.31 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8625 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:01.05 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 40.0   3.6   1:17.57 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 60.0   3.6   1:17.77 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8706 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.18 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   1:18.07 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8706 u0_a488      10 -10 1.8G 310M  26M R 34.0   2.9   0:00.36 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 60.0   3.6   1:18.34 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8706 u0_a488      10 -10 1.8G 310M  26M S 38.0   2.9   0:00.53 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   1:18.64 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8706 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.72 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 58.0   3.6   1:18.91 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8706 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.89 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 54.0   3.6   1:19.20 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8706 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:01.07 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 56.0   3.6   1:19.47 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 54.0   3.6   1:19.75 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8785 u0_a488      10 -10 1.8G 310M  26M R 36.0   2.9   0:00.08 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   1:20.02 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8785 u0_a488      10 -10 1.8G 310M  27M S 38.0   2.9   0:00.26 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 56.0   3.6   1:20.29 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8785 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.45 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 56.0   3.6   1:20.57 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8785 u0_a488      10 -10 1.8G 310M  27M S 36.0   2.9   0:00.62 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 60.0   3.6   1:20.85 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8785 u0_a488      10 -10 1.8G 310M  26M S 38.0   2.9   0:00.80 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 58.0   3.6   1:21.15 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8785 u0_a488      10 -10 1.8G 310M  26M S 30.0   2.9   0:00.99 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 32.0   3.6   1:21.44 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 50.0   3.6   1:21.60 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8863 u0_a488      10 -10 1.8G 310M  26M t 34.0   2.9   0:00.20 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 60.0   3.6   1:21.85 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8863 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.37 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 52.0   3.6   1:22.15 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8863 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.54 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 54.0   3.6   1:22.41 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8863 u0_a488      10 -10 1.8G 310M  26M R 38.0   2.9   0:00.71 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 58.0   3.6   1:22.68 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8863 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.90 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 56.0   3.6   1:22.97 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8863 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:01.08 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 48.0   3.6   1:23.25 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 58.0   3.6   1:23.49 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8943 u0_a488      10 -10 1.8G 310M  26M t 36.0   2.9   0:00.13 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 54.0   3.6   1:23.78 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8943 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.31 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 56.0   3.6   1:24.05 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8943 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.48 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 50.0   3.6   1:24.33 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8943 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.66 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 52.0   3.6   1:24.58 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8943 u0_a488      10 -10 1.8G 310M  27M S 32.0   2.9   0:00.84 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 52.0   3.6   1:24.84 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 8943 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:01.00 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 42.0   3.6   1:25.10 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 60.0   3.6   1:25.31 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9020 u0_a488      10 -10 1.8G 310M  26M S 38.0   2.9   0:00.09 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 56.0   3.6   1:25.61 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9020 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.28 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 54.0   3.6   1:25.89 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9020 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.46 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 60.0   3.6   1:26.16 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9020 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.64 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 52.0   3.6   1:26.46 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9020 u0_a488      10 -10 1.8G 310M  26M R 34.0   2.9   0:00.82 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 56.0   3.6   1:26.72 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9020 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.99 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 46.0   3.6   1:27.00 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 52.0   3.6   1:27.23 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9097 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.14 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   1:27.49 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9097 u0_a488      10 -10 1.8G 310M  26M R 34.0   2.9   0:00.31 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   1:27.76 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9097 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.48 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 54.0   3.6   1:28.03 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9097 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.66 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 58.0   3.6   1:28.30 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9097 u0_a488      10 -10 1.8G 309M  26M S 34.0   2.9   0:00.84 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 62.0   3.6   1:28.59 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9097 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:01.01 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 38.0   3.6   1:28.90 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 52.0   3.6   1:29.09 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9177 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.17 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S  108   3.6   1:29.35 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9177 u0_a488      10 -10 1.8G 310M  26M S 46.0   2.9   0:00.35 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 80.0   3.6   1:29.89 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R  108   3.6   1:30.29 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9257 u0_a488      10 -10 1.8G 310M  26M S 46.0   2.9   0:00.22 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 80.0   3.6   1:30.83 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R  112   3.6   1:31.23 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9340 u0_a488      10 -10 1.8G 310M  26M S 48.0   2.9   0:00.22 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 84.0   3.6   1:31.79 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R  106   3.6   1:32.21 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9422 u0_a488      10 -10 1.8G 310M  26M S 54.0   2.9   0:00.13 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 88.0   3.6   1:32.74 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R  112   3.6   1:33.18 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9501 u0_a488      10 -10 1.8G 310M  26M R 50.0   2.9   0:00.08 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S  106   3.6   1:33.74 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 62.0   3.6   1:34.27 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9579 u0_a488      10 -10 1.9G 288M 4.5M R 42.0   2.7   0:00.00 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 58.0   3.6   1:34.58 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9579 u0_a488      10 -10 1.8G 310M  27M S 36.0   2.9   0:00.21 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 52.0   3.6   1:34.87 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9579 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.39 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   1:35.13 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9579 u0_a488      10 -10 1.8G 310M  27M S 36.0   2.9   0:00.57 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   1:35.40 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9579 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.75 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 52.0   3.6   1:35.67 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9579 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:00.92 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 42.0   3.6   1:35.93 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 52.0   3.6   1:36.14 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9659 u0_a488      10 -10 1.8G 310M  26M R 34.0   2.9   0:00.10 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 56.0   3.6   1:36.40 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9659 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.27 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   1:36.68 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9659 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.45 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 52.0   3.6   1:36.95 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9659 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:00.63 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 52.0   3.6   1:37.21 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9659 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.79 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 54.0   3.6   1:37.47 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9659 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.96 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 56.0   3.6   1:37.74 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.9G 291M 7.5M R 40.0   2.7   0:00.00 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 40.0   3.6   1:38.02 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 52.0   3.6   1:38.22 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.20 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 56.0   3.6   1:38.48 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:00.38 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 54.0   3.6   1:38.76 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.55 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 52.0   3.6   1:39.03 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 40.0   2.9   0:00.73 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   1:39.29 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:00.93 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 60.0   3.6   1:39.56 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:01.11 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 52.0   3.6   1:39.86 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 38.0   2.9   0:01.29 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   1:40.12 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:01.48 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 56.0   3.6   1:40.39 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  27M S 38.0   2.9   0:01.65 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 56.0   3.6   1:40.67 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:01.84 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 52.0   3.6   1:40.95 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 38.0   2.9   0:02.02 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 52.0   3.6   1:41.21 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:02.21 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 52.0   3.6   1:41.47 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:02.38 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 56.0   3.6   1:41.73 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:02.55 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   1:42.01 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:02.73 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 50.0   3.6   1:42.28 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:02.89 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 60.0   3.6   1:42.53 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  27M S 40.0   2.9   0:03.06 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 50.0   3.6   1:42.83 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:03.26 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 54.0   3.6   1:43.08 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 32.0   2.9   0:03.43 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 48.0   3.6   1:43.35 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 40.0   2.9   0:03.59 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 56.0   3.6   1:43.59 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:03.79 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 56.0   3.6   1:43.87 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  27M S 34.0   2.9   0:03.97 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 48.0   3.6   1:44.15 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:04.14 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 50.0   3.6   1:44.39 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:04.31 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 52.0   3.6   1:44.64 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 34.0   2.9   0:04.49 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 56.0   3.6   1:44.90 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:04.66 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 50.0   3.6   1:45.18 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  27M S 36.0   2.9   0:04.84 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 58.0   3.6   1:45.43 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:05.02 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 58.0   3.6   1:45.72 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 36.0   2.9   0:05.20 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M t 54.0   3.6   1:46.01 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 38.0   2.9   0:05.38 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M S 54.0   3.6   1:46.28 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 9737 u0_a488      10 -10 1.8G 310M  26M S 28.0   2.9   0:05.57 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
- 5366 u0_a488      10 -10 1.9G 389M 105M R 98.0   3.6   1:46.55 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10  12M 8.2M 4.8M R  216   0.0   0:00.15 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 485M  67M  40M R 82.0   0.6   0:01.23 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 525M 131M  63M R 64.0   1.2   0:01.64 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 533M 139M  64M R 60.0   1.3   0:01.96 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 544M 149M  64M R 60.0   1.4   0:02.26 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 556M 161M  64M t 64.0   1.5   0:02.56 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 568M 174M  65M t 76.0   1.6   0:02.88 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 583M 189M  65M R  176   1.7   0:03.26 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 798M 209M  71M R 58.0   1.9   0:04.14 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 828M 226M  80M R 70.0   2.1   0:04.43 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 862M 247M  86M R 50.0   2.3   0:04.78 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 865M 249M  86M t 48.0   2.3   0:05.03 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 868M 252M  86M R 68.0   2.3   0:05.27 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 885M 264M  89M R 66.0   2.4   0:05.61 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 919M 286M  96M R 10.0   2.6   0:05.94 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.0G 298M 102M S  0.0   2.8   0:05.99 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.0G 298M 102M S  0.0   2.8   0:05.99 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.0G 298M 102M S  0.0   2.8   0:05.99 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.0G 298M 102M S  0.0   2.8   0:05.99 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.0G 298M 102M S  0.0   2.8   0:05.99 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.0G 298M 102M S  252   2.8   0:05.99 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.7G 404M 111M R  362   3.8   0:07.25 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.7G 415M 112M S  316   3.9   0:09.06 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 453M 112M R  320   4.2   0:10.64 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.7G 438M 112M R  364   4.1   0:12.24 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.7G 442M 112M R  352   4.1   0:14.06 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 456M 112M R  360   4.3   0:15.82 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 456M 112M S  304   4.2   0:17.62 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 456M 112M R  250   4.2   0:19.14 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 456M 112M R  314   4.2   0:20.39 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 468M 112M R  296   4.4   0:21.96 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 452M 112M R  306   4.2   0:23.44 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.7G 445M 112M R  226   4.1   0:24.97 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 447M 112M R  268   4.2   0:26.10 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 453M 112M R  294   4.2   0:27.44 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.7G 445M 112M R  238   4.1   0:28.91 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 447M 112M R  306   4.2   0:30.10 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 453M 112M S  260   4.2   0:31.63 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.7G 445M 112M R  224   4.1   0:32.93 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 473M 112M R  282   4.4   0:34.05 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 481M 112M R  272   4.5   0:35.46 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 459M 112M S  322   4.3   0:36.82 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 473M 112M S  240   4.4   0:38.43 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 473M 112M R  352   4.4   0:39.63 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.7G 436M 112M R  286   4.1   0:41.39 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 465M 112M R  316   4.3   0:42.82 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 486M 112M R  310   4.5   0:44.40 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 466M 112M R  278   4.3   0:45.95 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 466M 112M R  308   4.3   0:47.34 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 481M 112M S  310   4.5   0:48.88 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 480M 112M R  306   4.5   0:50.43 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 472M 112M R  234   4.4   0:51.96 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 472M 112M R  314   4.4   0:53.13 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 474M 112M R  270   4.4   0:54.70 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 472M 112M S  268   4.4   0:56.05 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 472M 112M R  292   4.4   0:57.39 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 474M 112M S  304   4.4   0:58.85 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 472M 112M S  146   4.4   1:00.37 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.7G 435M 112M S  0.0   4.1   1:01.10 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.7G 435M 112M S  0.0   4.1   1:01.10 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.7G 435M 112M S  0.0   4.1   1:01.10 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.7G 435M 112M S  0.0   4.1   1:01.10 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.7G 435M 112M S  0.0   4.1   1:01.10 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.7G 435M 112M S  0.0   4.1   1:01.10 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.7G 435M 112M S  0.0   4.1   1:01.10 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.7G 435M 112M S  0.0   4.1   1:01.10 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.7G 435M 112M S  0.0   4.1   1:01.10 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.7G 435M 112M S  0.0   4.1   1:01.10 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.7G 435M 112M S  0.0   4.1   1:01.10 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.7G 435M 112M S 30.0   4.1   1:01.10 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 436M 112M R  112   4.1   1:01.25 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30818 u0_a488      10 -10 1.7G 348M  24M S 38.0   3.2   0:00.07 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 437M 113M t 94.0   4.1   1:01.81 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R  120   3.7   1:02.28 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30895 u0_a488      10 -10 1.7G 313M  23M R 40.0   2.9   0:00.04 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R  116   3.7   1:02.88 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M t  100   3.7   1:03.46 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R  106   3.7   1:03.96 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30972 u0_a488      10 -10 1.8G 313M  23M S 36.0   2.9   0:00.20 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S  100   3.7   1:04.49 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R  110   3.7   1:04.99 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31049 u0_a488      10 -10 1.8G 313M  24M S 42.0   2.9   0:00.12 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 94.0   3.7   1:05.54 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S  110   3.7   1:06.01 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31126 u0_a488      10 -10 1.8G 313M  24M S 38.0   2.9   0:00.07 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 60.0   3.7   1:06.56 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31126 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.26 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 56.0   3.7   1:06.86 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31126 u0_a488      10 -10 1.8G 313M  24M S 32.0   2.9   0:00.42 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 58.0   3.7   1:07.14 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31126 u0_a488      10 -10 1.8G 313M  23M S 34.0   2.9   0:00.58 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 58.0   3.7   1:07.43 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 52.0   3.7   1:07.72 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31206 u0_a488      10 -10 1.8G 301M  11M t 32.0   2.8   0:00.01 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 56.0   3.7   1:07.98 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31206 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.17 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 54.0   3.7   1:08.26 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31206 u0_a488      10 -10 1.8G 313M  24M S 32.0   2.9   0:00.33 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 62.0   3.7   1:08.53 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31206 u0_a488      10 -10 1.8G 313M  24M S 34.0   2.9   0:00.49 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 60.0   3.7   1:08.84 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31206 u0_a488      10 -10 1.8G 313M  24M S 28.0   2.9   0:00.66 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 60.0   3.7   1:09.14 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31206 u0_a488      10 -10 1.8G 313M  23M S 34.0   2.9   0:00.80 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 60.0   3.7   1:09.44 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31206 u0_a488      10 -10 1.8G 313M  24M S 26.0   2.9   0:00.97 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 38.0   3.7   1:09.74 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M S 54.0   3.7   1:09.93 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31283 u0_a488      10 -10 1.8G 313M  24M S 30.0   2.9   0:00.17 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 56.0   3.7   1:10.20 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31283 u0_a488      10 -10 1.8G 313M  24M S 32.0   2.9   0:00.32 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M t 58.0   3.7   1:10.48 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31283 u0_a488      10 -10 1.8G 313M  24M S 32.0   2.9   0:00.48 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M S 58.0   3.7   1:10.77 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31283 u0_a488      10 -10 1.8G 313M  23M S 30.0   2.9   0:00.64 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 64.0   3.7   1:11.06 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31283 u0_a488      10 -10 1.8G 313M  24M S 34.0   2.9   0:00.79 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 54.0   3.7   1:11.38 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31283 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.96 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M t 46.0   3.7   1:11.65 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 56.0   3.7   1:11.88 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31360 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.09 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 62.0   3.7   1:12.16 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31360 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.25 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 56.0   3.7   1:12.47 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31360 u0_a488      10 -10 1.8G 313M  23M S 30.0   2.9   0:00.41 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 64.0   3.7   1:12.75 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31360 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.56 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 52.0   3.7   1:13.07 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31360 u0_a488      10 -10 1.8G 313M  23M S 30.0   2.9   0:00.72 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 54.0   3.7   1:13.33 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31360 u0_a488      10 -10 1.8G 313M  23M S 28.0   2.9   0:00.87 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 40.0   3.7   1:13.60 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M t 60.0   3.7   1:13.80 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31440 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.09 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 56.0   3.7   1:14.10 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31440 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.25 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 56.0   3.7   1:14.38 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31440 u0_a488      10 -10 1.8G 313M  24M S 30.0   2.9   0:00.41 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 58.0   3.7   1:14.66 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31440 u0_a488      10 -10 1.8G 313M  23M S 30.0   2.9   0:00.56 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 56.0   3.7   1:14.95 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31440 u0_a488      10 -10 1.8G 313M  24M S 32.0   2.9   0:00.71 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 60.0   3.7   1:15.23 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31440 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.87 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 58.0   3.7   1:15.53 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 56.0   3.7   1:15.82 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31517 u0_a488      10 -10 1.8G 312M  23M S 36.0   2.9   0:00.04 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 54.0   3.7   1:16.10 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31517 u0_a488      10 -10 1.8G 313M  24M S 30.0   2.9   0:00.22 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 60.0   3.7   1:16.37 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31517 u0_a488      10 -10 1.8G 313M  24M S 34.0   2.9   0:00.37 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 52.0   3.7   1:16.67 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31517 u0_a488      10 -10 1.8G 313M  23M S 30.0   2.9   0:00.54 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M t 58.0   3.7   1:16.93 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31517 u0_a488      10 -10 1.8G 313M  23M S 30.0   2.9   0:00.69 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 58.0   3.7   1:17.22 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31517 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.84 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M t 58.0   3.7   1:17.51 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31517 u0_a488      10 -10 1.8G 313M  24M S 26.0   2.9   0:01.00 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 40.0   3.7   1:17.80 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 58.0   3.7   1:18.00 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31597 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.17 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 54.0   3.7   1:18.29 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31597 u0_a488      10 -10 1.8G 313M  24M S 30.0   2.9   0:00.33 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 54.0   3.7   1:18.56 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31597 u0_a488      10 -10 1.8G 313M  24M S 30.0   2.9   0:00.48 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M t 54.0   3.7   1:18.83 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31597 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.63 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 64.0   3.7   1:19.10 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31597 u0_a488      10 -10 1.8G 313M  24M S 32.0   2.9   0:00.79 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 56.0   3.7   1:19.42 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31597 u0_a488      10 -10 1.8G 313M  23M S 30.0   2.9   0:00.95 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 54.0   3.7   1:19.70 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 52.0   3.7   1:19.97 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31678 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.04 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 58.0   3.7   1:20.23 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31678 u0_a488      10 -10 1.8G 313M  23M S 28.0   2.9   0:00.20 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 56.0   3.7   1:20.52 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31678 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.34 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 54.0   3.7   1:20.80 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31678 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.50 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 52.0   3.7   1:21.07 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31678 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.66 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M t 54.0   3.7   1:21.33 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31678 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.82 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 54.0   3.7   1:21.60 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31678 u0_a488      10 -10 1.8G 313M  23M S 26.0   2.9   0:00.98 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 50.0   3.7   1:21.87 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 56.0   3.7   1:22.12 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31755 u0_a488      10 -10 1.8G 313M  24M S 30.0   2.9   0:00.14 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 64.0   3.7   1:22.40 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31755 u0_a488      10 -10 1.8G 313M  24M S 32.0   2.9   0:00.29 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 60.0   3.7   1:22.72 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31755 u0_a488      10 -10 1.8G 313M  24M S 32.0   2.9   0:00.45 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 56.0   3.7   1:23.02 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31755 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.61 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M t 56.0   3.7   1:23.30 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31755 u0_a488      10 -10 1.8G 313M  24M S 30.0   2.9   0:00.77 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 56.0   3.7   1:23.58 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 42.0   3.7   1:23.86 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31835 u0_a488      10 -10 1.8G 299M  10M t 38.0   2.8   0:00.00 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 56.0   3.7   1:24.07 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31835 u0_a488      10 -10 1.8G 313M  23M S 30.0   2.9   0:00.19 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 62.0   3.7   1:24.35 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31835 u0_a488      10 -10 1.8G 313M  23M S 30.0   2.9   0:00.34 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 58.0   3.7   1:24.66 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31835 u0_a488      10 -10 1.8G 313M  23M S 30.0   2.9   0:00.49 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 54.0   3.7   1:24.95 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31835 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.64 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M t 58.0   3.7   1:25.22 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31835 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.80 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 54.0   3.7   1:25.51 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31835 u0_a488      10 -10 1.8G 313M  23M S 30.0   2.9   0:00.96 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 40.0   3.7   1:25.78 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 52.0   3.7   1:25.98 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31912 u0_a488      10 -10 1.8G 313M  23M R 30.0   2.9   0:00.12 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 64.0   3.7   1:26.24 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31912 u0_a488      10 -10 1.8G 313M  23M S 34.0   2.9   0:00.27 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 56.0   3.7   1:26.56 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31912 u0_a488      10 -10 1.8G 313M  23M S 28.0   2.9   0:00.44 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 60.0   3.7   1:26.84 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31912 u0_a488      10 -10 1.8G 313M  23M S 34.0   2.9   0:00.58 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 54.0   3.7   1:27.14 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31912 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.75 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 62.0   3.7   1:27.41 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31912 u0_a488      10 -10 1.8G 313M  23M S 30.0   2.9   0:00.91 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 56.0   3.7   1:27.72 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 48.0   3.7   1:28.00 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M S 60.0   3.7   1:28.24 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31989 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.18 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 52.0   3.7   1:28.54 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31989 u0_a488      10 -10 1.8G 313M  24M S 30.0   2.9   0:00.34 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M S 60.0   3.7   1:28.80 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31989 u0_a488      10 -10 1.8G 313M  24M S 30.0   2.9   0:00.49 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 56.0   3.7   1:29.10 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31989 u0_a488      10 -10 1.8G 313M  23M S 34.0   2.9   0:00.64 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 52.0   3.7   1:29.38 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+31989 u0_a488      10 -10 1.8G 313M  24M S 30.0   2.9   0:00.81 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M t 56.0   3.7   1:29.64 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 40.0   3.7   1:29.92 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M t 58.0   3.7   1:30.12 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32069 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.18 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 52.0   3.7   1:30.41 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32069 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.34 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 56.0   3.7   1:30.67 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32069 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.50 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 54.0   3.7   1:30.95 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32069 u0_a488      10 -10 1.8G 313M  23M S 30.0   2.9   0:00.66 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 56.0   3.7   1:31.22 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32069 u0_a488      10 -10 1.8G 313M  23M S 30.0   2.9   0:00.81 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 56.0   3.7   1:31.50 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32069 u0_a488      10 -10 1.8G 313M  23M S 30.0   2.9   0:00.96 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 50.0   3.7   1:31.78 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 56.0   3.7   1:32.03 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32146 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.07 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M S 52.0   3.7   1:32.31 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32146 u0_a488      10 -10 1.8G 313M  24M S 30.0   2.9   0:00.23 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 54.0   3.7   1:32.57 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32146 u0_a488      10 -10 1.8G 313M  24M S 30.0   2.9   0:00.38 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 56.0   3.7   1:32.84 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32146 u0_a488      10 -10 1.8G 313M  24M S 32.0   2.9   0:00.53 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M S 52.0   3.7   1:33.12 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32146 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.69 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 62.0   3.7   1:33.38 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32146 u0_a488      10 -10 1.8G 313M  24M S 30.0   2.9   0:00.85 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 54.0   3.7   1:33.69 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32146 u0_a488      10 -10 1.8G 313M  23M S 26.0   2.9   0:01.00 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 34.0   3.7   1:33.96 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 58.0   3.7   1:34.13 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32225 u0_a488      10 -10 1.8G 313M  23M S 30.0   2.9   0:00.17 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 54.0   3.7   1:34.42 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32225 u0_a488      10 -10 1.8G 313M  23M S 28.0   2.9   0:00.32 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M S 54.0   3.7   1:34.69 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32225 u0_a488      10 -10 1.8G 313M  23M S 30.0   2.9   0:00.46 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M S 60.0   3.7   1:34.96 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32225 u0_a488      10 -10 1.8G 313M  23M S 34.0   2.9   0:00.61 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M S 54.0   3.7   1:35.26 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32225 u0_a488      10 -10 1.8G 313M  23M S 30.0   2.9   0:00.78 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 52.0   3.7   1:35.53 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32225 u0_a488      10 -10 1.8G 313M  23M S 30.0   2.9   0:00.93 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 58.0   3.7   1:35.79 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 40.0   3.7   1:36.08 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 52.0   3.7   1:36.28 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32305 u0_a488      10 -10 1.8G 313M  23M S 30.0   2.9   0:00.19 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 58.0   3.7   1:36.54 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32305 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.34 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 58.0   3.7   1:36.83 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32305 u0_a488      10 -10 1.8G 313M  24M S 34.0   2.9   0:00.50 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M t 60.0   3.7   1:37.12 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32305 u0_a488      10 -10 1.8G 313M  23M S 30.0   2.9   0:00.67 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 54.0   3.7   1:37.42 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32305 u0_a488      10 -10 1.8G 313M  24M S 30.0   2.9   0:00.82 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 56.0   3.7   1:37.69 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32305 u0_a488      10 -10 1.8G 313M  23M S 26.0   2.9   0:00.97 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 34.0   3.7   1:37.97 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M t 60.0   3.7   1:38.14 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  24M S 34.0   2.9   0:00.16 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M S 56.0   3.7   1:38.44 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  24M S 32.0   2.9   0:00.33 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 54.0   3.7   1:38.72 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  24M S 32.0   2.9   0:00.49 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 60.0   3.7   1:38.99 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:00.65 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 58.0   3.7   1:39.29 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  24M S 32.0   2.9   0:00.81 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 60.0   3.7   1:39.58 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  23M S 34.0   2.9   0:00.97 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M t 60.0   3.7   1:39.88 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  24M S 30.0   2.9   0:01.14 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 60.0   3.7   1:40.18 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  23M S 36.0   2.9   0:01.29 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M S 58.0   3.7   1:40.48 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  24M S 30.0   2.9   0:01.47 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M t 58.0   3.7   1:40.77 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  23M S 34.0   2.9   0:01.62 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M t 54.0   3.7   1:41.06 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  24M S 30.0   2.9   0:01.79 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 60.0   3.7   1:41.33 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  23M S 34.0   2.9   0:01.94 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 60.0   3.7   1:41.63 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  24M S 30.0   2.9   0:02.11 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 54.0   3.7   1:41.93 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:02.26 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 60.0   3.7   1:42.20 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  24M S 36.0   2.9   0:02.42 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 54.0   3.7   1:42.50 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  23M S 30.0   2.9   0:02.60 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M t 58.0   3.7   1:42.77 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  24M S 30.0   2.9   0:02.75 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 58.0   3.7   1:43.06 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  24M S 30.0   2.9   0:02.90 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 54.0   3.7   1:43.35 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  23M S 34.0   2.9   0:03.05 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 62.0   3.7   1:43.62 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  24M R 34.0   2.9   0:03.22 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M S 54.0   3.7   1:43.93 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  23M S 30.0   2.9   0:03.39 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 58.0   3.7   1:44.20 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  24M S 34.0   2.9   0:03.54 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 60.0   3.7   1:44.49 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  23M S 34.0   2.9   0:03.71 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M S 58.0   3.7   1:44.79 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  24M S 30.0   2.9   0:03.88 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M S 52.0   3.7   1:45.08 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  23M S 34.0   2.9   0:04.03 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 56.0   3.7   1:45.34 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  24M S 32.0   2.9   0:04.20 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M S 50.0   3.7   1:45.62 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  24M S 28.0   2.9   0:04.36 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 403M 113M R 52.0   3.7   1:45.87 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  24M S 30.0   2.9   0:04.50 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 56.0   3.7   1:46.13 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  23M S 32.0   2.9   0:04.65 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M R 56.0   3.7   1:46.41 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+32384 u0_a488      10 -10 1.8G 313M  24M S 30.0   2.9   0:04.81 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml
+30686 u0_a488      10 -10 1.8G 402M 113M S 88.0   3.7   1:46.69 python3 experiment.py --config /home/hjyoon/configs/10shot/metatpn.yaml

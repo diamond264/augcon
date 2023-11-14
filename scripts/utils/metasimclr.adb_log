@@ -1,470 +1,394 @@
- 7573 u0_a488      10 -10 177M  12M 6.1M t  194   0.1   0:00.06 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 453M  67M  39M R 78.0   0.6   0:01.03 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 493M 131M  63M R 64.0   1.2   0:01.42 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 504M 142M  63M t 54.0   1.3   0:01.74 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 512M 150M  64M R 62.0   1.4   0:02.01 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 524M 161M  64M R 62.0   1.5   0:02.32 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 538M 176M  65M t 72.0   1.6   0:02.63 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 552M 190M  65M R  172   1.7   0:02.99 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 762M 208M  69M t 60.0   1.9   0:03.85 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 785M 219M  73M R 64.0   2.0   0:04.15 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 814M 236M  77M R 54.0   2.2   0:04.47 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 822M 240M  78M R 66.0   2.2   0:04.74 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 838M 250M  79M t 66.0   2.3   0:05.07 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 857M 262M  82M t 70.0   2.4   0:05.40 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 0.9G 291M  92M S  0.0   2.7   0:05.75 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 0.9G 291M  92M S  0.0   2.7   0:05.75 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 0.9G 291M  92M S  0.0   2.7   0:05.75 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 0.9G 291M  92M S  0.0   2.7   0:05.75 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 0.9G 291M  92M S  0.0   2.7   0:05.75 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 0.9G 291M  92M S  6.0   2.7   0:05.75 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.4G 352M 100M R  278   3.3   0:05.78 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.7G 456M 105M S  266   4.3   0:07.17 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.7G 451M 106M S  290   4.2   0:08.50 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 496M 106M R  268   4.6   0:09.95 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 510M 106M S  262   4.8   0:11.29 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 511M 106M R  312   4.8   0:12.60 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 503M 106M R  240   4.7   0:14.16 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 505M 106M S  308   4.7   0:15.36 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 505M 106M R  266   4.7   0:16.90 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 495M 106M R  284   4.6   0:18.23 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 510M 106M R  230   4.8   0:19.65 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 511M 106M R  226   4.8   0:20.80 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 510M 106M R  306   4.8   0:21.93 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 512M 106M R  242   4.8   0:23.46 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 484M 106M R  280   4.5   0:24.67 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 510M 106M S  240   4.8   0:26.07 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 510M 106M S  208   4.8   0:27.27 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 510M 106M R  308   4.8   0:28.31 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 522M 106M R  260   4.9   0:29.85 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 511M 106M S  248   4.8   0:31.15 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 510M 106M R  282   4.8   0:32.39 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 510M 106M R  246   4.8   0:33.80 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 510M 106M S  298   4.8   0:35.03 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 489M 106M R  156   4.6   0:36.52 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.7G 452M 106M S  0.0   4.2   0:37.30 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.7G 452M 106M S  0.0   4.2   0:37.30 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.7G 452M 106M S  0.0   4.2   0:37.30 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.7G 452M 106M S  0.0   4.2   0:37.30 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.7G 452M 106M S  0.0   4.2   0:37.30 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.7G 452M 106M S  0.0   4.2   0:37.30 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.7G 452M 106M S  0.0   4.2   0:37.30 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.7G 452M 106M S  0.0   4.2   0:37.30 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.7G 452M 106M S  0.0   4.2   0:37.30 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.7G 452M 106M S  0.0   4.2   0:37.30 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.7G 452M 106M S  0.0   4.2   0:37.30 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.7G 452M 106M S 46.0   4.2   0:37.30 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M R  128   4.2   0:37.53 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7695 u0_a488      10 -10 1.7G 372M  26M R 30.0   3.5   0:00.07 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M S  110   4.2   0:38.17 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R  124   4.2   0:38.72 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M S  124   4.2   0:39.34 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7856 u0_a488      10 -10 1.8G 357M  11M R 40.0   3.3   0:00.00 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M S  112   4.2   0:39.96 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M S  130   4.2   0:40.52 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7938 u0_a488      10 -10 1.8G 372M  26M R 34.0   3.5   0:00.10 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R  116   4.2   0:41.17 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M S  122   4.2   0:41.75 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M S 96.0   4.2   0:42.36 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8106 u0_a488      10 -10 1.8G 355M 8.8M S 34.0   3.3   0:00.00 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M S 84.0   4.2   0:42.84 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8106 u0_a488      10 -10 1.8G 372M  25M S 34.0   3.5   0:00.17 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R 94.0   4.2   0:43.26 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8106 u0_a488      10 -10 1.8G 372M  25M t 30.0   3.5   0:00.34 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M S 82.0   4.2   0:43.73 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M S 80.0   4.2   0:44.14 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8193 u0_a488      10 -10 1.8G 357M  11M t 34.0   3.3   0:00.01 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M t 90.0   4.2   0:44.54 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8193 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.18 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M t 82.0   4.2   0:44.99 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8193 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.34 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M t 88.0   4.2   0:45.40 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8193 u0_a488      10 -10 1.8G 372M  25M S 30.0   3.5   0:00.50 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M t 64.0   4.2   0:45.84 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R 86.0   4.2   0:46.16 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8272 u0_a488      10 -10 1.8G 372M  26M t 32.0   3.5   0:00.08 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R 86.0   4.2   0:46.59 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8272 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.24 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M t 88.0   4.2   0:47.02 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8272 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.40 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M R 86.0   4.2   0:47.46 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8272 u0_a488      10 -10 1.8G 372M  26M S 28.0   3.5   0:00.56 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M S 70.0   4.2   0:47.89 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R 90.0   4.2   0:48.24 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8354 u0_a488      10 -10 1.8G 372M  26M R 32.0   3.5   0:00.13 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M R 88.0   4.2   0:48.69 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8354 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.29 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M S 88.0   4.2   0:49.13 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8354 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.45 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M t 66.0   4.2   0:49.57 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M S 88.0   4.2   0:49.90 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8454 u0_a488      10 -10 1.8G 371M  25M S 34.0   3.5   0:00.05 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R 80.0   4.2   0:50.34 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8454 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.22 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R 88.0   4.2   0:50.74 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8454 u0_a488      10 -10 1.8G 372M  26M R 32.0   3.5   0:00.37 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M t 90.0   4.2   0:51.18 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8454 u0_a488      10 -10 1.8G 372M  26M S 36.0   3.5   0:00.53 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M S 56.0   4.2   0:51.63 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M R 86.0   4.2   0:51.91 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8538 u0_a488      10 -10 1.8G 372M  26M S 28.0   3.5   0:00.11 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M R 96.0   4.2   0:52.34 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8538 u0_a488      10 -10 1.8G 372M  26M R 30.0   3.5   0:00.25 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M S 82.0   4.2   0:52.82 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8538 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.40 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M R 84.0   4.2   0:53.23 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M R 64.0   4.2   0:53.65 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R 82.0   4.2   0:53.97 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8617 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.18 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R 86.0   4.2   0:54.38 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8617 u0_a488      10 -10 1.8G 372M  26M R 32.0   3.5   0:00.34 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M S 94.0   4.2   0:54.81 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8617 u0_a488      10 -10 1.8G 372M  26M R 34.0   3.5   0:00.50 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M R 56.0   4.2   0:55.28 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 84.0   4.2   0:55.56 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8694 u0_a488      10 -10 1.8G 372M  25M S 32.0   3.5   0:00.11 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M S 86.0   4.2   0:55.98 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8694 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.27 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R 86.0   4.2   0:56.41 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8694 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.42 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R 88.0   4.2   0:56.84 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8694 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.58 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M R 60.0   4.2   0:57.28 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M t 86.0   4.2   0:57.58 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8776 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.15 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M R 90.0   4.2   0:58.01 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8776 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.31 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M R 88.0   4.2   0:58.46 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8776 u0_a488      10 -10 1.8G 372M  26M S 34.0   3.5   0:00.47 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M S 84.0   4.2   0:58.90 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8776 u0_a488      10 -10 1.8G 372M  26M S 26.0   3.5   0:00.64 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M S 50.0   4.2   0:59.32 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M S 88.0   4.2   0:59.57 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8860 u0_a488      10 -10 1.8G 372M  26M R 28.0   3.5   0:00.19 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R 82.0   4.2   1:00.01 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8860 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.33 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M t 92.0   4.2   1:00.42 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8860 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.49 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M R 66.0   4.2   1:00.88 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M R 84.0   4.2   1:01.21 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8939 u0_a488      10 -10 1.8G 372M  26M S 28.0   3.5   0:00.08 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R 88.0   4.2   1:01.63 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8939 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.22 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M S 90.0   4.2   1:02.07 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8939 u0_a488      10 -10 1.8G 372M  26M S 36.0   3.5   0:00.37 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M R 90.0   4.2   1:02.52 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 8939 u0_a488      10 -10 1.8G 372M  26M S 28.0   3.5   0:00.55 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 452M 106M R 54.0   4.2   1:02.97 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 86.0   4.2   1:03.24 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9018 u0_a488      10 -10 1.8G 372M  26M R 32.0   3.5   0:00.17 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 86.0   4.2   1:03.67 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9018 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.33 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R 90.0   4.2   1:04.10 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9018 u0_a488      10 -10 1.8G 372M  26M R 30.0   3.5   0:00.49 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 62.0   4.2   1:04.55 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 78.0   4.2   1:04.86 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9097 u0_a488      10 -10 1.8G 372M  25M S 32.0   3.5   0:00.09 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 86.0   4.2   1:05.25 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9097 u0_a488      10 -10 1.8G 372M  26M R 34.0   3.5   0:00.25 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 94.0   4.2   1:05.68 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9097 u0_a488      10 -10 1.8G 372M  26M t 28.0   3.5   0:00.42 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 86.0   4.2   1:06.15 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M t 60.0   4.2   1:06.58 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 90.0   4.2   1:06.88 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9176 u0_a488      10 -10 1.8G 372M  26M S 34.0   3.5   0:00.18 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 82.0   4.2   1:07.33 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9176 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.35 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R 82.0   4.2   1:07.74 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9176 u0_a488      10 -10 1.8G 372M  26M S 28.0   3.5   0:00.51 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 82.0   4.2   1:08.15 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 72.0   4.2   1:08.56 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9260 u0_a488      10 -10 1.8G 357M  11M t 38.0   3.3   0:00.00 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 88.0   4.2   1:08.92 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9260 u0_a488      10 -10 1.8G 372M  26M S 34.0   3.5   0:00.19 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 86.0   4.2   1:09.36 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9260 u0_a488      10 -10 1.8G 372M  26M R 30.0   3.5   0:00.36 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 96.0   4.2   1:09.79 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9260 u0_a488      10 -10 1.8G 372M  26M R 34.0   3.5   0:00.51 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R 54.0   4.2   1:10.27 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 90.0   4.2   1:10.54 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9344 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.10 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 88.0   4.2   1:10.99 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9344 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.26 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 88.0   4.2   1:11.43 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9344 u0_a488      10 -10 1.8G 372M  26M S 34.0   3.5   0:00.41 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R 86.0   4.2   1:11.87 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9344 u0_a488      10 -10 1.8G 372M  26M S 28.0   3.5   0:00.58 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R 60.0   4.2   1:12.30 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 84.0   4.2   1:12.60 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9433 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.12 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 86.0   4.2   1:13.02 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9433 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.28 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 88.0   4.2   1:13.45 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9433 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.44 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 90.0   4.2   1:13.89 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9433 u0_a488      10 -10 1.8G 372M  26M S 26.0   3.5   0:00.59 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M S 56.0   4.2   1:14.34 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 88.0   4.2   1:14.62 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9515 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.18 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 84.0   4.2   1:15.06 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9515 u0_a488      10 -10 1.8G 372M  26M S 34.0   3.5   0:00.33 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 88.0   4.2   1:15.48 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9515 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.50 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 66.0   4.2   1:15.92 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 90.0   4.2   1:16.25 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9597 u0_a488      10 -10 1.8G 372M  25M S 30.0   3.5   0:00.07 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 90.0   4.2   1:16.70 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9597 u0_a488      10 -10 1.8G 372M  25M S 30.0   3.5   0:00.22 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M S 84.0   4.2   1:17.15 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9597 u0_a488      10 -10 1.8G 372M  25M S 30.0   3.5   0:00.37 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R 84.0   4.2   1:17.57 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9597 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.52 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M S 60.0   4.2   1:17.99 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 84.0   4.2   1:18.29 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9676 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.10 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 92.0   4.2   1:18.71 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9676 u0_a488      10 -10 1.8G 372M  26M t 30.0   3.5   0:00.26 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 90.0   4.2   1:19.17 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9676 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.41 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 88.0   4.2   1:19.62 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9676 u0_a488      10 -10 1.8G 372M  26M S 26.0   3.5   0:00.57 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 50.0   4.2   1:20.06 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 84.0   4.2   1:20.31 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9754 u0_a488      10 -10 1.8G 372M  26M R 30.0   3.5   0:00.18 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 88.0   4.2   1:20.73 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9754 u0_a488      10 -10 1.8G 372M  26M S 34.0   3.5   0:00.33 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 86.0   4.2   1:21.17 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9754 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.50 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M t 90.0   4.2   1:21.60 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9754 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.66 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M S 58.0   4.2   1:22.05 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 88.0   4.2   1:22.34 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9833 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.17 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 86.0   4.2   1:22.78 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9833 u0_a488      10 -10 1.8G 372M  26M S 34.0   3.5   0:00.33 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 86.0   4.2   1:23.21 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9833 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.50 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M t 84.0   4.2   1:23.64 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M S 78.0   4.2   1:24.06 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9921 u0_a488      10 -10 1.8G 360M  14M R 34.0   3.3   0:00.01 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 88.0   4.2   1:24.45 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9921 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.18 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 88.0   4.2   1:24.89 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9921 u0_a488      10 -10 1.8G 372M  26M S 34.0   3.5   0:00.33 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 86.0   4.2   1:25.33 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 9921 u0_a488      10 -10 1.8G 372M  26M S 28.0   3.5   0:00.50 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 66.0   4.2   1:25.76 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M S 82.0   4.2   1:26.09 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10001 u0_a488      10 -10 1.8G 372M  26M S 28.0   3.5   0:00.06 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 86.0   4.2   1:26.50 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10001 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.20 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 84.0   4.2   1:26.93 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10001 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.36 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 88.0   4.2   1:27.35 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10001 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.52 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M S 58.0   4.2   1:27.79 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 94.0   4.2   1:28.08 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10083 u0_a488      10 -10 1.8G 372M  26M R 30.0   3.5   0:00.13 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 86.0   4.2   1:28.55 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10083 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.28 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 86.0   4.2   1:28.98 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10083 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.44 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 92.0   4.2   1:29.41 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R 56.0   4.2   1:29.87 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R 82.0   4.2   1:30.15 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10169 u0_a488      10 -10 1.8G 372M  26M R 30.0   3.5   0:00.18 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M S 86.0   4.2   1:30.56 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10169 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.33 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 84.0   4.2   1:30.99 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M t 66.0   4.2   1:31.41 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 88.0   4.2   1:31.74 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10248 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.18 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 82.0   4.2   1:32.18 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10248 u0_a488      10 -10 1.8G 372M  26M S 34.0   3.5   0:00.34 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 92.0   4.2   1:32.59 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10248 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.51 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M t 66.0   4.2   1:33.05 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 92.0   4.2   1:33.38 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10335 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.10 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 92.0   4.2   1:33.84 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10335 u0_a488      10 -10 1.8G 372M  26M t 32.0   3.5   0:00.25 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 92.0   4.2   1:34.30 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10335 u0_a488      10 -10 1.8G 372M  26M R 32.0   3.5   0:00.41 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 80.0   4.2   1:34.76 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R 70.0   4.2   1:35.16 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 88.0   4.2   1:35.51 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10415 u0_a488      10 -10 1.8G 372M  26M S 34.0   3.5   0:00.17 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 84.0   4.2   1:35.95 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10415 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.34 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M S 90.0   4.2   1:36.37 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10415 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.50 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M S 58.0   4.2   1:36.82 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 90.0   4.2   1:37.11 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10499 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.11 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 88.0   4.2   1:37.56 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10499 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.27 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 82.0   4.2   1:38.00 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10499 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.42 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 88.0   4.2   1:38.41 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10499 u0_a488      10 -10 1.8G 372M  26M S 28.0   3.5   0:00.58 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 46.0   4.2   1:38.85 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 84.0   4.2   1:39.08 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10581 u0_a488      10 -10 1.8G 372M  26M R 30.0   3.5   0:00.15 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 84.0   4.2   1:39.50 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10581 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.30 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 86.0   4.2   1:39.92 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10581 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.46 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 90.0   4.2   1:40.35 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10581 u0_a488      10 -10 1.8G 372M  26M S 26.0   3.5   0:00.62 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 54.0   4.2   1:40.80 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 84.0   4.2   1:41.07 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10663 u0_a488      10 -10 1.8G 372M  25M S 30.0   3.5   0:00.19 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 84.0   4.2   1:41.49 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10663 u0_a488      10 -10 1.8G 372M  25M S 30.0   3.5   0:00.34 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 84.0   4.2   1:41.91 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10663 u0_a488      10 -10 1.8G 372M  25M S 32.0   3.5   0:00.49 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 68.0   4.2   1:42.33 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 84.0   4.2   1:42.67 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10740 u0_a488      10 -10 1.8G 371M  25M S 30.0   3.5   0:00.06 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 90.0   4.2   1:43.09 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10740 u0_a488      10 -10 1.8G 372M  26M S 34.0   3.5   0:00.21 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 88.0   4.2   1:43.54 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10740 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.38 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 86.0   4.2   1:43.98 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10740 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.53 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 64.0   4.2   1:44.41 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 86.0   4.2   1:44.73 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10842 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.11 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 82.0   4.2   1:45.16 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10842 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.27 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 88.0   4.2   1:45.57 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10842 u0_a488      10 -10 1.8G 372M  26M R 32.0   3.5   0:00.42 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 94.0   4.2   1:46.01 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 60.0   4.2   1:46.48 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 92.0   4.2   1:46.78 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10946 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.19 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 88.0   4.2   1:47.24 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10946 u0_a488      10 -10 1.8G 372M  26M S 34.0   3.5   0:00.35 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 88.0   4.2   1:47.68 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-10946 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.52 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 68.0   4.2   1:48.12 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 88.0   4.2   1:48.46 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11031 u0_a488      10 -10 1.8G 372M  26M t 30.0   3.5   0:00.08 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 80.0   4.2   1:48.90 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11031 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.23 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 88.0   4.2   1:49.30 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11031 u0_a488      10 -10 1.8G 372M  26M t 36.0   3.5   0:00.39 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 88.0   4.2   1:49.74 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11031 u0_a488      10 -10 1.8G 372M  26M S 24.0   3.5   0:00.57 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 48.0   4.2   1:50.18 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 86.0   4.2   1:50.42 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11112 u0_a488      10 -10 1.8G 372M  25M S 32.0   3.5   0:00.19 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 84.0   4.2   1:50.85 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11112 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.35 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 86.0   4.2   1:51.27 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11112 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.51 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 68.0   4.2   1:51.70 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 88.0   4.2   1:52.04 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11191 u0_a488      10 -10 1.8G 372M  25M t 32.0   3.5   0:00.05 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 86.0   4.2   1:52.48 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11191 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.21 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 90.0   4.2   1:52.91 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11191 u0_a488      10 -10 1.8G 372M  26M S 34.0   3.5   0:00.37 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 88.0   4.2   1:53.36 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11191 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.54 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 52.0   4.2   1:53.80 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 88.0   4.2   1:54.06 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11272 u0_a488      10 -10 1.8G 372M  26M S 28.0   3.5   0:00.13 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 84.0   4.2   1:54.50 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11272 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.27 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 90.0   4.2   1:54.92 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11272 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.42 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 88.0   4.2   1:55.37 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11272 u0_a488      10 -10 1.8G 372M  26M S 28.0   3.5   0:00.58 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 50.0   4.2   1:55.81 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 86.0   4.2   1:56.06 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11353 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.17 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 90.0   4.2   1:56.49 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11353 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.32 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 92.0   4.2   1:56.94 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11353 u0_a488      10 -10 1.8G 372M  26M S 36.0   3.5   0:00.47 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 78.0   4.2   1:57.40 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 84.0   4.2   1:57.79 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11434 u0_a488      10 -10 1.8G 357M  11M t 36.0   3.3   0:00.01 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 86.0   4.2   1:58.21 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11434 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.19 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 88.0   4.2   1:58.64 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11434 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.35 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 86.0   4.2   1:59.08 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11434 u0_a488      10 -10 1.8G 372M  26M S 28.0   3.5   0:00.50 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 58.0   4.2   1:59.51 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 90.0   4.2   1:59.80 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11513 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.09 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 84.0   4.2   2:00.25 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11513 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.24 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 90.0   4.2   2:00.67 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11513 u0_a488      10 -10 1.8G 372M  26M t 32.0   3.5   0:00.40 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 86.0   4.2   2:01.12 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11513 u0_a488      10 -10 1.8G 372M  26M t 26.0   3.5   0:00.56 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 58.0   4.2   2:01.55 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 86.0   4.2   2:01.84 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11592 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.17 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 84.0   4.2   2:02.27 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11592 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.32 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 88.0   4.2   2:02.69 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11592 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.48 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 64.0   4.2   2:03.13 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 84.0   4.2   2:03.45 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11671 u0_a488      10 -10 1.8G 372M  25M S 28.0   3.5   0:00.08 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 88.0   4.2   2:03.87 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11671 u0_a488      10 -10 1.8G 372M  25M S 32.0   3.5   0:00.22 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 84.0   4.2   2:04.31 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11671 u0_a488      10 -10 1.8G 372M  25M S 34.0   3.5   0:00.38 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 96.0   4.2   2:04.73 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11671 u0_a488      10 -10 1.8G 372M  25M S 30.0   3.5   0:00.55 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 60.0   4.2   2:05.21 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 84.0   4.2   2:05.51 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11751 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.14 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 86.0   4.2   2:05.93 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11751 u0_a488      10 -10 1.8G 372M  26M S 28.0   3.5   0:00.29 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 92.0   4.2   2:06.36 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11751 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.43 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 86.0   4.2   2:06.82 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 52.0   4.2   2:07.25 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 84.0   4.2   2:07.51 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11831 u0_a488      10 -10 1.8G 372M  26M S 34.0   3.5   0:00.20 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 86.0   4.2   2:07.93 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11831 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:00.37 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 86.0   4.2   2:08.36 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11831 u0_a488      10 -10 1.8G 372M  26M S 34.0   3.5   0:00.52 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 88.0   4.2   2:08.79 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11831 u0_a488      10 -10 1.8G 372M  26M t 34.0   3.5   0:00.69 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 84.0   4.2   2:09.23 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11831 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:00.86 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 84.0   4.2   2:09.65 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11831 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:01.02 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 84.0   4.2   2:10.07 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11831 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:01.18 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 84.0   4.2   2:10.49 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11831 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:01.34 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 84.0   4.2   2:10.91 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11831 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:01.50 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 82.0   4.2   2:11.33 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11831 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:01.65 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 86.0   4.2   2:11.74 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11831 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:01.81 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 86.0   4.2   2:12.17 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11831 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:01.97 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 86.0   4.2   2:12.60 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11831 u0_a488      10 -10 1.8G 372M  26M S 30.0   3.5   0:02.13 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M t 88.0   4.2   2:13.03 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11831 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:02.28 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 90.0   4.2   2:13.47 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11831 u0_a488      10 -10 1.8G 372M  26M S 32.0   3.5   0:02.44 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M S 88.0   4.2   2:13.92 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11831 u0_a488      10 -10 1.8G 372M  26M S 34.0   3.5   0:02.60 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 82.0   4.2   2:14.36 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11831 u0_a488      10 -10 1.8G 372M  26M R 34.0   3.5   0:02.77 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 107M R 86.0   4.2   2:14.77 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
-11831 u0_a488      10 -10 1.8G 372M  26M R 28.0   3.5   0:02.94 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
- 7573 u0_a488      10 -10 1.8G 453M 106M R 98.0   4.2   2:15.20 python3 ./experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10  11M 7.7M 4.8M t  214   0.0   0:00.10 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 479M  61M  37M R 86.0   0.5   0:01.17 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 507M 101M  48M R 72.0   0.9   0:01.60 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 527M 137M  64M t 62.0   1.2   0:01.96 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 536M 145M  64M R 58.0   1.3   0:02.27 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 544M 153M  64M R 56.0   1.4   0:02.56 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 554M 162M  64M t 68.0   1.5   0:02.84 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 565M 175M  65M R 64.0   1.6   0:03.18 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 574M 184M  65M t 76.0   1.7   0:03.50 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 587M 196M  65M t  214   1.8   0:03.88 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 881M 218M  72M t 48.0   2.0   0:04.95 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 889M 223M  74M t 48.0   2.1   0:05.19 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 897M 228M  77M R 58.0   2.1   0:05.43 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 916M 239M  82M t 64.0   2.2   0:05.72 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 942M 255M  87M R 70.0   2.4   0:06.04 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 950M 262M  87M R 70.0   2.4   0:06.39 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 968M 276M  91M R 66.0   2.5   0:06.74 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.0G 304M 101M S  0.0   2.8   0:07.07 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.0G 304M 101M S  0.0   2.8   0:07.07 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.0G 304M 101M S  0.0   2.8   0:07.07 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.0G 304M 101M S  0.0   2.8   0:07.07 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.0G 304M 101M S  0.0   2.8   0:07.07 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.0G 304M 101M S 10.0   2.8   0:07.07 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.5G 364M 110M R  266   3.4   0:07.12 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.8G 461M 114M R  340   4.3   0:08.45 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.8G 425M 115M R  252   4.0   0:10.15 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 518M 115M R  350   4.8   0:11.41 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 518M 115M R  310   4.8   0:13.16 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 507M 115M S  314   4.7   0:14.71 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 485M 115M R  316   4.5   0:16.28 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 521M 115M R  256   4.9   0:17.86 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 521M 115M R  236   4.9   0:19.14 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 503M 115M S  258   4.7   0:20.32 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 491M 115M R  230   4.6   0:21.61 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 501M 115M R  288   4.7   0:22.76 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 509M 115M R  270   4.8   0:24.20 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 512M 115M R  256   4.8   0:25.55 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 515M 115M R  296   4.8   0:26.83 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 517M 115M R  282   4.8   0:28.31 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.8G 452M 115M S  248   4.2   0:29.72 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 510M 115M R  294   4.8   0:30.96 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 550M 115M R  258   5.1   0:32.43 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 526M 115M R  262   4.9   0:33.72 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 525M 115M R  322   4.9   0:35.03 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 524M 115M S  256   4.9   0:36.64 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 487M 115M S  316   4.5   0:37.92 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 508M 115M R  264   4.7   0:39.50 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 508M 115M R  284   4.7   0:40.82 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 515M 115M R  318   4.8   0:42.24 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 553M 115M R  262   5.2   0:43.83 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 545M 115M R  308   5.1   0:45.14 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 548M 115M S  284   5.1   0:46.68 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 519M 115M R  266   4.8   0:48.10 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 519M 115M S  268   4.8   0:49.43 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 514M 115M R  320   4.8   0:50.77 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 529M 115M S  246   4.9   0:52.37 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 491M 115M R  238   4.6   0:53.60 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 528M 115M S  258   4.9   0:54.79 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 528M 115M R  232   4.9   0:56.08 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 491M 115M R  262   4.6   0:57.24 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 549M 115M R  256   5.1   0:58.55 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 2.0G 569M 115M R  220   5.3   0:59.83 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 549M 115M R  286   5.1   1:00.93 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 521M 115M R  292   4.9   1:02.36 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 521M 115M R  266   4.9   1:03.82 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 527M 115M S  322   4.9   1:05.15 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 529M 115M S  270   4.9   1:06.76 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 534M 115M R  278   5.0   1:08.11 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 534M 115M R  314   5.0   1:09.50 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 534M 115M R  328   5.0   1:11.07 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 534M 115M R  262   5.0   1:12.71 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 493M 115M S  322   4.6   1:14.02 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 528M 115M S  254   4.9   1:15.63 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 490M 115M R  242   4.6   1:16.90 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 527M 115M R  244   4.9   1:18.11 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 527M 115M R  234   4.9   1:19.33 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 497M 115M R  266   4.6   1:20.50 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 527M 115M R  254   4.9   1:21.83 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 527M 115M R  226   4.9   1:23.10 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 527M 115M S  302   4.9   1:24.23 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 528M 115M S  242   4.9   1:25.74 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 528M 115M R  228   4.9   1:26.95 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 534M 115M R  236   5.0   1:28.09 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 534M 115M S  242   5.0   1:29.27 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 534M 115M S  322   5.0   1:30.48 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 534M 115M R  244   5.0   1:32.09 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 535M 115M S  314   5.0   1:33.31 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 565M 115M R  278   5.3   1:34.88 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 534M 115M S  266   5.0   1:36.27 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 534M 115M S  310   5.0   1:37.60 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 529M 115M R  272   4.9   1:39.15 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 541M 115M S  260   5.1   1:40.51 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 542M 115M R  224   5.1   1:41.81 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 541M 115M R  316   5.1   1:42.93 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 503M 115M S  242   4.7   1:44.51 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.8G 465M 115M S  0.0   4.3   1:45.72 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.8G 465M 115M S  0.0   4.3   1:45.72 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.8G 465M 115M S  0.0   4.3   1:45.72 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.8G 465M 115M S  0.0   4.3   1:45.72 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.8G 465M 115M S  0.0   4.3   1:45.72 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.8G 465M 115M S  0.0   4.3   1:45.72 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.8G 465M 115M S  0.0   4.3   1:45.72 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.8G 465M 115M S  0.0   4.3   1:45.72 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.8G 465M 115M S  0.0   4.3   1:45.72 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.8G 465M 115M S  0.0   4.3   1:45.72 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.8G 465M 115M S  0.0   4.3   1:45.72 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.8G 465M 115M S  4.0   4.3   1:45.72 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.8G 465M 115M R 96.0   4.3   1:45.74 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 115M R  110   4.3   1:46.22 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28768 u0_a488      10 -10 1.8G 375M  24M S 38.0   3.5   0:00.19 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 115M t 94.0   4.3   1:46.77 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R  124   4.3   1:47.24 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28845 u0_a488      10 -10 1.8G 375M  24M S 42.0   3.5   0:00.11 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 115M t 96.0   4.3   1:47.86 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R  114   4.3   1:48.34 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28922 u0_a488      10 -10 1.8G 374M  23M S 40.0   3.5   0:00.08 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R  102   4.3   1:48.91 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28922 u0_a488      10 -10 1.8G 374M  23M S 30.0   3.5   0:00.28 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 115M R 92.0   4.3   1:49.42 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S  120   4.3   1:49.88 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29006 u0_a488      10 -10 1.8G 375M  24M S 42.0   3.5   0:00.19 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 115M t  102   4.3   1:50.48 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 62.0   4.3   1:50.99 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29083 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.14 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 115M t 60.0   4.3   1:51.30 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29083 u0_a488      10 -10 1.9G 375M  24M S 34.0   3.5   0:00.30 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 115M R 58.0   4.3   1:51.60 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29083 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.47 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 115M R 58.0   4.3   1:51.89 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29083 u0_a488      10 -10 1.9G 375M  24M S 30.0   3.5   0:00.63 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 115M R 62.0   4.3   1:52.18 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29083 u0_a488      10 -10 1.9G 375M  24M S 28.0   3.5   0:00.78 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 36.0   4.3   1:52.49 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 64.0   4.3   1:52.67 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29163 u0_a488      10 -10 1.9G 374M  23M S 32.0   3.5   0:00.18 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 60.0   4.3   1:52.99 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29163 u0_a488      10 -10 1.9G 375M  24M S 34.0   3.5   0:00.34 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M t 60.0   4.3   1:53.29 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29163 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.51 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 60.0   4.3   1:53.59 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29163 u0_a488      10 -10 1.9G 375M  24M S 30.0   3.5   0:00.67 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 58.0   4.3   1:53.89 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29163 u0_a488      10 -10 1.9G 375M  24M S 34.0   3.5   0:00.82 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 115M R 60.0   4.3   1:54.18 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29163 u0_a488      10 -10 1.9G 375M  24M S 30.0   3.5   0:00.99 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 115M S 48.0   4.3   1:54.48 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 62.0   4.3   1:54.72 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29240 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.10 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 56.0   4.3   1:55.03 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29240 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.26 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 56.0   4.3   1:55.31 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29240 u0_a488      10 -10 1.9G 375M  24M S 28.0   3.5   0:00.42 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 54.0   4.3   1:55.59 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29240 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.56 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 58.0   4.3   1:55.86 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29240 u0_a488      10 -10 1.9G 375M  24M S 30.0   3.5   0:00.72 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 58.0   4.3   1:56.15 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29240 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.87 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 54.0   4.3   1:56.44 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 115M S 58.0   4.3   1:56.71 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29317 u0_a488      10 -10 1.9G 374M  23M S 32.0   3.5   0:00.04 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M S 62.0   4.4   1:57.00 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29317 u0_a488      10 -10 1.9G 374M  23M S 32.0   3.5   0:00.20 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 56.0   4.3   1:57.31 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29317 u0_a488      10 -10 1.9G 374M  23M R 30.0   3.5   0:00.36 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 58.0   4.3   1:57.59 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29317 u0_a488      10 -10 1.9G 374M  23M S 32.0   3.5   0:00.51 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 56.0   4.3   1:57.88 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29317 u0_a488      10 -10 1.9G 374M  23M S 30.0   3.5   0:00.67 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M t 60.0   4.3   1:58.16 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29317 u0_a488      10 -10 1.9G 374M  23M S 32.0   3.5   0:00.82 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 60.0   4.3   1:58.46 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29317 u0_a488      10 -10 1.9G 374M  23M S 28.0   3.5   0:00.98 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 46.0   4.3   1:58.76 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 56.0   4.4   1:58.99 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29397 u0_a488      10 -10 1.9G 374M  23M S 34.0   3.5   0:00.16 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 56.0   4.4   1:59.27 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29397 u0_a488      10 -10 1.9G 374M  23M S 32.0   3.5   0:00.33 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 58.0   4.3   1:59.55 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29397 u0_a488      10 -10 1.9G 374M  23M R 30.0   3.5   0:00.49 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M t 58.0   4.3   1:59.84 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29397 u0_a488      10 -10 1.9G 374M  23M S 32.0   3.5   0:00.64 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 58.0   4.3   2:00.13 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29397 u0_a488      10 -10 1.9G 374M  23M S 32.0   3.5   0:00.80 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M t 58.0   4.3   2:00.42 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 40.0   4.3   2:00.71 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 62.0   4.4   2:00.91 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29474 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.18 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 56.0   4.4   2:01.22 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29474 u0_a488      10 -10 1.9G 375M  24M S 30.0   3.5   0:00.34 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 60.0   4.3   2:01.50 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29474 u0_a488      10 -10 1.9G 375M  24M S 34.0   3.5   0:00.49 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M t 56.0   4.3   2:01.80 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29474 u0_a488      10 -10 1.9G 375M  24M S 30.0   3.5   0:00.66 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M t 62.0   4.3   2:02.08 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29474 u0_a488      10 -10 1.9G 375M  24M S 28.0   3.5   0:00.81 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 60.0   4.3   2:02.39 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 46.0   4.3   2:02.69 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29551 u0_a488      10 -10 1.9G 362M  11M R 36.0   3.4   0:00.02 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 62.0   4.4   2:02.92 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29551 u0_a488      10 -10 1.9G 374M  23M S 32.0   3.5   0:00.20 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M t 56.0   4.4   2:03.23 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29551 u0_a488      10 -10 1.9G 374M  23M S 34.0   3.5   0:00.36 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 62.0   4.3   2:03.51 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29551 u0_a488      10 -10 1.9G 374M  23M S 32.0   3.5   0:00.53 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 54.0   4.3   2:03.82 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29551 u0_a488      10 -10 1.9G 374M  23M S 30.0   3.5   0:00.69 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 56.0   4.3   2:04.09 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29551 u0_a488      10 -10 1.9G 374M  23M S 30.0   3.5   0:00.84 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 58.0   4.3   2:04.37 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29551 u0_a488      10 -10 1.9G 374M  23M S 30.0   3.5   0:00.99 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 40.0   4.3   2:04.66 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M S 64.0   4.4   2:04.86 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29632 u0_a488      10 -10 1.9G 375M  24M S 36.0   3.5   0:00.18 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M S 56.0   4.4   2:05.18 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29632 u0_a488      10 -10 1.9G 375M  24M S 30.0   3.5   0:00.36 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M S 60.0   4.3   2:05.46 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29632 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.51 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 62.0   4.3   2:05.76 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29632 u0_a488      10 -10 1.9G 375M  24M S 34.0   3.5   0:00.67 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 56.0   4.3   2:06.07 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29632 u0_a488      10 -10 1.9G 375M  24M t 28.0   3.5   0:00.84 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 60.0   4.3   2:06.35 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29632 u0_a488      10 -10 1.9G 375M  24M S 26.0   3.5   0:00.98 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 40.0   4.3   2:06.65 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 60.0   4.4   2:06.85 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29711 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.17 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 60.0   4.4   2:07.15 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29711 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.33 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 52.0   4.3   2:07.45 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29711 u0_a488      10 -10 1.9G 375M  24M S 30.0   3.5   0:00.49 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 62.0   4.3   2:07.71 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29711 u0_a488      10 -10 1.9G 375M  24M t 32.0   3.5   0:00.64 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 56.0   4.3   2:08.02 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29711 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.80 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M t 58.0   4.3   2:08.30 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29711 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.96 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 44.0   4.3   2:08.59 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M S 56.0   4.4   2:08.81 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29788 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.12 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M S 54.0   4.4   2:09.09 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29788 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.28 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 62.0   4.3   2:09.36 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29788 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.44 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 58.0   4.3   2:09.67 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29788 u0_a488      10 -10 1.9G 375M  24M S 34.0   3.5   0:00.60 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 58.0   4.3   2:09.96 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29788 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.77 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M t 60.0   4.3   2:10.25 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29788 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.93 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M t 56.0   4.3   2:10.55 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 54.0   4.3   2:10.83 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29868 u0_a488      10 -10 1.9G 373M  23M S 32.0   3.5   0:00.03 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 60.0   4.4   2:11.10 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29868 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.19 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M S 60.0   4.4   2:11.40 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29868 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.35 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M S 58.0   4.3   2:11.70 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29868 u0_a488      10 -10 1.9G 375M  24M S 28.0   3.5   0:00.51 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 62.0   4.3   2:11.99 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29868 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.65 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 58.0   4.3   2:12.30 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29868 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.81 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 52.0   4.3   2:12.59 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29868 u0_a488      10 -10 1.9G 375M  24M S 28.0   3.5   0:00.97 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 40.0   4.3   2:12.85 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 58.0   4.4   2:13.05 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29945 u0_a488      10 -10 1.9G 374M  23M S 30.0   3.5   0:00.16 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 58.0   4.4   2:13.34 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29945 u0_a488      10 -10 1.9G 374M  23M S 34.0   3.5   0:00.31 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 56.0   4.3   2:13.63 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29945 u0_a488      10 -10 1.9G 374M  23M S 28.0   3.5   0:00.48 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 58.0   4.3   2:13.91 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29945 u0_a488      10 -10 1.9G 374M  23M S 32.0   3.5   0:00.62 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 50.0   4.3   2:14.20 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29945 u0_a488      10 -10 1.9G 374M  23M S 32.0   3.5   0:00.78 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M t 58.0   4.3   2:14.45 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+29945 u0_a488      10 -10 1.9G 374M  23M S 28.0   3.5   0:00.94 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 44.0   4.3   2:14.74 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 62.0   4.3   2:14.96 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30022 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.09 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 62.0   4.4   2:15.27 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30022 u0_a488      10 -10 1.9G 375M  24M S 28.0   3.5   0:00.25 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 60.0   4.3   2:15.58 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30022 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.39 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 60.0   4.3   2:15.88 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30022 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.55 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 56.0   4.3   2:16.18 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30022 u0_a488      10 -10 1.9G 375M  24M S 30.0   3.5   0:00.71 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 56.0   4.3   2:16.46 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30022 u0_a488      10 -10 1.9G 375M  24M S 28.0   3.5   0:00.86 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 46.0   4.3   2:16.74 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 56.0   4.4   2:16.97 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30102 u0_a488      10 -10 1.9G 375M  24M S 30.0   3.5   0:00.14 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M t 60.0   4.4   2:17.25 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30102 u0_a488      10 -10 1.9G 375M  24M S 34.0   3.5   0:00.29 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 56.0   4.3   2:17.55 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30102 u0_a488      10 -10 1.9G 375M  24M S 30.0   3.5   0:00.46 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 58.0   4.3   2:17.83 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30102 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.61 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 58.0   4.3   2:18.12 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30102 u0_a488      10 -10 1.9G 375M  24M S 30.0   3.5   0:00.77 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 60.0   4.3   2:18.41 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30102 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.92 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M t 56.0   4.3   2:18.71 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30102 u0_a488      10 -10 1.9G 375M  24M S 26.0   3.5   0:01.08 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 36.0   4.3   2:18.99 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 62.0   4.4   2:19.17 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30179 u0_a488      10 -10 1.9G 374M  23M S 32.0   3.5   0:00.17 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M S 58.0   4.4   2:19.48 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30179 u0_a488      10 -10 1.9G 374M  23M S 32.0   3.5   0:00.33 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 58.0   4.4   2:19.77 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30179 u0_a488      10 -10 1.9G 374M  24M S 30.0   3.5   0:00.49 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 62.0   4.3   2:20.06 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30179 u0_a488      10 -10 1.9G 375M  24M S 36.0   3.5   0:00.64 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 54.0   4.3   2:20.37 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30179 u0_a488      10 -10 1.9G 374M  23M S 30.0   3.5   0:00.82 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 62.0   4.3   2:20.64 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30179 u0_a488      10 -10 1.9G 374M  23M S 28.0   3.5   0:00.97 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 38.0   4.3   2:20.95 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M t 58.0   4.3   2:21.14 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30259 u0_a488      10 -10 1.9G 375M  24M S 28.0   3.5   0:00.19 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M S 54.0   4.4   2:21.43 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30259 u0_a488      10 -10 1.9G 375M  24M S 34.0   3.5   0:00.33 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M t 52.0   4.4   2:21.70 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30259 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.50 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 64.0   4.4   2:21.96 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30259 u0_a488      10 -10 1.9G 375M  24M R 30.0   3.5   0:00.66 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 58.0   4.3   2:22.28 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30259 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.81 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M t 58.0   4.3   2:22.57 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30259 u0_a488      10 -10 1.9G 375M  24M S 28.0   3.5   0:00.97 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 46.0   4.3   2:22.86 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 60.0   4.3   2:23.09 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 30.0   3.5   0:00.11 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 50.0   4.4   2:23.39 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 30.0   3.5   0:00.26 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M S 50.0   4.4   2:23.64 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.41 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M S 60.0   4.4   2:23.89 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.57 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 56.0   4.4   2:24.19 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 30.0   3.5   0:00.73 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 467M 116M R 60.0   4.3   2:24.47 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:00.88 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 58.0   4.3   2:24.77 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 34.0   3.5   0:01.04 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M t 64.0   4.3   2:25.06 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 34.0   3.5   0:01.21 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 58.0   4.3   2:25.38 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 34.0   3.5   0:01.38 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 58.0   4.3   2:25.67 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:01.55 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 56.0   4.3   2:25.96 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 30.0   3.5   0:01.71 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 58.0   4.3   2:26.24 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:01.86 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 52.0   4.3   2:26.53 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 28.0   3.5   0:02.02 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 56.0   4.3   2:26.79 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 34.0   3.5   0:02.16 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 60.0   4.3   2:27.07 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 30.0   3.5   0:02.33 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 58.0   4.3   2:27.37 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 30.0   3.5   0:02.48 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 52.0   4.3   2:27.66 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 34.0   3.5   0:02.63 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 60.0   4.3   2:27.92 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:02.80 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 58.0   4.3   2:28.22 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:02.96 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 115M S 56.0   4.3   2:28.51 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 34.0   3.5   0:03.12 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 115M t 58.0   4.3   2:28.79 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 30.0   3.5   0:03.29 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 115M t 58.0   4.3   2:29.08 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 34.0   3.5   0:03.44 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 115M R 54.0   4.3   2:29.37 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 30.0   3.5   0:03.61 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 115M R 58.0   4.3   2:29.64 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:03.76 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 115M R 62.0   4.3   2:29.93 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 34.0   3.5   0:03.92 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 115M S 54.0   4.3   2:30.24 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:04.09 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 56.0   4.3   2:30.51 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 30.0   3.5   0:04.25 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 60.0   4.3   2:30.79 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 34.0   3.5   0:04.40 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M R 64.0   4.3   2:31.09 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 32.0   3.5   0:04.57 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M S 58.0   4.3   2:31.41 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+30336 u0_a488      10 -10 1.9G 375M  24M S 34.0   3.5   0:04.73 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
+28536 u0_a488      10 -10 1.9G 466M 116M t 58.0   4.3   2:31.70 python3 experiment.py --config /home/hjyoon/configs/10shot/metasimclr.yaml
