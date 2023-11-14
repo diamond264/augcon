@@ -90,7 +90,7 @@ log_freq: 10
 save_freq: -1
 
 domain_adaptation: {'true' if args.domain_adaptation else 'false'}
-task_steps: 10
+task_steps: 30
 task_lr: 0.001
 reg_lambda: 0
 no_vars: true
