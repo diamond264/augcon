@@ -126,7 +126,7 @@ class Aggregator(nn.Module):
         
         idx = 0
         for i in range(self.num_blocks):
-            residual = z
+            # residual = z
             z = self.zero_pads[i](z)
             
             w, b = vars[idx], vars[idx+1]
@@ -139,10 +139,10 @@ class Aggregator(nn.Module):
             
             z = F.relu(z, True)
             
-            rproj = self.rproj[i]
-            if rproj != None:
-                residual = rproj(residual)
-            z = (z + residual) * self.residual_scale
+            # rproj = self.rproj[i]
+            # if rproj != None:
+            #     residual = rproj(residual)
+            # z = (z + residual) * self.residual_scale
         
         return z
     
