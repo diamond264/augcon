@@ -13,6 +13,8 @@ import torch.multiprocessing as mp
 
 from torch.utils.data import DataLoader, Dataset, DistributedSampler
 
+
+from torch.utils.tensorboard import SummaryWriter
 class Encoder(nn.Module):
     def __init__(self, input_channels, z_dim):
         super(Encoder, self).__init__()
@@ -291,12 +293,12 @@ class MetaTPNLearner:
                 cls_net.cuda()
             if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
                 train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size,
-                                          shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
+                                          shuffle=True, num_workers=self.cfg.num_workers, drop_last=False)
                 if len(val_dataset) > 0:
                     val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size,
-                                            shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
+                                            shuffle=True, num_workers=self.cfg.num_workers, drop_last=False)
                 test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size,
-                                         shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
+                                         shuffle=True, num_workers=self.cfg.num_workers, drop_last=False)
             meta_train_dataset = train_dataset
             if rank == 0:
                 log = "Single GPU is used for training - training {} instances for each worker".format(
@@ -461,6 +463,20 @@ class MetaTPNLearner:
                     log = "Missing keys: {}".format(msg.missing_keys)
                     logs.append(log)
                     print(log)
+
+                if self.cfg.visualization:
+                    is_meta = True if "meta" in self.cfg.pretrained else False
+                    tag = f'{self.cfg.dataset_name}_{self.cfg.pretext}_{self.cfg.domain_adaptation}_meta{is_meta}'
+                    writer = SummaryWriter(f'./logs/{tag}')
+
+                    if rank == 0:
+                        log = "Missing keys: {}".format(msg.missing_keys)
+                        logs.append(log)
+                        print(log)
+
+                    self.visualize(rank, cls_net, test_loader, criterion, logs, writer, tag)
+                    print(f"Visualization finished")
+                    exit(0)
             else:
                 if rank == 0:
                     log = "Loading state_dict from checkpoint - {}".format(self.cfg.resume)
@@ -698,6 +714,10 @@ class MetaTPNLearner:
     def meta_train(self, rank, net, support, target_support, criterion, log_internals=False, logs=None):
         fast_weights = list(net.parameters())
         for i in range(self.cfg.task_steps):
+            shuffled_idx = torch.randperm(len(support))
+            support = support[shuffled_idx]
+            target_support = target_support[shuffled_idx]
+
             s_logits = net(support, fast_weights)
             s_loss = 0
             # print(support.shape, target_support.shape, s_logits[0].shape)
@@ -773,6 +793,27 @@ class MetaTPNLearner:
                 log += f', F1: {f1.item():.2f}, Recall: {recall.item():.2f}, Precision: {precision.item():.2f}'
                 logs.append(log)
                 print(log)
+
+    def visualize(self, rank, net, val_loader, criterion, logs, writer, tag):
+        net.eval()
+
+        total_targets = []
+        total_logits = []
+        for batch_idx, data in enumerate(val_loader):
+            features = data[0].cuda()
+            targets = data[3].cuda()
+
+            logits = net.base_model(features)
+
+            # print(logits.shape)
+            # print(targets.shape)
+
+            total_targets.append(targets)
+            total_logits.append(logits.view(targets.shape[0], -1))
+
+        total_targets = torch.cat(total_targets, dim=0)
+        total_logits = torch.cat(total_logits, dim=0)
+        writer.add_embedding(total_logits, metadata=total_targets, global_step=0, tag="feature")
 
     def save_checkpoint(self, filename, epoch, state_dict, optimizer):
         directory = os.path.dirname(filename)

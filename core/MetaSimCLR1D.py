@@ -14,6 +14,8 @@ import torch.multiprocessing as mp
 # from datautils.SimCLR_dataset import subject_collate
 from torch.utils.data import DataLoader, Dataset, DistributedSampler
 
+from torch.utils.tensorboard import SummaryWriter
+
 class Encoder(nn.Module):
     def __init__(self, input_channels, z_dim):
         super(Encoder, self).__init__()
@@ -458,6 +460,20 @@ class MetaSimCLR1DLearner:
                 log = "Missing keys: {}".format(msg.missing_keys)
                 logs.append(log)
                 print(log)
+
+            if self.cfg.visualization:
+                is_meta = True if "meta" in self.cfg.pretrained else False
+                tag = f'{self.cfg.dataset_name}_{self.cfg.pretext}_{self.cfg.domain_adaptation}_meta{is_meta}'
+                writer = SummaryWriter(f'./logs/{tag}')
+
+                if rank == 0:
+                    log = "Missing keys: {}".format(msg.missing_keys)
+                    logs.append(log)
+                    print(log)
+
+                self.visualize(rank, cls_net, test_loader, criterion, logs, writer, tag)
+                print(f"Visualization finished")
+                exit(0)
             
             net = cls_net
             
@@ -985,7 +1001,26 @@ class MetaSimCLR1DLearner:
                 log += f', F1: {f1.item():.2f}, Recall: {recall.item():.2f}, Precision: {precision.item():.2f}'
                 logs.append(log)
                 print(log)
-    
+    def visualize(self, rank, net, val_loader, criterion, logs, writer, tag):
+        net.eval()
+
+        total_targets = []
+        total_logits = []
+        for batch_idx, data in enumerate(val_loader):
+            features = data[0].cuda()
+            targets = data[3].cuda()
+
+            logits = net.base_model(features)
+
+            # print(logits.shape)
+            # print(targets.shape)
+
+            total_targets.append(targets)
+            total_logits.append(logits.view(targets.shape[0], -1))
+
+        total_targets = torch.cat(total_targets, dim=0)
+        total_logits = torch.cat(total_logits, dim=0)
+        writer.add_embedding(total_logits, metadata=total_targets, global_step=0, tag="feature")
     def save_checkpoint(self, filename, epoch, state_dict, optimizer):
         directory = os.path.dirname(filename)
         if not os.path.exists(directory):
