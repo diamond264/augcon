@@ -302,12 +302,12 @@ class CPCLearner:
             if len(val_dataset) > 0:
                 val_sampler = DistributedSampler(val_dataset)
             test_sampler = DistributedSampler(test_dataset)
-            train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size//world_size,
+            train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size,#//world_size,
                                       shuffle=False, sampler=train_sampler, num_workers=self.cfg.num_workers, drop_last=True)
             if len(val_dataset) > 0:
-                val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size//world_size,
+                val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size,#//world_size,
                                         shuffle=False, sampler=val_sampler, num_workers=self.cfg.num_workers, drop_last=True)
-            test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size//world_size,
+            test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size,#//world_size,
                                       shuffle=False, sampler=test_sampler, num_workers=self.cfg.num_workers, drop_last=True)
             self.write_log(rank, logs, "DDP is used for training - training {} instances for each worker".format(len(list(train_sampler))))
         # Single GPU setting

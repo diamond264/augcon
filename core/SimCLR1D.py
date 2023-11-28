@@ -196,10 +196,10 @@ class SimCLR1DLearner:
             
             # collate_fn = subject_collate if self.cfg.mode == 'pretrain' else None
             collate_fn = None
-            train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size//world_size,
+            train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size,#//world_size,
                                       shuffle=False, sampler=train_sampler, collate_fn=collate_fn,
                                       num_workers=self.cfg.num_workers, drop_last=True)
-            test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size//world_size,
+            test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size,#//world_size,
                                      shuffle=False, sampler=test_sampler, collate_fn=collate_fn,
                                      num_workers=self.cfg.num_workers, drop_last=True)
             if len(val_dataset) > 0:
