@@ -322,7 +322,7 @@ class CPCLearner:
                                       shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
             self.write_log(rank, logs, "Single GPU is used for training - training {} instances for each worker".format(len(train_dataset)))
         
-        self.all_domains = self.split_per_domain(train_dataset)
+        # self.all_domains = self.split_per_domain(train_dataset)
         
         # Define criterion
         if self.cfg.criterion == 'crossentropy':
