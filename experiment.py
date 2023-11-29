@@ -64,11 +64,11 @@ class Experiment:
         cudnn.benchmark = True
         if not self.cfg.seed is None:
             random.seed(self.cfg.seed)
-            torch.manual_seed(self.cfg.seed)
+            # torch.manual_seed(self.cfg.seed)
             np.random.seed(self.cfg.seed)
-            cudnn.benchmark = False
-            cudnn.deterministic = True
-            torch.cuda.manual_seed_all(self.cfg.seed)
+            # cudnn.benchmark = False
+            # cudnn.deterministic = True
+            # torch.cuda.manual_seed_all(self.cfg.seed)
             
             self.logger.warning('You have chosen to seed training. ')
             self.logger.warning('This will turn on the CUDNN deterministic setting, ')
