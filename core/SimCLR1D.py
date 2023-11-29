@@ -350,7 +350,7 @@ class SimCLR1DLearner:
                             else:
                                 esnum = esnum+1
                                 # Early stop
-                                if self.cfg.earlystop > 0 and esnum == self.cfg.earlystop:
+                                if self.cfg.early_stop > 0 and esnum == self.cfg.early_stop:
                                     log = "Early Stopped at best epoch {}".format(epoch-5)
                                     logs.append(log)
                                     print(log)
