@@ -392,6 +392,7 @@ class CPCLearner:
         # scheduler = StepLR(optimizer, step_size=self.cfg.lr_decay_step, gamma=self.cfg.lr_decay)
         
         if self.cfg.mode != 'eval':
+            loss_best = 0
             for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
                 if world_size > 1:
                     train_sampler.set_epoch(epoch)

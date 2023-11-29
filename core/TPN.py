@@ -296,7 +296,7 @@ class TPNLearner:
         elif self.cfg.mode == 'eval_finetune':
             self.validate_finetune(rank, net, test_loader, criterion, logs)
         else:
-            # loss_best = 0
+            loss_best = 0
             for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
                 if world_size > 1:
                     train_sampler.set_epoch(epoch)
