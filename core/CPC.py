@@ -11,6 +11,7 @@ import torch.distributed as dist
 import torch.multiprocessing as mp
 from torch.utils.data import DataLoader
 from torch.utils.data import DistributedSampler
+from torch.optim.lr_scheduler import StepLR
 
 # reference:
 # https://github.com/facebookresearch/fairseq/blob/176cd934982212a4f75e0669ee81b834ee71dbb0/fairseq/models/wav2vec/wav2vec.py#L431
@@ -388,6 +389,8 @@ class CPCLearner:
             optimizer.load_state_dict(state['optimizer'])
             self.cfg.start_epoch = state['epoch']
         
+        # scheduler = StepLR(optimizer, step_size=self.cfg.lr_decay_step, gamma=self.cfg.lr_decay)
+        
         if self.cfg.mode != 'eval':
             for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
                 if world_size > 1:
@@ -398,6 +401,30 @@ class CPCLearner:
                 
                 if self.cfg.mode == 'pretrain':
                     self.pretrain(rank, net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
+                    if len(val_dataset) > 0:
+                        loss_ep = self.validate_pretrain(rank, net, val_loader, criterion, logs)
+                        
+                        if rank == 0:
+                            if loss_best == 0 or loss_ep < loss_best:
+                                loss_best = loss_ep
+                                ckpt_dir = self.cfg.ckpt_dir
+                                ckpt_filename = 'checkpoint_best.pth.tar'
+                                ckpt_filename = os.path.join(ckpt_dir, ckpt_filename)
+                                state_dict = net.state_dict()
+                                if world_size > 1:
+                                    for k, v in list(state_dict.items()):
+                                        if 'module.' in k:
+                                            state_dict[k.replace('module.', '')] = v
+                                            del state_dict[k]
+                                self.save_checkpoint(ckpt_filename, epoch, state_dict, optimizer)
+                            else:
+                                esnum += 1
+                                if self.cfg.early_stop > 0 and esnum >= self.cfg.early_stop:
+                                    log = "Early Stopped at best epoch {}".format(epoch-5)
+                                    logs.append(log)
+                                    print(log)
+                                    break
+                                
                 elif self.cfg.mode == 'finetune':
                     self.finetune(rank, net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
                     if len(val_dataset) > 0:
@@ -461,6 +488,48 @@ class CPCLearner:
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+    
+    def validate_pretrain(self, rank, net, val_loader, criterion, logs):
+        net.eval()
+        
+        total_targets = []
+        total_logits = []
+        total_loss = 0
+        with torch.no_grad():
+            for batch_idx, data in enumerate(val_loader):
+                features = data[0].cuda()
+                domains = data[2].cuda()
+                
+                if self.cfg.neg_per_domain:
+                    all_logits = []
+                    all_targets = []
+                    for dom in self.all_domains:
+                        dom_idx = torch.nonzero(domains == dom).squeeze()
+                        if dom_idx.dim() == 0: dom_idx = dom_idx.unsqueeze(0)
+                        if torch.numel(dom_idx):
+                            dom_features = features[dom_idx]
+                            logits, targets = net(dom_features)
+                            all_logits.append(logits)
+                            all_targets.append(targets)
+                    logits = torch.cat(all_logits, dim=0)
+                    targets = torch.cat(all_targets, dim=0)
+                else:
+                    logits, targets = net(features)
+                
+                total_loss += criterion(logits, targets)
+                total_targets.append(targets)
+                total_logits.append(logits)
+            
+            if len(total_targets) > 0:
+                total_targets = torch.cat(total_targets, dim=0)
+                total_logits = torch.cat(total_logits, dim=0)
+                acc1, acc5 = self.accuracy(total_logits, total_targets, topk=(1, 5))
+                total_loss /= len(val_loader)
+                
+                log = f'Validation Loss: {total_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+                self.write_log(rank, logs, log)
+                
+                return total_loss.item()
     
     def finetune(self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs):
         net.eval()
