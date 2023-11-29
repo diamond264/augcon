@@ -6,6 +6,7 @@ import torch.distributed as dist
 import torch.nn.functional as F
 import torchvision.models as models
 import torch.multiprocessing as mp
+from torch.optim.lr_scheduler import CosineAnnealingLR
 
 # from datautils.SimCLR_dataset import subject_collate
 from torch.utils.data import DataLoader, Dataset, DistributedSampler
@@ -287,7 +288,8 @@ class SimCLR1DLearner:
             optimizer = torch.optim.Adam(parameters, self.cfg.lr,
                                         weight_decay=self.cfg.wd)
         # if self.cfg.mode == 'finetune':
-        #     scheduler = StepLR(optimizer, step_size=self.cfg.lr_decay_step, gamma=self.cfg.lr_decay)
+        if self.cfg.mode == 'pretrain':
+            scheduler = CosineAnnealingLR(optimizer, T_max=self.cfg.epochs, eta_min=0, last_epoch=-1)
         
         # Load checkpoint if exists
         if os.path.isfile(self.cfg.resume):
@@ -325,7 +327,7 @@ class SimCLR1DLearner:
                     test_sampler.set_epoch(epoch)
                 
                 if self.cfg.mode == 'pretrain':
-                    self.pretrain(rank, net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
+                    self.pretrain(rank, net, train_loader, criterion, optimizer, scheduler, epoch, self.cfg.epochs, logs)
                     if len(val_dataset) > 0:
                         loss_ep = self.validate_pretrain(rank, net, val_loader, criterion, logs)
                     
@@ -382,7 +384,7 @@ class SimCLR1DLearner:
         domains = sorted(domains)
         return domains
     
-    def pretrain(self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs):
+    def pretrain(self, rank, net, train_loader, criterion, optimizer, scheduler, epoch, num_epochs, logs):
         net.train()
         
         for batch_idx, data in enumerate(train_loader):
@@ -418,6 +420,7 @@ class SimCLR1DLearner:
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+            scheduler.step()
             
     def validate_pretrain(self, rank, net, val_loader, criterion, logs):
         net.eval()
