@@ -306,33 +306,33 @@ class TPNLearner:
                 
                 if self.cfg.mode == 'pretrain':
                     self.pretrain(rank, net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
-                    # if len(val_dataset) > 0:
-                    #     loss_ep = self.validate_pretrain(rank, net, val_loader, criterion, logs)
+                    if len(val_dataset) > 0:
+                        loss_ep = self.validate_pretrain(rank, net, val_loader, criterion, logs)
                     
-                    # # Storing best epoch checkpoint and early stopping
-                    # if rank == 0:
-                    #     if loss_best == 0 or loss_ep < loss_best:
-                    #         loss_best = loss_ep
-                    #         esnum = 0
-                    #         # Save best checkpoint
-                    #         ckpt_dir = self.cfg.ckpt_dir
-                    #         ckpt_filename = 'checkpoint_best.pth.tar'
-                    #         ckpt_filename = os.path.join(ckpt_dir, ckpt_filename)
-                    #         state_dict = net.state_dict()
-                    #         if world_size > 1:
-                    #             for k, v in list(state_dict.items()):
-                    #                 if 'module.' in k:
-                    #                     state_dict[k.replace('module.', '')] = v
-                    #                     del state_dict[k]
-                    #         self.save_checkpoint(ckpt_filename, epoch, state_dict, optimizer)
-                    #     else:
-                    #         esnum = esnum+1
-                    #         # Early stop
-                    #         if self.cfg.earlystop > 0 and esnum == self.cfg.earlystop:
-                    #             log = "Early Stopped at best epoch {}".format(epoch-5)
-                    #             logs.append(log)
-                    #             print(log)
-                    #             break
+                        # Storing best epoch checkpoint and early stopping
+                        if rank == 0:
+                            if loss_best == 0 or loss_ep < loss_best:
+                                loss_best = loss_ep
+                                esnum = 0
+                                # Save best checkpoint
+                                ckpt_dir = self.cfg.ckpt_dir
+                                ckpt_filename = 'checkpoint_best.pth.tar'
+                                ckpt_filename = os.path.join(ckpt_dir, ckpt_filename)
+                                state_dict = net.state_dict()
+                                if world_size > 1:
+                                    for k, v in list(state_dict.items()):
+                                        if 'module.' in k:
+                                            state_dict[k.replace('module.', '')] = v
+                                            del state_dict[k]
+                                self.save_checkpoint(ckpt_filename, epoch, state_dict, optimizer)
+                            else:
+                                esnum = esnum+1
+                                # Early stop
+                                if self.cfg.earlystop > 0 and esnum == self.cfg.earlystop:
+                                    log = "Early Stopped at best epoch {}".format(epoch-5)
+                                    logs.append(log)
+                                    print(log)
+                                    break
                     
                 elif self.cfg.mode == 'finetune':
                     self.finetune(rank, net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
@@ -412,26 +412,35 @@ class TPNLearner:
         total_loss = 0
         with torch.no_grad():
             for batch_idx, data in enumerate(val_loader):
-                features = data[1].cuda()
-                pos_features = data[2].cuda()
+                my_X = data[1].cuda().float()
+                TPN_labels = [d.cuda().long() for d in data[2]]
                 domains = data[4].cuda()
                 
                 if self.cfg.neg_per_domain:
                     all_logits = []
                     all_targets = []
-                    for dom in self.all_domains:
-                        dom_idx = torch.nonzero(domains == dom).squeeze()
-                        if dom_idx.dim() == 0: dom_idx = dom_idx.unsqueeze(0)
-                        if torch.numel(dom_idx):
-                            dom_features = features[dom_idx]
-                            dom_pos_features = pos_features[dom_idx]
-                            logits, targets = net(dom_features, dom_pos_features, features.shape[0])
-                            all_logits.append(logits)
-                            all_targets.append(targets)
+                    # for dom in self.all_domains:
+                    #     dom_idx = torch.nonzero(domains == dom).squeeze()
+                    #     if dom_idx.dim() == 0: dom_idx = dom_idx.unsqueeze(0)
+                    #     if torch.numel(dom_idx):
+                    #         dom_features = features[dom_idx]
+                    #         dom_pos_features = pos_features[dom_idx]
+                    #         logits, targets = net(dom_features, dom_pos_features, features.shape[0])
+                    #         all_logits.append(logits)
+                    #         all_targets.append(targets)
                     logits = torch.cat(all_logits, dim=0)
                     targets = torch.cat(all_targets, dim=0)
                 else:
-                    logits, targets = net(features, pos_features, features.shape[0])
+                    # logits, targets = net(features, pos_features, features.shape[0])
+                    TPN_preds = net(my_X)
+                
+                loss = 0
+                for pred, y in zip(TPN_preds, TPN_labels):
+                    loss += criterion(pred, y)
+                loss = loss/len(TPN_preds)
+                
+                logits = torch.cat(TPN_preds)
+                targets = torch.cat(TPN_labels)
                 loss = criterion(logits, targets)
                 total_loss += loss
             
