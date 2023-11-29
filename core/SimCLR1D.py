@@ -326,33 +326,33 @@ class SimCLR1DLearner:
                 
                 if self.cfg.mode == 'pretrain':
                     self.pretrain(rank, net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
-                    # if len(val_dataset) > 0:
-                    #     loss_ep = self.validate_pretrain(rank, net, val_loader, criterion, logs)
+                    if len(val_dataset) > 0:
+                        loss_ep = self.validate_pretrain(rank, net, val_loader, criterion, logs)
                     
-                    # # Storing best epoch checkpoint and early stopping
-                    # if rank == 0:
-                    #     if loss_best == 0 or loss_ep < loss_best:
-                    #         loss_best = loss_ep
-                    #         esnum = 0
-                    #         # Save best checkpoint
-                    #         ckpt_dir = self.cfg.ckpt_dir
-                    #         ckpt_filename = 'checkpoint_best.pth.tar'
-                    #         ckpt_filename = os.path.join(ckpt_dir, ckpt_filename)
-                    #         state_dict = net.state_dict()
-                    #         if world_size > 1:
-                    #             for k, v in list(state_dict.items()):
-                    #                 if 'module.' in k:
-                    #                     state_dict[k.replace('module.', '')] = v
-                    #                     del state_dict[k]
-                    #         self.save_checkpoint(ckpt_filename, epoch, state_dict, optimizer)
-                    #     else:
-                    #         esnum = esnum+1
-                    #         # Early stop
-                    #         if self.cfg.earlystop > 0 and esnum == self.cfg.earlystop:
-                    #             log = "Early Stopped at best epoch {}".format(epoch-5)
-                    #             logs.append(log)
-                    #             print(log)
-                    #             break
+                        # Storing best epoch checkpoint and early stopping
+                        if rank == 0:
+                            if loss_best == 0 or loss_ep < loss_best:
+                                loss_best = loss_ep
+                                esnum = 0
+                                # Save best checkpoint
+                                ckpt_dir = self.cfg.ckpt_dir
+                                ckpt_filename = 'checkpoint_best.pth.tar'
+                                ckpt_filename = os.path.join(ckpt_dir, ckpt_filename)
+                                state_dict = net.state_dict()
+                                if world_size > 1:
+                                    for k, v in list(state_dict.items()):
+                                        if 'module.' in k:
+                                            state_dict[k.replace('module.', '')] = v
+                                            del state_dict[k]
+                                self.save_checkpoint(ckpt_filename, epoch, state_dict, optimizer)
+                            else:
+                                esnum = esnum+1
+                                # Early stop
+                                if self.cfg.earlystop > 0 and esnum == self.cfg.earlystop:
+                                    log = "Early Stopped at best epoch {}".format(epoch-5)
+                                    logs.append(log)
+                                    print(log)
+                                    break
                     
                 elif self.cfg.mode == 'finetune':
                     self.finetune(rank, net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)

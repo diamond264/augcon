@@ -407,6 +407,7 @@ class CPCLearner:
                         if rank == 0:
                             if loss_best == 0 or loss_ep < loss_best:
                                 loss_best = loss_ep
+                                esnum = 0
                                 ckpt_dir = self.cfg.ckpt_dir
                                 ckpt_filename = 'checkpoint_best.pth.tar'
                                 ckpt_filename = os.path.join(ckpt_dir, ckpt_filename)
