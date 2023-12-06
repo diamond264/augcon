@@ -425,7 +425,7 @@ class CPCLearner:
                                 log = "Early Stopped at best epoch {}".format(epoch)
                                 logs.append(log)
                                 print(log)
-                                break
+                                # break
                                 
                 elif self.cfg.mode == 'finetune':
                     self.finetune(rank, net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
