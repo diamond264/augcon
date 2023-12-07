@@ -15,13 +15,13 @@ from util.config import Config
 from util.logger import Logger
 
 from data_loader.default_data_loader import DefaultDataLoader
-from data_loader.DomainNetDataset import DomainNetDataset
-from data_loader.DigitFiveDataset import DigitFiveDataset
-from data_loader.PACSDataset import PACSDataset
-from data_loader.Country211Dataset import Country211Dataset
-from data_loader.PCamDataset import PCamDataset
-from data_loader.ImageNetDataset import ImageNetDataset
-from data_loader.EmptyDataset import EmptyDataset
+# from data_loader.DomainNetDataset import DomainNetDataset
+# from data_loader.DigitFiveDataset import DigitFiveDataset
+# from data_loader.PACSDataset import PACSDataset
+# from data_loader.Country211Dataset import Country211Dataset
+# from data_loader.PCamDataset import PCamDataset
+# from data_loader.ImageNetDataset import ImageNetDataset
+# from data_loader.EmptyDataset import EmptyDataset
 
 # 1D pretext tasks
 from core.CPC import CPCLearner
