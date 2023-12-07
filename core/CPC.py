@@ -304,22 +304,22 @@ class CPCLearner:
                 val_sampler = DistributedSampler(val_dataset)
             test_sampler = DistributedSampler(test_dataset)
             train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size,#//world_size,
-                                      shuffle=False, sampler=train_sampler, num_workers=self.cfg.num_workers, drop_last=True)
+                                      shuffle=False, sampler=train_sampler, num_workers=self.cfg.num_workers, drop_last=False)
             if len(val_dataset) > 0:
                 val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size,#//world_size,
-                                        shuffle=False, sampler=val_sampler, num_workers=self.cfg.num_workers, drop_last=True)
+                                        shuffle=False, sampler=val_sampler, num_workers=self.cfg.num_workers, drop_last=False)
             test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size,#//world_size,
-                                      shuffle=False, sampler=test_sampler, num_workers=self.cfg.num_workers, drop_last=True)
+                                      shuffle=False, sampler=test_sampler, num_workers=self.cfg.num_workers, drop_last=False)
             self.write_log(rank, logs, "DDP is used for training - training {} instances for each worker".format(len(list(train_sampler))))
         # Single GPU setting
         else:
             train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size,
-                                      shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
+                                      shuffle=True, num_workers=self.cfg.num_workers, drop_last=False)
             if len(val_dataset) > 0:
                 val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size,
-                                        shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
+                                        shuffle=True, num_workers=self.cfg.num_workers, drop_last=False)
             test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size,
-                                      shuffle=True, num_workers=self.cfg.num_workers, drop_last=True)
+                                      shuffle=True, num_workers=self.cfg.num_workers, drop_last=False)
             self.write_log(rank, logs, "Single GPU is used for training - training {} instances for each worker".format(len(train_dataset)))
         
         # self.all_domains = self.split_per_domain(train_dataset)

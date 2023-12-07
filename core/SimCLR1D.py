@@ -200,14 +200,14 @@ class SimCLR1DLearner:
             collate_fn = None
             train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size,#//world_size,
                                       shuffle=False, sampler=train_sampler, collate_fn=collate_fn,
-                                      num_workers=self.cfg.num_workers, drop_last=True)
+                                      num_workers=self.cfg.num_workers, drop_last=False)
             test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size,#//world_size,
                                      shuffle=False, sampler=test_sampler, collate_fn=collate_fn,
-                                     num_workers=self.cfg.num_workers, drop_last=True)
+                                     num_workers=self.cfg.num_workers, drop_last=False)
             if len(val_dataset) > 0:
                 val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size//world_size,
                                         shuffle=False, sampler=val_sampler, collate_fn=collate_fn,
-                                        num_workers=self.cfg.num_workers, drop_last=True)
+                                        num_workers=self.cfg.num_workers, drop_last=False)
             if rank == 0:
                 log = "DDP is used for training - training {} instances for each worker".format(len(list(train_sampler)))
                 logs.append(log)
@@ -220,14 +220,14 @@ class SimCLR1DLearner:
             collate_fn = None
             train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size,
                                       shuffle=True, collate_fn=collate_fn,
-                                      num_workers=self.cfg.num_workers, drop_last=True)
+                                      num_workers=self.cfg.num_workers, drop_last=False)
             test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size,
                                      shuffle=True, collate_fn=collate_fn,
-                                     num_workers=self.cfg.num_workers, drop_last=True)
+                                     num_workers=self.cfg.num_workers, drop_last=False)
             if len(val_dataset) > 0:
                 val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size,
                                         shuffle=True, collate_fn=collate_fn,
-                                        num_workers=self.cfg.num_workers, drop_last=True)
+                                        num_workers=self.cfg.num_workers, drop_last=False)
             if rank == 0:
                 log = "Single GPU is used for training - training {} instances for each worker".format(len(train_dataset))
                 logs.append(log)
