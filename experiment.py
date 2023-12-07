@@ -57,7 +57,7 @@ class Experiment:
         else:
             self.logger.warning(f'Only GPU training is supported. Setting gpu 0 as default.')
             self.gpu = [0]
-        os.environ["CUDA_VISIBLE_DEVICES"] = ','.join([str(gpu) for gpu in self.gpu])
+        # os.environ["CUDA_VISIBLE_DEVICES"] = ','.join([str(gpu) for gpu in self.gpu])
         self.logger.info(f'GPUs {self.gpu} will be used')
     
     def configure_random_seed(self):
