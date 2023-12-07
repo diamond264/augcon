@@ -389,7 +389,8 @@ class CPCLearner:
             optimizer.load_state_dict(state['optimizer'])
             self.cfg.start_epoch = state['epoch']
         
-        # scheduler = StepLR(optimizer, step_size=self.cfg.lr_decay_step, gamma=self.cfg.lr_decay)
+        if self.cfg.mode == 'finetune':
+            scheduler = StepLR(optimizer, step_size=self.cfg.lr_decay_step, gamma=self.cfg.lr_decay)
         
         if self.cfg.mode != 'eval':
             loss_best = 0
@@ -429,6 +430,7 @@ class CPCLearner:
                                 
                 elif self.cfg.mode == 'finetune':
                     self.finetune(rank, net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
+                    scheduler.step()
                     if len(val_dataset) > 0:
                         self.validate(rank, net, val_loader, criterion, logs)
                 

@@ -11,6 +11,7 @@ from collections import defaultdict
 
 # from datautils.SimCLR_dataset import subject_collate
 from torch.utils.data import DataLoader, Dataset, DistributedSampler
+from torch.optim.lr_scheduler import StepLR
 
 class Encoder(nn.Module):
     def __init__(self, input_channels, z_dim=96):
@@ -266,8 +267,8 @@ class TPNLearner:
         elif self.cfg.optimizer == 'adam':
             optimizer = torch.optim.Adam(parameters, self.cfg.lr,
                                         weight_decay=self.cfg.wd)
-        # if self.cfg.mode == 'finetune':
-        #     scheduler = StepLR(optimizer, step_size=self.cfg.lr_decay_step, gamma=self.cfg.lr_decay)
+        if self.cfg.mode == 'finetune':
+            scheduler = StepLR(optimizer, step_size=self.cfg.lr_decay_step, gamma=self.cfg.lr_decay)
         
         # Load checkpoint if exists
         if os.path.isfile(self.cfg.resume):
@@ -336,6 +337,7 @@ class TPNLearner:
                     
                 elif self.cfg.mode == 'finetune':
                     self.finetune(rank, net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
+                    scheduler.step()
                     # if len(val_dataset) > 0:
                     #     self.validate_finetune(rank, net, val_loader, criterion, logs)
                 
