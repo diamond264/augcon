@@ -414,9 +414,9 @@ class SimCLR1DLearner:
             loss = criterion(logits, targets)
 
             if batch_idx % self.cfg.log_freq == 0 and rank == 0:
-                acc1, acc5 = self.accuracy(logits, targets, topk=(1, 5))
+                acc1, _ = self.accuracy(logits, targets, topk=(1, 1))
                 log = f'Epoch [{epoch+1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) '
-                log += f'Loss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+                log += f'Loss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}'#, Acc(5): {acc5.item():.2f}'
                 logs.append(log)
                 print(log)
 
