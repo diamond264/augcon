@@ -1,36 +1,76 @@
 import os
+import copy
 import random
-import sklearn.metrics as metrics
 
 from collections import defaultdict
+import sklearn.metrics as metrics
 
 import torch
 import torch.nn as nn
 import torch.distributed as dist
 import torch.nn.functional as F
-import torchvision.models as models
 import torch.multiprocessing as mp
+from torch.utils.data import DataLoader, DistributedSampler
 
-# from datautils.SimCLR_dataset import subject_collate
-from torch.utils.data import DataLoader, Dataset, DistributedSampler
+# from torch.utils.tensorboard import SummaryWriter
 
-from torch.utils.tensorboard import SummaryWriter
+
+class Adversary_Negatives(nn.Module):
+    def __init__(self, bank_size, dim):
+        super(Adversary_Negatives, self).__init__()
+        self.vars = nn.ParameterList()
+        W = torch.randn(bank_size, dim)
+        self.vars.append(W)
+
+    def init(self, net, dataset):
+        with torch.no_grad():
+            net.eval()
+            shuffled_dataset = torch.utils.data.Subset(
+                dataset, torch.randperm(len(dataset))
+            )
+            for i, (x, _, _, _, _) in enumerate(shuffled_dataset):
+                if i >= len(self.vars[0]):
+                    break
+                x = x.cuda()
+                z = net.get_z(x)
+                self.vars[0][i] = z
+
+    def forward(self, vars=None):
+        if vars is None:
+            vars = self.vars
+
+        return vars[0]
+
+    def zero_grad(self, vars=None):
+        with torch.no_grad():
+            if vars is None:
+                for p in self.vars:
+                    if p.grad is not None:
+                        p.grad.zero_()
+            else:
+                for p in vars:
+                    if p.grad is not None:
+                        p.grad.zero_()
+
+    def parameters(self):
+        return self.vars
+
 
 class Encoder(nn.Module):
     def __init__(self, input_channels, z_dim):
         super(Encoder, self).__init__()
         self.vars = nn.ParameterList()
 
+        self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(0.1)
+
         self.num_blocks = 3
         in_dims = [input_channels, 32, 64]
         out_dims = [32, 64, z_dim]
         kernel_sizes = [24, 16, 8]
-        
+
         for i in range(self.num_blocks):
             conv = nn.Conv1d(in_dims[i], out_dims[i], kernel_size=kernel_sizes[i])
-            relu = nn.ReLU()
-            dropout = nn.Dropout(0.1)
-            
             w = nn.Parameter(torch.ones_like(conv.weight))
             torch.nn.init.kaiming_normal_(w)
             b = nn.Parameter(torch.zeros_like(conv.bias))
@@ -42,19 +82,19 @@ class Encoder(nn.Module):
     def forward(self, x, vars=None):
         if vars is None:
             vars = self.vars
-        
+
         idx = 0
-        for i in range(self.num_blocks):
-            w, b = vars[idx], vars[idx+1]
+        for _ in range(self.num_blocks):
+            w, b = vars[idx], vars[idx + 1]
             idx += 2
             x = F.conv1d(x, w, b)
-            x = F.relu(x, True)
-            x = F.dropout(x, 0.1)
-        
+            x = self.relu(x)
+            x = self.dropout(x)
+
         x = F.adaptive_max_pool1d(x, 1)
         x = x.squeeze(-1)
         return x
-    
+
     def zero_grad(self, vars=None):
         with torch.no_grad():
             if vars is None:
@@ -65,31 +105,31 @@ class Encoder(nn.Module):
                 for p in vars:
                     if p.grad is not None:
                         p.grad.zero_()
-    
+
     def parameters(self):
         return self.vars
 
 
 class Classifier(nn.Module):
-    def __init__(self, in_dim=96,
-                 hidden_1=256, hidden_2=128, out_dim=50):
+    def __init__(self, in_dim=96, hidden_1=256, hidden_2=128, out_dim=50):
         super(Classifier, self).__init__()
         self.vars = nn.ParameterList()
-        
+
+        self.relu = nn.ReLU()
+
         fc1 = nn.Linear(in_dim, hidden_1)
-        relu1 = nn.ReLU()
-        fc2 = nn.Linear(hidden_1, hidden_2)
-        relu2 = nn.ReLU()
-        fc3 = nn.Linear(hidden_2, out_dim)
-        
         w = fc1.weight
         b = fc1.bias
         self.vars.append(w)
         self.vars.append(b)
+
+        fc2 = nn.Linear(hidden_1, hidden_2)
         w = fc2.weight
         b = fc2.bias
         self.vars.append(w)
         self.vars.append(b)
+
+        fc3 = nn.Linear(hidden_2, out_dim)
         w = fc3.weight
         b = fc3.bias
         self.vars.append(w)
@@ -98,11 +138,11 @@ class Classifier(nn.Module):
     def forward(self, x, vars=None):
         if vars is None:
             vars = self.vars
-        
+
         x = F.linear(x, vars[0], vars[1])
-        x = F.relu(x, True)
+        x = self.relu(x)
         x = F.linear(x, vars[2], vars[3])
-        x = F.relu(x, True)
+        x = self.relu(x)
         x = F.linear(x, vars[4], vars[5])
         return x
 
@@ -116,7 +156,7 @@ class Classifier(nn.Module):
                 for p in vars:
                     if p.grad is not None:
                         p.grad.zero_()
-    
+
     def parameters(self):
         return self.vars
 
@@ -126,6 +166,7 @@ class SimCLRNet(nn.Module):
     Build a SimCLR model with: a query encoder, a key encoder, and a queue
     https://arxiv.org/abs/1911.05722
     """
+
     def __init__(self, input_channels=3, z_dim=96, out_dim=50, T=0.1, mlp=True):
         super(SimCLRNet, self).__init__()
         self.T = T
@@ -138,88 +179,133 @@ class SimCLRNet(nn.Module):
         if mlp:  # hack: brute-force replacement
             self.classifier = Classifier(in_dim=z_dim, out_dim=out_dim)
 
+    def get_z(self, x):
+        z = self.encoder(x)
+        if self.mlp:
+            z = self.classifier(z)
+        return z
+
     def forward(self, feature, aug_feature, vars=None):
         if vars is None:
             vars = nn.ParameterList()
             vars.extend(self.encoder.parameters())
             if self.mlp:
                 vars.extend(self.classifier.parameters())
-        
-        enc_vars = vars[:len(self.encoder.parameters())]
+
+        enc_vars = vars[: len(self.encoder.parameters())]
         if self.mlp:
-            cls_vars = vars[len(self.encoder.parameters()):]
-            
-        z = self.encoder(feature, enc_vars)  # queries: NxC
-        aug_z = self.encoder(aug_feature, enc_vars)
+            cls_vars = vars[len(self.encoder.parameters()) :]
+
+        z = self.encoder(feature, enc_vars)
         if self.mlp:
             z = self.classifier(z, cls_vars)
-            aug_z = self.classifier(aug_z, cls_vars)
-        
         z = F.normalize(z, dim=1)
+
+        aug_z = self.encoder(aug_feature, enc_vars)
+        if self.mlp:
+            aug_z = self.classifier(aug_z, cls_vars)
         aug_z = F.normalize(aug_z, dim=1)
-        
+
         LARGE_NUM = 1e9
-        batch_size = z.size(0)
+        masks = F.one_hot(torch.arange(z.size(0)), z.size(0)).cuda()
 
-        labels = torch.arange(batch_size).cuda()
-        masks = F.one_hot(torch.arange(batch_size), batch_size).cuda()
-        # mask = ~torch.eye(batch_size, dtype=bool).cuda()
+        pos_logits = torch.matmul(z, aug_z.t())
+        neg_logits_1 = torch.matmul(z, z.t())
+        neg_logits_1 = neg_logits_1 - masks * LARGE_NUM
+        neg_logits_2 = torch.matmul(aug_z, aug_z.t())
+        neg_logits_2 = neg_logits_2 - masks * LARGE_NUM
 
-        logits_aa = torch.matmul(z, z.t())
-        # logits_aa = logits_aa[mask].reshape(batch_size, batch_size-1)
-        logits_aa = logits_aa - masks * LARGE_NUM
-        logits_bb = torch.matmul(aug_z, aug_z.t())
-        # logits_bb = logits_bb[mask].reshape(batch_size, batch_size-1)
-        logits_bb = logits_bb - masks * LARGE_NUM
-        logits_ab = torch.matmul(z, aug_z.t())
-
-        logits = torch.cat([logits_ab, logits_aa, logits_bb], dim=1)
-        # logits = logits_ab
+        logits = torch.cat([pos_logits, neg_logits_1, neg_logits_2], dim=1)
         logits /= self.T
-        # logits = F.pad(logits, (0, full_batch_size-logits.shape[1]), "constant", -LARGE_NUM)
+        labels = torch.arange(z.size(0)).cuda()
 
         return logits, labels
-    
-    def adapt(self, feature, aug_feature, neg_feature, neg_aug_feature, full_batch_size, vars=None):
+
+    def forward_wo_nq(self, feature, aug_feature, neg_feature, vars=None):
         if vars is None:
             vars = nn.ParameterList()
             vars.extend(self.encoder.parameters())
             if self.mlp:
                 vars.extend(self.classifier.parameters())
-        
-        enc_vars = vars[:len(self.encoder.parameters())]
+
+        enc_vars = vars[: len(self.encoder.parameters())]
         if self.mlp:
-            cls_vars = vars[len(self.encoder.parameters()):]
-            
-        z = self.encoder(feature, enc_vars)  # queries: NxC
-        aug_z = self.encoder(aug_feature, enc_vars)
-        neg_z = self.encoder(neg_feature, enc_vars)
-        neg_aug_z = self.encoder(neg_aug_feature, enc_vars)
+            cls_vars = vars[len(self.encoder.parameters()) :]
+
+        z = self.encoder(feature, enc_vars)
         if self.mlp:
             z = self.classifier(z, cls_vars)
-            aug_z = self.classifier(aug_z, cls_vars)
-            neg_z = self.classifier(neg_z, cls_vars)
-            neg_aug_z = self.classifier(neg_aug_z, cls_vars)
-        
         z = F.normalize(z, dim=1)
+
+        aug_z = self.encoder(aug_feature, enc_vars)
+        if self.mlp:
+            aug_z = self.classifier(aug_z, cls_vars)
         aug_z = F.normalize(aug_z, dim=1)
-        neg_z = F.normalize(neg_z, dim=1)
-        neg_aug_z = F.normalize(neg_aug_z, dim=1)
-        
+
         LARGE_NUM = 1e9
-        
-        pos_logits = torch.einsum('ij,ij->i', z, aug_z)
-        pos_logits = torch.unsqueeze(pos_logits, dim=1)
-        neg_logits_1 = torch.matmul(z, neg_z.t())
-        neg_logits_2 = torch.matmul(z, neg_aug_z.t())
-        neg_logits_3 = torch.matmul(aug_z, neg_aug_z.t())
-        logits = torch.cat([pos_logits, neg_logits_1, neg_logits_2, neg_logits_3], dim=1)
+        masks = F.one_hot(torch.arange(z.size(0)), z.size(0)).cuda()
+
+        pos_logits = torch.matmul(z, aug_z.t())
+        neg_logits_1 = torch.matmul(z, z.t())
+        neg_logits_1 = neg_logits_1 - masks * LARGE_NUM
+        neg_logits_2 = torch.matmul(aug_z, aug_z.t())
+        neg_logits_2 = neg_logits_2 - masks * LARGE_NUM
+
+        logits = torch.cat([pos_logits, neg_logits_1, neg_logits_2], dim=1)
         logits /= self.T
-        logits = F.pad(logits, (0, full_batch_size*3-logits.shape[1]), "constant", -LARGE_NUM)
-        
-        labels = torch.zeros(logits.shape[0], dtype=torch.long).cuda()
+        labels = torch.arange(z.size(0)).cuda()
+
         return logits, labels
-    
+
+    def forward_w_nq(self, feature, aug_feature, neg_feature, vars=None):
+        if vars is None:
+            vars = nn.ParameterList()
+            vars.extend(self.encoder.parameters())
+            if self.mlp:
+                vars.extend(self.classifier.parameters())
+
+        enc_vars = vars[: len(self.encoder.parameters())]
+        if self.mlp:
+            cls_vars = vars[len(self.encoder.parameters()) :]
+
+        z = self.encoder(feature, enc_vars)
+        if self.mlp:
+            z = self.classifier(z, cls_vars)
+        z = F.normalize(z, dim=1)
+
+        aug_z = self.encoder(aug_feature, enc_vars)
+        if self.mlp:
+            aug_z = self.classifier(aug_z, cls_vars)
+        aug_z = F.normalize(aug_z, dim=1)
+
+        # neg_z = self.encoder(neg_feature, enc_vars)
+        # if self.mlp:
+        #     neg_z = self.classifier(neg_z, cls_vars)
+        neg_z = F.normalize(neg_feature, dim=1)
+
+        LARGE_NUM = 1e9
+        masks = F.one_hot(torch.arange(z.size(0)), z.size(0)).cuda()
+
+        pos_logits = torch.matmul(z, aug_z.t())
+        # pos_logits = torch.einsum("ij,ij->i", z, aug_z)
+        # pos_logits = torch.unsqueeze(pos_logits, dim=1)
+        neg_logits_1 = torch.matmul(z, z.t())
+        neg_logits_1 = neg_logits_1 - masks * LARGE_NUM
+        neg_logits_2 = torch.matmul(aug_z, aug_z.t())
+        neg_logits_2 = neg_logits_2 - masks * LARGE_NUM
+        neg_logits_3 = torch.matmul(z, neg_z.t())
+        neg_logits_4 = torch.matmul(aug_z, neg_z.t())
+
+        logits = torch.cat(
+            [pos_logits, neg_logits_1, neg_logits_2, neg_logits_3, neg_logits_4],
+            dim=1,
+        )
+        logits /= self.T
+        labels = torch.arange(z.size(0)).cuda()
+        # labels = torch.zeros(z.size(0), dtype=torch.long).cuda()
+
+        return logits, labels
+
     def zero_grad(self, vars=None):
         with torch.no_grad():
             if vars is None:
@@ -230,7 +316,7 @@ class SimCLRNet(nn.Module):
             for p in vars:
                 if p.grad is not None:
                     p.grad.zero_()
-    
+
     def parameters(self):
         vars = nn.ParameterList()
         vars.extend(self.encoder.parameters())
@@ -258,7 +344,7 @@ class ClassificationHead(nn.Module):
             self.block = nn.Sequential(
                 nn.Linear(input_size, num_cls),
             )
-    
+
     def forward(self, x):
         x = self.block(x)
         return x
@@ -269,7 +355,7 @@ class SimCLRClassifier(nn.Module):
         super(SimCLRClassifier, self).__init__()
         self.base_model = Encoder(input_channels, z_dim)
         self.classifier = ClassificationHead(z_dim, z_dim, num_cls, mlp)
-        
+
     def forward(self, x):
         x = self.base_model(x)
         pred = self.classifier(x)
@@ -281,290 +367,385 @@ class MetaSimCLR1DLearner:
         self.cfg = cfg
         self.gpu = gpu
         self.logger = logger
-    def run(self, train_dataset, val_dataset, test_dataset):
+
+    def run(self, train_dataset, val_dataset, test_dataset, neg_dataset=None):
         num_gpus = len(self.gpu)
         logs = mp.Manager().list([])
         self.logger.info("Executing SimCLR")
         self.logger.info("Logs are skipped during training")
         if num_gpus > 1:
-            mp.spawn(self.main_worker,
-                     args=(num_gpus, train_dataset, val_dataset, test_dataset, logs),
-                     nprocs=num_gpus)
+            mp.spawn(
+                self.main_worker,
+                args=(
+                    num_gpus,
+                    train_dataset,
+                    val_dataset,
+                    test_dataset,
+                    neg_dataset,
+                    logs,
+                ),
+                nprocs=num_gpus,
+            )
         else:
-            self.main_worker(0, 1, train_dataset, val_dataset, test_dataset, logs)
-        
+            self.main_worker(
+                0, 1, train_dataset, val_dataset, test_dataset, neg_dataset, logs
+            )
+
         for log in logs:
             self.logger.info(log)
-    
-    def main_worker(self, rank, world_size, train_dataset, val_dataset, test_dataset, logs):
+
+    def log(self, rank, logs, log_txt):
+        if rank == 0:
+            logs.append(log_txt)
+            print(log_txt)
+
+    def main_worker(
+        self,
+        rank,
+        world_size,
+        train_dataset,
+        val_dataset,
+        test_dataset,
+        neg_dataset,
+        logs,
+    ):
         # Model initialization
-        net = SimCLRNet(self.cfg.input_channels, self.cfg.z_dim, self.cfg.out_dim, self.cfg.T, True)
-        if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval_finetune':
-            cls_net = SimCLRClassifier(self.cfg.input_channels, self.cfg.z_dim, self.cfg.num_cls, self.cfg.mlp)
-        
+        net = SimCLRNet(
+            self.cfg.input_channels, self.cfg.z_dim, self.cfg.out_dim, self.cfg.T, True
+        )
+        if self.cfg.mode == "finetune" or self.cfg.mode == "eval_finetune":
+            cls_net = SimCLRClassifier(
+                self.cfg.input_channels, self.cfg.z_dim, self.cfg.num_cls, self.cfg.mlp
+            )
+
         # DDP setting
         if world_size > 1:
-            dist.init_process_group(backend='nccl',
-                                    init_method=self.cfg.dist_url,
-                                    world_size=world_size,
-                                    rank=rank)
-            
+            dist.init_process_group(
+                backend="nccl",
+                init_method=self.cfg.dist_url,
+                world_size=world_size,
+                rank=rank,
+            )
+
             torch.cuda.set_device(rank)
             net.cuda()
-            net = nn.parallel.DistributedDataParallel(net, device_ids=[rank], find_unused_parameters=True)
-            
+            net = nn.parallel.DistributedDataParallel(
+                net, device_ids=[rank], find_unused_parameters=True
+            )
+
             train_sampler = DistributedSampler(train_dataset)
-            meta_train_dataset = torch.utils.data.Subset(train_dataset, list(train_sampler))
-            
-            if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval_finetune':
+            meta_train_dataset = torch.utils.data.Subset(
+                train_dataset, list(train_sampler)
+            )
+
+            if self.cfg.mode == "finetune" or self.cfg.mode == "eval_finetune":
                 cls_net.cuda()
-                cls_net = nn.parallel.DistributedDataParallel(cls_net, device_ids=[rank], find_unused_parameters=True)
-                
+                cls_net = nn.parallel.DistributedDataParallel(
+                    cls_net, device_ids=[rank], find_unused_parameters=True
+                )
+
+                if not neg_dataset is None:
+                    neg_sampler = DistributedSampler(neg_dataset)
+                    meta_neg_dataset = torch.utils.data.Subset(
+                        neg_dataset, list(neg_sampler)
+                    )
+
                 if len(val_dataset) > 0:
                     val_sampler = DistributedSampler(val_dataset)
                 test_sampler = DistributedSampler(test_dataset)
-                
+
                 # collate_fn = subject_collate if self.cfg.mode == 'pretrain' else None
                 collate_fn = None
-                train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size//world_size,
-                                        shuffle=False, sampler=train_sampler, collate_fn=collate_fn,
-                                        num_workers=self.cfg.num_workers, drop_last=True)
-                test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size//world_size,
-                                        shuffle=False, sampler=test_sampler, collate_fn=collate_fn,
-                                        num_workers=self.cfg.num_workers, drop_last=True)
+                train_loader = DataLoader(
+                    train_dataset,
+                    batch_size=self.cfg.batch_size // world_size,
+                    shuffle=False,
+                    sampler=train_sampler,
+                    collate_fn=collate_fn,
+                    num_workers=self.cfg.num_workers,
+                    drop_last=True,
+                )
+                test_loader = DataLoader(
+                    test_dataset,
+                    batch_size=self.cfg.batch_size // world_size,
+                    shuffle=False,
+                    sampler=test_sampler,
+                    collate_fn=collate_fn,
+                    num_workers=self.cfg.num_workers,
+                    drop_last=True,
+                )
                 if len(val_dataset) > 0:
-                    val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size//world_size,
-                                            shuffle=False, sampler=val_sampler, collate_fn=collate_fn,
-                                            num_workers=self.cfg.num_workers, drop_last=True)
-            
-            if rank == 0:
-                log = "DDP is used for training - training {} instances for each worker".format(len(list(train_sampler)))
-                logs.append(log)
-                print(log)
+                    val_loader = DataLoader(
+                        val_dataset,
+                        batch_size=self.cfg.batch_size // world_size,
+                        shuffle=False,
+                        sampler=val_sampler,
+                        collate_fn=collate_fn,
+                        num_workers=self.cfg.num_workers,
+                        drop_last=True,
+                    )
+            self.log(rank, logs, f"Using DDP ({len(list(train_sampler))} per worker)")
         else:
             torch.cuda.set_device(rank)
             net.cuda()
-            
+
             meta_train_dataset = train_dataset
-            
-            if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval_finetune':
+
+            if self.cfg.mode == "finetune" or self.cfg.mode == "eval_finetune":
                 cls_net.cuda()
+
+                if not neg_dataset is None:
+                    meta_neg_dataset = neg_dataset
+
                 # collate_fn = subject_collate if self.cfg.mode == 'pretrain' else None
                 collate_fn = None
-                train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size,
-                                        shuffle=True, collate_fn=collate_fn,
-                                        num_workers=self.cfg.num_workers, drop_last=True)
-                test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size,
-                                        shuffle=True, collate_fn=collate_fn,
-                                        num_workers=self.cfg.num_workers, drop_last=True)
+                train_loader = DataLoader(
+                    train_dataset,
+                    batch_size=self.cfg.batch_size,
+                    shuffle=True,
+                    collate_fn=collate_fn,
+                    num_workers=self.cfg.num_workers,
+                    drop_last=True,
+                )
+                test_loader = DataLoader(
+                    test_dataset,
+                    batch_size=self.cfg.batch_size,
+                    shuffle=True,
+                    collate_fn=collate_fn,
+                    num_workers=self.cfg.num_workers,
+                    drop_last=True,
+                )
                 if len(val_dataset) > 0:
-                    val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size,
-                                            shuffle=True, collate_fn=collate_fn,
-                                            num_workers=self.cfg.num_workers, drop_last=True)
-            
-            if rank == 0:
-                log = "Single GPU is used for training - training {} instances for each worker".format(len(train_dataset))
-                logs.append(log)
-                print(log)
-        
+                    val_loader = DataLoader(
+                        val_dataset,
+                        batch_size=self.cfg.batch_size,
+                        shuffle=True,
+                        collate_fn=collate_fn,
+                        num_workers=self.cfg.num_workers,
+                        drop_last=True,
+                    )
+            self.log(rank, logs, f"Using single GPU ({len(train_dataset)} per worker)")
+
         indices_per_domain = self.split_per_domain(meta_train_dataset)
-        # indices_per_domain = self.split_per_domain(train_dataset)
-        
+
+        memory_bank = Adversary_Negatives(self.cfg.bank_size, self.cfg.out_dim).cuda()
+        memory_bank.init(net, meta_train_dataset)
+
         # Define criterion
-        if self.cfg.criterion == 'crossentropy':
+        if self.cfg.criterion == "crossentropy":
             criterion = nn.CrossEntropyLoss().cuda()
-        
+
         # For finetuning, load pretrained model
-        if self.cfg.mode == 'finetune':
+        if self.cfg.mode == "finetune":
             if os.path.isfile(self.cfg.pretrained):
-                if rank == 0:
-                    log = "Loading pretrained model from checkpoint - {}".format(self.cfg.pretrained)
-                    logs.append(log)
-                    print(log)
-                loc = 'cuda:{}'.format(rank)
-                if self.cfg.pretext == 'setsimclr':
-                    state = torch.load(self.cfg.pretrained, map_location=loc)
-                else:
-                    state = torch.load(self.cfg.pretrained, map_location=loc)['state_dict']
-                
-                # for k, v in list(state.items()):
-                #     if k.startswith('encoder.'):
-                #         k = k[len('encoder.'):]
-                #     if world_size > 1:
-                #         k = 'module.' + k
-                #     if k in net.state_dict().keys():
-                #         state[k] = v
+                self.log(
+                    rank, logs, f"Loading pretrained model ({self.cfg.pretrained})"
+                )
+                loc = "cuda:{}".format(rank)
+                state = torch.load(self.cfg.pretrained, map_location=loc)
+                if self.cfg.pretext != "setsimclr":
+                    state = torch.load(self.cfg.pretrained, map_location=loc)[
+                        "state_dict"
+                    ]
+
                 new_state = {}
-                if self.cfg.no_vars:
+                if self.cfg.no_vars:  # option for debugging
                     for i, (k, v) in enumerate(state.items()):
                         new_k = list(net.state_dict().keys())[i]
                         new_state[new_k] = v
                 else:
                     new_state = state
-                
-                # print(state.keys())
-                # print(net.state_dict().keys())
-                # assert(0)
-                
-                msg = net.load_state_dict(new_state, strict=False)
-                if rank == 0:
-                    log = "Missing keys: {}".format(msg.missing_keys)
-                    logs.append(log)
-                    print(log)
+
+                msg = net.load_state_dict(new_state, strict=True)
+                self.log(rank, logs, f"Missing keys: {msg.missing_keys}")
             else:
-                if rank == 0:
-                    log = "No checkpoint found at '{}'".format(self.cfg.pretrained)
-                    logs.append(log)
-                    print(log)
-            
+                self.log(rank, logs, f"No checkpoint found at '{self.cfg.pretrained}'")
+
             # Meta-train the pretrained model for domain adaptation
+            if world_size > 1:
+                train_sampler.set_epoch(0)
+                # for debugging
+                if not neg_dataset is None:
+                    neg_sampler.set_epoch(0)
+
+            shuffled_idx = torch.randperm(len(meta_train_dataset))
+            meta_train_dataset = torch.utils.data.Subset(
+                meta_train_dataset, shuffled_idx
+            )
+
+            # for debugging
+            st = 200
+            shuffled_neg_idx = torch.randperm(len(meta_neg_dataset))[
+                st : st + self.cfg.num_negs
+            ]
+            meta_neg_dataset = torch.utils.data.Subset(
+                meta_neg_dataset, shuffled_neg_idx
+            )
+
+            net.eval()
+            enc_parameters = list(copy.deepcopy(net.parameters()))
+
+            # perform domgin adaptation
             if self.cfg.domain_adaptation:
-                if rank == 0:
-                    log = "Perform domain adaptation step"
-                    logs.append(log)
-                    print(log)
-                if world_size > 1:
-                    train_sampler.set_epoch(0)
-                net.train()
-                net.zero_grad()
+                self.log(rank, logs, f"Perform domain adaptation step")
+                support = [e[1] for e in meta_train_dataset]
+                support = torch.stack(support, dim=0).cuda()
 
-                shuffled_idx = torch.randperm(len(meta_train_dataset))
-                meta_train_dataset = torch.utils.data.Subset(meta_train_dataset, shuffled_idx)
+                pos_support = [e[2] for e in meta_train_dataset]
+                pos_support = torch.stack(pos_support, dim=0).cuda()
 
-                if self.cfg.out_cls_neg_sampling:
-                    enc_parameters = self.adapt(rank, net, meta_train_dataset, criterion, log_steps=True, logs=logs)
-                    self.meta_eval(rank, net, test_dataset, criterion, enc_parameters, logs)
-                else:
-                    support = [e[1] for e in meta_train_dataset]
-                    pos_support = [e[2] for e in meta_train_dataset]
-                    support = torch.stack(support, dim=0).cuda()
-                    pos_support = torch.stack(pos_support, dim=0).cuda()
-                    enc_parameters = self.meta_train(rank, net, support, pos_support, criterion, log_steps=True, logs=logs)
-                    # self.meta_eval(rank, net, test_dataset, criterion, enc_parameters, logs)
-            else:
-                enc_parameters = list(net.parameters())
-            
-            if rank == 0:
-                log = "Loading encoder parameters to the classifier"
-                logs.append(log)
-                print(log)
-            
+                # for debugging
+                neg_support = [e[1] for e in meta_neg_dataset]
+                neg_support = torch.stack(neg_support, dim=0).cuda()
+
+                enc_parameters = self.meta_train(
+                    rank,
+                    net,
+                    support,
+                    pos_support,
+                    neg_support,
+                    criterion,
+                    log_steps=True,
+                    logs=logs,
+                )
+
+            self.log(rank, logs, "Loading encoder parameters to the classifier")
             enc_dict = {}
-            for idx, k in enumerate(list(net.state_dict().keys())):
-                if not 'classifier' in k:
-                    k_ = k.replace('encoder.', 'base_model.')
-                    enc_dict[k_] = enc_parameters[idx]
-            
-            msg = cls_net.load_state_dict(enc_dict, strict=False)
-            if rank == 0:
-                log = "Missing keys: {}".format(msg.missing_keys)
-                logs.append(log)
-                print(log)
+            for idx, k in enumerate(list(cls_net.state_dict().keys())):
+                if not "classifier" in k:
+                    # k_ = k.replace("encoder.", "base_model.")
+                    enc_dict[k] = enc_parameters[idx]
+                else:
+                    enc_dict[k] = cls_net.state_dict()[k]
 
-            if self.cfg.visualization:
-                is_meta = True if "meta" in self.cfg.pretrained else False
-                tag = f'{self.cfg.dataset_name}_{self.cfg.pretext}_{self.cfg.domain_adaptation}_meta{is_meta}'
-                writer = SummaryWriter(f'./logs/{tag}')
+            msg = cls_net.load_state_dict(enc_dict, strict=True)
+            self.log(rank, logs, f"Missing keys: {msg.missing_keys}")
 
-                if rank == 0:
-                    log = "Missing keys: {}".format(msg.missing_keys)
-                    logs.append(log)
-                    print(log)
+            # if self.cfg.visualization:
+            #     is_meta = True if "meta" in self.cfg.pretrained else False
+            #     tag = f"{self.cfg.dataset_name}_{self.cfg.pretext}_{self.cfg.domain_adaptation}_meta{is_meta}"
+            #     writer = SummaryWriter(f"./logs/{tag}")
+            #     self.visualize(rank, cls_net, test_loader, criterion, logs, writer, tag)
 
-                self.visualize(rank, cls_net, test_loader, criterion, logs, writer, tag)
-                print(f"Visualization finished")
-                exit(0)
-            
+            # now replace the encoder with the classifier
             net = cls_net
-            
             # Freezing the encoder
             if self.cfg.freeze:
-                if rank == 0:
-                    log = "Freezing the encoder"
-                    logs.append(log)
-                    print(log)
+                self.log(rank, logs, "Freezing the encoder")
                 for name, param in net.named_parameters():
-                    print(name)
-                    if not 'classifier' in name:
+                    if not "classifier" in name:
                         param.requires_grad = False
                     else:
                         param.requires_grad = True
-        
+        else:
+            if self.cfg.membank_optimizer == "sgd":
+                membank_optimizer = torch.optim.SGD(
+                    memory_bank.parameters(),
+                    self.cfg.membank_lr,
+                    momentum=self.cfg.membank_m,
+                    weight_decay=self.cfg.membank_wd,
+                )
+
         parameters = list(filter(lambda p: p.requires_grad, net.parameters()))
-        if self.cfg.optimizer == 'sgd':
-            optimizer = torch.optim.SGD(parameters, self.cfg.lr,
-                                        momentum=self.cfg.momentum,
-                                        weight_decay=self.cfg.wd)
-        elif self.cfg.optimizer == 'adam':
-            optimizer = torch.optim.Adam(parameters, self.cfg.lr,
-                                        weight_decay=self.cfg.wd)
+
+        if self.cfg.optimizer == "sgd":
+            optimizer = torch.optim.SGD(
+                parameters,
+                self.cfg.lr,
+                momentum=self.cfg.momentum,
+                weight_decay=self.cfg.wd,
+            )
+        elif self.cfg.optimizer == "adam":
+            optimizer = torch.optim.Adam(
+                parameters, self.cfg.lr, weight_decay=self.cfg.wd
+            )
         # if self.cfg.mode == 'finetune':
         #     scheduler = StepLR(optimizer, step_size=self.cfg.lr_decay_step, gamma=self.cfg.lr_decay)
-        
+
         # Load checkpoint if exists
         if os.path.isfile(self.cfg.resume):
-            if rank == 0:
-                log = "Loading state_dict from checkpoint - {}".format(self.cfg.resume)
-                logs.append(log)
-                print(log)
-            loc = 'cuda:{}'.format(rank)
+            self.log(rank, logs, f"Resume from checkpoint - {self.cfg.resume}")
+            loc = "cuda:{}".format(rank)
             state = torch.load(self.cfg.resume, map_location=loc)
-            
-            for k, v in list(state['state_dict'].items()):
+
+            for k, v in list(state["state_dict"].items()):
                 new_k = k
                 if world_size > 1:
-                    new_k = 'module.' + k
+                    new_k = "module." + k
                 if new_k in net.state_dict().keys():
-                    state['state_dict'][new_k] = v
+                    state["state_dict"][new_k] = v
                 if k not in net.state_dict().keys():
-                    state['state_dict'].pop(k,None)
-            
-            net.load_state_dict(state['state_dict'])
-            optimizer.load_state_dict(state['optimizer'])
-            self.cfg.start_epoch = state['epoch']
-        
+                    state["state_dict"].pop(k, None)
+
+            net.load_state_dict(state["state_dict"])
+            optimizer.load_state_dict(state["optimizer"])
+            self.cfg.start_epoch = state["epoch"]
+
         # Handling the modes (train or eval)
-        if self.cfg.mode == 'eval_pretrain':
-            self.validate_pretrain(rank, net, test_loader, criterion, logs)
-        elif self.cfg.mode == 'eval_finetune':
+        # if self.cfg.mode == "eval_pretrain":
+        #     self.validate_pretrain(rank, net, test_loader, criterion, logs)
+        if self.cfg.mode == "eval_finetune":
             self.validate_finetune(rank, net, test_loader, criterion, logs)
-        else:
+        else:  # pretrain or finetune
             # loss_best = 0
             for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
                 if world_size > 1:
                     train_sampler.set_epoch(epoch)
+                    if not neg_dataset is None:
+                        neg_sampler.set_epoch(epoch)
                     if len(val_dataset) > 0:
                         val_sampler.set_epoch(epoch)
                     test_sampler.set_epoch(epoch)
-                
-                if self.cfg.mode == 'pretrain':
+
+                if self.cfg.mode == "pretrain":
                     supports = []
                     queries = []
                     pos_supports = []
                     pos_queries = []
                     if self.cfg.task_per_domain:
-                        supports, pos_supports, queries, pos_queries = self.gen_per_domain_tasks(
-                            meta_train_dataset,
-                            indices_per_domain,
-                            self.cfg.task_size,
-                            self.cfg.num_task
+                        supports, pos_supports, queries, pos_queries = (
+                            self.gen_per_domain_tasks(
+                                meta_train_dataset,
+                                indices_per_domain,
+                                self.cfg.task_size,
+                                self.cfg.num_task,
+                            )
                         )
                     if self.cfg.multi_cond_num_task > 0:
-                        multi_cond_supports, multi_cond_pos_supports, multi_cond_queries, multi_cond_pos_queries = self.gen_random_tasks(
+                        (
+                            multi_cond_supports,
+                            multi_cond_pos_supports,
+                            multi_cond_queries,
+                            multi_cond_pos_queries,
+                        ) = self.gen_random_tasks(
                             meta_train_dataset,
                             self.cfg.task_size,
-                            self.cfg.multi_cond_num_task
+                            self.cfg.multi_cond_num_task,
                         )
-                        supports = supports+multi_cond_supports
-                        queries = queries+multi_cond_queries
-                        pos_supports = pos_supports+multi_cond_pos_supports
-                        pos_queries = pos_queries+multi_cond_pos_queries
+                        supports = supports + multi_cond_supports
+                        queries = queries + multi_cond_queries
+                        pos_supports = pos_supports + multi_cond_pos_supports
+                        pos_queries = pos_queries + multi_cond_pos_queries
 
-                    # print(f"Num task : {len(supports)}")
-                    self.pretrain(rank, net, supports, pos_supports, queries, pos_queries, criterion, optimizer, epoch, self.cfg.epochs, logs)
+                    self.pretrain(
+                        rank,
+                        net,
+                        supports,
+                        pos_supports,
+                        queries,
+                        pos_queries,
+                        memory_bank,
+                        criterion,
+                        optimizer,
+                        membank_optimizer,
+                        epoch,
+                        self.cfg.epochs,
+                        logs,
+                    )
+
                     # if len(val_dataset) > 0:
                     #     loss_ep = self.validate_pretrain(rank, net, val_loader, criterion, logs)
-                    
+
                     # # Storing best epoch checkpoint and early stopping
                     # if rank == 0:
                     #     if loss_best == 0 or loss_ep < loss_best:
@@ -589,33 +770,43 @@ class MetaSimCLR1DLearner:
                     #             logs.append(log)
                     #             print(log)
                     #             break
-                    
-                elif self.cfg.mode == 'finetune':
-                    self.finetune(rank, net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
+
+                elif self.cfg.mode == "finetune":
+                    self.finetune(
+                        rank,
+                        net,
+                        train_loader,
+                        criterion,
+                        optimizer,
+                        epoch,
+                        self.cfg.epochs,
+                        logs,
+                    )
+
                     # if len(val_dataset) > 0:
                     #     self.validate_finetune(rank, net, val_loader, criterion, logs)
-                
-                if rank == 0 and (epoch+1) % self.cfg.save_freq == 0:
+
+                if rank == 0 and (epoch + 1) % self.cfg.save_freq == 0:
                     ckpt_dir = self.cfg.ckpt_dir
-                    ckpt_filename = 'checkpoint_{:04d}.pth.tar'.format(epoch)
+                    ckpt_filename = "checkpoint_{:04d}.pth.tar".format(epoch)
                     ckpt_filename = os.path.join(ckpt_dir, ckpt_filename)
                     state_dict = net.state_dict()
                     if world_size > 1:
                         for k, v in list(state_dict.items()):
-                            if 'module.' in k:
-                                state_dict[k.replace('module.', '')] = v
+                            if "module." in k:
+                                state_dict[k.replace("module.", "")] = v
                                 del state_dict[k]
                     self.save_checkpoint(ckpt_filename, epoch, state_dict, optimizer)
-            
-            if self.cfg.mode == 'finetune':
+
+            if self.cfg.mode == "finetune":
                 self.validate_finetune(rank, net, test_loader, criterion, logs)
-    
+
     def split_per_domain(self, dataset):
         indices_per_domain = defaultdict(list)
         for i, d in enumerate(dataset):
             indices_per_domain[d[4].item()].append(i)
         return indices_per_domain
-    
+
     def split_per_class(self, dataset):
         indices_per_class = defaultdict(list)
         opp_indices_per_class = defaultdict(list)
@@ -626,13 +817,15 @@ class MetaSimCLR1DLearner:
                 if i not in indices:
                     opp_indices_per_class[cls].append(i)
         return indices_per_class, opp_indices_per_class
-    
-    def gen_per_domain_tasks(self, dataset, indices_per_domain, task_size, num_task=None):
+
+    def gen_per_domain_tasks(
+        self, dataset, indices_per_domain, task_size, num_task=None
+    ):
         supports = []
         queries = []
         pos_supports = []
         pos_queries = []
-        
+
         with torch.no_grad():
             if num_task is None:
                 for _, indices in indices_per_domain.items():
@@ -645,8 +838,10 @@ class MetaSimCLR1DLearner:
                         pos_support.append(e[2])
                     support = torch.stack(support, dim=0)
                     pos_support = torch.stack(pos_support, dim=0)
-                    
-                    query_ = torch.utils.data.Subset(dataset, indices[task_size:2*task_size])
+
+                    query_ = torch.utils.data.Subset(
+                        dataset, indices[task_size : 2 * task_size]
+                    )
                     query = []
                     pos_query = []
                     for e in query_:
@@ -654,7 +849,7 @@ class MetaSimCLR1DLearner:
                         pos_query.append(e[2])
                     query = torch.stack(query, dim=0)
                     pos_query = torch.stack(pos_query, dim=0)
-                    
+
                     supports.append(support)
                     queries.append(query)
                     pos_supports.append(pos_support)
@@ -675,12 +870,20 @@ class MetaSimCLR1DLearner:
                         support = support[:task_size]
                         pos_support = pos_support[:task_size]
                     else:
-                        support = support * (task_size // len(support)) + support[:task_size % len(support)]
-                        pos_support = pos_support * (task_size // len(pos_support)) + pos_support[:task_size % len(pos_support)]
+                        support = (
+                            support * (task_size // len(support))
+                            + support[: task_size % len(support)]
+                        )
+                        pos_support = (
+                            pos_support * (task_size // len(pos_support))
+                            + pos_support[: task_size % len(pos_support)]
+                        )
                     support = torch.stack(support, dim=0)
                     pos_support = torch.stack(pos_support, dim=0)
-                    
-                    query_ = torch.utils.data.Subset(dataset, indices[task_size:2*task_size])
+
+                    query_ = torch.utils.data.Subset(
+                        dataset, indices[task_size : 2 * task_size]
+                    )
                     # query_ = torch.utils.data.Subset(dataset, indices[len(indices)//2:])
                     query = []
                     pos_query = []
@@ -691,16 +894,22 @@ class MetaSimCLR1DLearner:
                         query = query[:task_size]
                         pos_query = pos_query[:task_size]
                     else:
-                        query = query * (task_size // len(query)) + query[:task_size % len(query)]
-                        pos_query = pos_query * (task_size // len(pos_query)) + pos_query[:task_size % len(pos_query)]
+                        query = (
+                            query * (task_size // len(query))
+                            + query[: task_size % len(query)]
+                        )
+                        pos_query = (
+                            pos_query * (task_size // len(pos_query))
+                            + pos_query[: task_size % len(pos_query)]
+                        )
                     query = torch.stack(query, dim=0)
                     pos_query = torch.stack(pos_query, dim=0)
-                    
+
                     supports.append(support)
                     queries.append(query)
                     pos_supports.append(pos_support)
                     pos_queries.append(pos_query)
-        
+
         return supports, pos_supports, queries, pos_queries
 
     def gen_random_tasks(self, dataset, task_size, num_task):
@@ -712,10 +921,10 @@ class MetaSimCLR1DLearner:
             for _ in range(num_task):
                 indices = list(range(len(dataset)))
                 random.shuffle(indices)
-                
+
                 st = 0
                 ed = task_size
-                
+
                 support_ = torch.utils.data.Subset(dataset, indices[st:ed])
                 support = []
                 pos_support = []
@@ -726,7 +935,7 @@ class MetaSimCLR1DLearner:
                 pos_support = torch.stack(pos_support, dim=0)
                 st += task_size
                 ed += task_size
-                
+
                 query_ = torch.utils.data.Subset(dataset, indices[st:ed])
                 query = []
                 pos_query = []
@@ -741,63 +950,133 @@ class MetaSimCLR1DLearner:
                 queries.append(query)
                 pos_supports.append(pos_support)
                 pos_queries.append(pos_query)
-            
+
         return supports, pos_supports, queries, pos_queries
-    
-    def pretrain(self, rank, net, supports, pos_supports, queries, pos_queries, criterion, optimizer, epoch, num_epochs, logs):
+
+    def pretrain(
+        self,
+        rank,
+        net,
+        supports,
+        pos_supports,
+        queries,
+        pos_queries,
+        memory_bank,
+        criterion,
+        optimizer,
+        membank_optimizer,
+        epoch,
+        num_epochs,
+        logs,
+    ):
         net.train()
         net.zero_grad()
-        
+
         q_losses = []
-        for task_idx in range(len(supports)):
+        num_tasks = len(supports)
+        for task_idx in range(num_tasks):
             support = supports[task_idx].cuda()
             pos_support = pos_supports[task_idx].cuda()
             query = queries[task_idx].cuda()
             pos_query = pos_queries[task_idx].cuda()
-            
-            fast_weights = self.meta_train(rank, net, support, pos_support, criterion, log_steps=self.cfg.log_meta_train, logs=logs)
-            
-            q_logits, q_targets = net(query, pos_query, fast_weights)
+
+            fast_weights, fast_negatives = self.meta_train(
+                rank,
+                net,
+                support,
+                pos_support,
+                memory_bank,
+                criterion,
+                log_steps=self.cfg.log_meta_train,
+                logs=logs,
+            )
+
+            negatives = memory_bank(fast_negatives)
+            if self.cfg.adapt_w_neg:
+                negatives = memory_bank(fast_negatives)
+                q_logits, q_targets = net.forward_w_nq(
+                    support, pos_support, negatives, fast_weights
+                )
+            else:
+                q_logits, q_targets = net(query, pos_query, fast_weights)
             q_loss = criterion(q_logits, q_targets)
             q_losses.append(q_loss)
-            
+
             if task_idx % self.cfg.log_freq == 0:
-                acc1, acc5 = self.accuracy(q_logits, q_targets, topk=(1, 5))
-                log = f'Epoch [{epoch+1}/{num_epochs}]  \t({task_idx}/{len(supports)}) '
-                log += f'Loss: {q_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+                acc = self.accuracy(q_logits, q_targets, topk=(1, 5))
+                log = f"Epoch [{epoch+1}/{num_epochs}]  \t({task_idx}/{len(supports)}) "
+                log += f"Loss: {q_loss.item():.4f}, Acc(1): {acc[0].item():.2f}, Acc(5): {acc[1].item():.2f}"
                 if rank == 0:
                     logs.append(log)
                     print(log)
-        
+
         q_losses = torch.stack(q_losses, dim=0)
         loss = torch.sum(q_losses)
         # reg_term = torch.sum((q_losses - torch.mean(q_losses))**2)
         # loss += reg_term * self.cfg.reg_lambda
-        loss = loss/len(supports)
+        loss = loss / len(supports)
         # log = f'Epoch [{epoch+1}/{num_epochs}] {loss.item():.4f}'
         # if rank == 0:
         #     logs.append(log)
         #     print(log)
         optimizer.zero_grad()
-        loss.backward()
+        # loss.backward()
+        loss.backward(retain_graph=True)
         optimizer.step()
-    
-    def meta_train(self, rank, net, support, pos_support, criterion, log_steps=False, logs=None):
+
+        membank_loss = -loss
+        membank_optimizer.zero_grad()
+        membank_loss.backward()
+        membank_optimizer.step()
+
+    def meta_train(
+        self,
+        rank,
+        net,
+        support,
+        pos_support,
+        memory_bank,
+        criterion,
+        log_steps=False,
+        logs=None,
+    ):
+        # fast_weights = list(copy.deepcopy(net.parameters()))
         fast_weights = list(net.parameters())
+        fast_negatives = list(memory_bank.parameters())
+
         for i in range(self.cfg.task_steps):
-            s_logits, s_targets = net(support, pos_support, fast_weights)
+            # for i in range(0):
+            # s_logits, s_targets = net(support, pos_support, fast_weights)
+            if self.cfg.adapt_w_neg:
+                negatives = memory_bank(fast_negatives)
+                s_logits, s_targets = net.forward_w_nq(
+                    support, pos_support, negatives, fast_weights
+                )
+            else:
+                s_logits, s_targets = net(support, pos_support, fast_weights)
             s_loss = criterion(s_logits, s_targets)
-            grad = torch.autograd.grad(s_loss, fast_weights)
-            fast_weights = list(map(lambda p: p[1] - self.cfg.task_lr * p[0], zip(grad, fast_weights)))
-            
-            if log_steps and rank == 0:
-                acc1, acc5 = self.accuracy(s_logits, s_targets, topk=(1, 5))
-                log = f'\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {s_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
-                logs.append(log)
-                print(log)
-        
-        return fast_weights
-    
+            grad = torch.autograd.grad(s_loss, fast_weights, retain_graph=True)
+            fast_weights = list(
+                map(lambda p: p[1] - self.cfg.task_lr * p[0], zip(grad, fast_weights))
+            )
+
+            membank_loss = -s_loss
+            membank_grad = torch.autograd.grad(membank_loss, fast_negatives)
+            fast_negatives = list(
+                map(
+                    lambda p: p[1] - self.cfg.task_membank_lr * p[0],
+                    zip(membank_grad, fast_negatives),
+                )
+            )
+
+            if log_steps:
+                acc = self.accuracy(s_logits, s_targets, topk=(1, 5))
+                log = f"\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {s_loss.item():.4f}, "
+                log += f"Acc(1): {acc[0].item():.2f}, Acc(5): {acc[1].item():.2f}"
+                self.log(rank, logs, log)
+
+        return fast_weights, fast_negatives
+
     def meta_eval(self, rank, net, test_dataset, criterion, fast_weights, logs):
         indices = list(range(len(test_dataset)))
         random.shuffle(indices)
@@ -807,21 +1086,20 @@ class MetaSimCLR1DLearner:
         pos_support = [e[2] for e in dataset]
         support = torch.stack(support, dim=0).cuda()
         pos_support = torch.stack(pos_support, dim=0).cuda()
-        
+
         logits, targets = net(support, pos_support, fast_weights)
         loss = criterion(logits, targets)
-        
-        
+
         train_dataset = test_dataset
         indices_per_class, opp_indices_per_class = self.split_per_class(train_dataset)
         full_batch_size = len(train_dataset)
-        
+
         total_logits = []
         total_targets = []
-        
+
         for cls, indices in indices_per_class.items():
             opp_indices = opp_indices_per_class[cls]
-            
+
             support_ = torch.utils.data.Subset(train_dataset, indices)
             support = []
             pos_support = []
@@ -830,7 +1108,7 @@ class MetaSimCLR1DLearner:
                 pos_support.append(e[2])
             support = torch.stack(support, dim=0).cuda()
             pos_support = torch.stack(pos_support, dim=0).cuda()
-            
+
             neg_support_ = torch.utils.data.Subset(train_dataset, opp_indices)
             neg_support = []
             neg_aug_support = []
@@ -839,35 +1117,40 @@ class MetaSimCLR1DLearner:
                 neg_aug_support.append(e[2])
             neg_support = torch.stack(neg_support, dim=0).cuda()
             neg_aug_support = torch.stack(neg_aug_support, dim=0).cuda()
-            
-            logits, targets = net.adapt(support, pos_support, neg_support, neg_aug_support, full_batch_size, fast_weights)
+
+            logits, targets = net.adapt(
+                support,
+                pos_support,
+                neg_support,
+                neg_aug_support,
+                full_batch_size,
+                fast_weights,
+            )
             total_logits.append(logits)
             total_targets.append(targets)
-        
+
         logits = torch.cat(total_logits, dim=0)
         targets = torch.cat(total_targets, dim=0)
         loss = criterion(logits, targets)
-        
-        
-        
+
         if rank == 0:
-            acc1, acc5 = self.accuracy(logits, targets, topk=(1, 5))
-            log = f'\tmeta-eval Loss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+            acc = self.accuracy(logits, targets, topk=(1, 5))
+            log = f"\tmeta-eval Loss: {loss.item():.4f}, Acc(1): {acc[0].item():.2f}, Acc(5): {acc[1].item():.2f}"
             logs.append(log)
             print(log)
-    
+
     def adapt(self, rank, net, train_dataset, criterion, log_steps=False, logs=None):
         fast_weights = list(net.parameters())
         indices_per_class, opp_indices_per_class = self.split_per_class(train_dataset)
         full_batch_size = len(train_dataset)
-        
+
         for i in range(self.cfg.task_steps):
             total_logits = []
             total_targets = []
-            
+
             for cls, indices in indices_per_class.items():
                 opp_indices = opp_indices_per_class[cls]
-                
+
                 support_ = torch.utils.data.Subset(train_dataset, indices)
                 support = []
                 pos_support = []
@@ -876,7 +1159,7 @@ class MetaSimCLR1DLearner:
                     pos_support.append(e[2])
                 support = torch.stack(support, dim=0).cuda()
                 pos_support = torch.stack(pos_support, dim=0).cuda()
-                
+
                 neg_support_ = torch.utils.data.Subset(train_dataset, opp_indices)
                 neg_support = []
                 neg_aug_support = []
@@ -885,96 +1168,110 @@ class MetaSimCLR1DLearner:
                     neg_aug_support.append(e[2])
                 neg_support = torch.stack(neg_support, dim=0).cuda()
                 neg_aug_support = torch.stack(neg_aug_support, dim=0).cuda()
-                
-                logits, targets = net.adapt(support, pos_support, neg_support, neg_aug_support, full_batch_size, fast_weights)
+
+                logits, targets = net.adapt(
+                    support,
+                    pos_support,
+                    neg_support,
+                    neg_aug_support,
+                    full_batch_size,
+                    fast_weights,
+                )
                 total_logits.append(logits)
                 total_targets.append(targets)
-            
+
             total_logits = torch.cat(total_logits, dim=0)
             total_targets = torch.cat(total_targets, dim=0)
             loss = criterion(total_logits, total_targets)
             grad = torch.autograd.grad(loss, fast_weights)
             for g, p in zip(grad, fast_weights):
                 g += self.cfg.task_wd * p
-            fast_weights = list(map(lambda p: p[1] - self.cfg.task_lr * p[0], zip(grad, fast_weights)))
-            
+            fast_weights = list(
+                map(lambda p: p[1] - self.cfg.task_lr * p[0], zip(grad, fast_weights))
+            )
+
             if log_steps and rank == 0:
-                acc1, acc5 = self.accuracy(total_logits, total_targets, topk=(1, 5))
-                log = f'\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+                acc = self.accuracy(total_logits, total_targets, topk=(1, 5))
+                log = f"\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {loss.item():.4f}, Acc(1): {acc[0].item():.2f}, Acc(5): {acc[1].item():.2f}"
                 logs.append(log)
                 print(log)
-        
+
         return fast_weights
-            
-    def validate_pretrain(self, rank, net, val_loader, criterion, logs):
-        net.eval()
-        
-        total_loss = 0
-        with torch.no_grad():
-            for batch_idx, data in enumerate(val_loader):
-                features = data[1].cuda()
-                pos_features = data[2].cuda()
-                domains = data[3].cuda()
-                
-                if self.cfg.neg_per_domain:
-                    all_logits = []
-                    all_targets = []
-                    for dom in self.all_domains:
-                        dom_idx = torch.nonzero(domains == dom).squeeze()
-                        if dom_idx.dim() == 0: dom_idx = dom_idx.unsqueeze(0)
-                        if torch.numel(dom_idx):
-                            dom_features = features[dom_idx]
-                            dom_pos_features = pos_features[dom_idx]
-                            logits, targets = net(dom_features, dom_pos_features, features.shape[0])
-                            all_logits.append(logits)
-                            all_targets.append(targets)
-                    logits = torch.cat(all_logits, dim=0)
-                    targets = torch.cat(all_targets, dim=0)
-                else:
-                    logits, targets = net(features, pos_features, features.shape[0])
-                loss = criterion(logits, targets)
-                total_loss += loss
-            
-            # if len(total_targets) > 0:
-            #     total_targets = torch.cat(total_targets, dim=0)
-            #     total_logits = torch.cat(total_logits, dim=0)
-            #     acc1, acc5 = self.accuracy(total_logits, total_targets, topk=(1, 5))
-            #     # f1, recall, precision = self.scores(total_logits, total_targets)
-            total_loss /= len(val_loader)
-            
-            if rank == 0:
-                log = f'[Pretrain] Validation Loss: {total_loss.item():.4f}'#, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
-                logs.append(log)
-                print(log)
-            
-            return total_loss.item()
-    
-    def finetune(self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs):
+
+    # def validate_pretrain(self, rank, net, val_loader, criterion, logs):
+    #     net.eval()
+
+    #     total_loss = 0
+    #     with torch.no_grad():
+    #         for batch_idx, data in enumerate(val_loader):
+    #             features = data[1].cuda()
+    #             pos_features = data[2].cuda()
+    #             domains = data[3].cuda()
+
+    #             if self.cfg.neg_per_domain:
+    #                 all_logits = []
+    #                 all_targets = []
+    #                 for dom in self.all_domains:
+    #                     dom_idx = torch.nonzero(domains == dom).squeeze()
+    #                     if dom_idx.dim() == 0:
+    #                         dom_idx = dom_idx.unsqueeze(0)
+    #                     if torch.numel(dom_idx):
+    #                         dom_features = features[dom_idx]
+    #                         dom_pos_features = pos_features[dom_idx]
+    #                         logits, targets = net(
+    #                             dom_features, dom_pos_features, features.shape[0]
+    #                         )
+    #                         all_logits.append(logits)
+    #                         all_targets.append(targets)
+    #                 logits = torch.cat(all_logits, dim=0)
+    #                 targets = torch.cat(all_targets, dim=0)
+    #             else:
+    #                 logits, targets = net(features, pos_features, features.shape[0])
+    #             loss = criterion(logits, targets)
+    #             total_loss += loss
+
+    #         # if len(total_targets) > 0:
+    #         #     total_targets = torch.cat(total_targets, dim=0)
+    #         #     total_logits = torch.cat(total_logits, dim=0)
+    #         #     acc1, acc5 = self.accuracy(total_logits, total_targets, topk=(1, 5))
+    #         #     # f1, recall, precision = self.scores(total_logits, total_targets)
+    #         total_loss /= len(val_loader)
+
+    #         if rank == 0:
+    #             log = f"[Pretrain] Validation Loss: {total_loss.item():.4f}"  # , Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+    #             logs.append(log)
+    #             print(log)
+
+    #         return total_loss.item()
+
+    def finetune(
+        self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs
+    ):
         net.eval()
 
         for batch_idx, data in enumerate(train_loader):
             features = data[0].cuda()
             targets = data[3].cuda()
-            
+
             logits = net(features)
             loss = criterion(logits, targets)
-            
+
             if rank == 0:
                 if batch_idx % self.cfg.log_freq == 0:
                     acc1, acc5 = self.accuracy(logits, targets, topk=(1, 5))
-                    log = f'Epoch [{epoch+1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) '
-                    log += f'\tLoss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+                    log = f"Epoch [{epoch+1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) "
+                    log += f"\tLoss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}"
                     logs.append(log)
                     print(log)
-            
+
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             # scheduler.step()
-                
+
     def validate_finetune(self, rank, net, val_loader, criterion, logs):
         net.eval()
-        
+
         total_targets = []
         total_logits = []
         total_loss = 0
@@ -982,25 +1279,26 @@ class MetaSimCLR1DLearner:
             for batch_idx, data in enumerate(val_loader):
                 features = data[0].cuda()
                 targets = data[3].cuda()
-                
+
                 logits = net(features)
-                
+
                 total_loss += criterion(logits, targets)
                 total_targets.append(targets)
                 total_logits.append(logits)
-            
+
             if len(total_targets) > 0:
                 total_targets = torch.cat(total_targets, dim=0)
                 total_logits = torch.cat(total_logits, dim=0)
                 acc1, acc5 = self.accuracy(total_logits, total_targets, topk=(1, 5))
                 f1, recall, precision = self.scores(total_logits, total_targets)
             total_loss /= len(val_loader)
-            
+
             if rank == 0:
-                log = f'[Finetune] Validation Loss: {total_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
-                log += f', F1: {f1.item():.2f}, Recall: {recall.item():.2f}, Precision: {precision.item():.2f}'
+                log = f"[Finetune] Validation Loss: {total_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}"
+                log += f", F1: {f1.item():.2f}, Recall: {recall.item():.2f}, Precision: {precision.item():.2f}"
                 logs.append(log)
                 print(log)
+
     def visualize(self, rank, net, val_loader, criterion, logs, writer, tag):
         net.eval()
 
@@ -1020,19 +1318,22 @@ class MetaSimCLR1DLearner:
 
         total_targets = torch.cat(total_targets, dim=0)
         total_logits = torch.cat(total_logits, dim=0)
-        writer.add_embedding(total_logits, metadata=total_targets, global_step=0, tag="feature")
+        writer.add_embedding(
+            total_logits, metadata=total_targets, global_step=0, tag="feature"
+        )
+
     def save_checkpoint(self, filename, epoch, state_dict, optimizer):
         directory = os.path.dirname(filename)
         if not os.path.exists(directory):
             os.makedirs(directory)
-        
+
         state = {
-            'epoch': epoch+1,
-            'state_dict': state_dict,
-            'optimizer': optimizer.state_dict()
+            "epoch": epoch + 1,
+            "state_dict": state_dict,
+            "optimizer": optimizer.state_dict(),
         }
         torch.save(state, filename)
-                
+
     def accuracy(self, output, target, topk=(1,)):
         with torch.no_grad():
             maxk = max(topk)
@@ -1046,7 +1347,7 @@ class MetaSimCLR1DLearner:
             for k in topk:
                 correct_k = correct[:k].reshape(-1).float().sum(0, keepdim=True)
                 res.append(correct_k.mul_(100.0 / batch_size))
-            
+
             return res
 
     def scores(self, output, target):
@@ -1061,11 +1362,7 @@ class MetaSimCLR1DLearner:
             recall = metrics.recall_score(
                 target_val, out_val, average="macro", zero_division=0
             )
-            f1 = metrics.f1_score(
-                target_val, out_val, average="macro", zero_division=0
-            )
-            acc = metrics.accuracy_score(
-                target_val, out_val
-            )
+            f1 = metrics.f1_score(target_val, out_val, average="macro", zero_division=0)
+            acc = metrics.accuracy_score(target_val, out_val)
 
             return f1, recall, precision

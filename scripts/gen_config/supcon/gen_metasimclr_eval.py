@@ -20,7 +20,16 @@ DATA_PATH = {
 
 NUM_CLS = {"ichar": 9, "hhar": 6, "pamap2": 12, "dsa": 19}
 
-CONFIG_PATH = "/mnt/sting/hjyoon/projects/aaa/configs/imwut/main_eval"
+use_supcon = False
+if use_supcon:
+    USE_SUPCON = "true"
+    CONFIG_PATH = (
+        "/mnt/sting/hjyoon/projects/aaa/configs/supervised_adaptation/main_eval/sup"
+    )
+else:
+    USE_SUPCON = "false"
+    CONFIG_PATH = "/mnt/sting/hjyoon/projects/aaa/configs/supervised_adaptation/main_eval/baseline"
+
 MODEL_PATH = "/mnt/sting/hjyoon/projects/aaa/models/imwut/main_eval"
 
 
@@ -80,7 +89,7 @@ def gen_pretrain_config():
                         pretrained_path = (
                             f"{pretrain_ckpt_path}/checkpoint_4999.pth.tar"
                         )
-                        ft_lr = 0.005 if freeze else 0.001
+                        ft_lr = 0.01 if freeze else 0.001
                         bs = 4 if shot != 1 else 1
                         finetune_config = get_config(
                             "finetune",
@@ -175,9 +184,10 @@ mlp: {'true' if mode == 'pretrain' else 'false'}
 neg_per_domain: false
 freeze: {'true' if freeze else 'false'}
 domain_adaptation: true
-out_cls_neg_sampling: false
+out_cls_neg_sampling: {USE_SUPCON}
 task_steps: 10
 no_vars: true
+visualization: false
 """
     return config
 
