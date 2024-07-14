@@ -1,6 +1,7 @@
 import os
 import copy
 import random
+import wandb
 
 from collections import defaultdict
 import sklearn.metrics as metrics
@@ -216,6 +217,44 @@ class SimCLRNet(nn.Module):
         neg_logits_2 = neg_logits_2 - masks * LARGE_NUM
 
         logits = torch.cat([pos_logits, neg_logits_1, neg_logits_2], dim=1)
+        # logits = torch.cat([pos_logits], dim=1)
+        logits /= self.T
+        labels = torch.arange(z.size(0)).cuda()
+
+        return logits, labels
+
+    def forward_detached(self, feature, aug_feature, vars=None):
+        if vars is None:
+            vars = nn.ParameterList()
+            vars.extend(self.encoder.parameters())
+            if self.mlp:
+                vars.extend(self.classifier.parameters())
+
+        enc_vars = vars[: len(self.encoder.parameters())]
+        if self.mlp:
+            cls_vars = vars[len(self.encoder.parameters()) :]
+
+        z = self.encoder(feature, enc_vars)
+        if self.mlp:
+            z = self.classifier(z, cls_vars)
+        z = F.normalize(z, dim=1).detach()
+
+        aug_z = self.encoder(aug_feature, enc_vars)
+        if self.mlp:
+            aug_z = self.classifier(aug_z, cls_vars)
+        aug_z = F.normalize(aug_z, dim=1).detach()
+
+        LARGE_NUM = 1e9
+        masks = F.one_hot(torch.arange(z.size(0)), z.size(0)).cuda()
+
+        pos_logits = torch.matmul(z, aug_z.t())
+        # neg_logits_1 = torch.matmul(z, z.t())
+        # neg_logits_1 = neg_logits_1 - masks * LARGE_NUM
+        # neg_logits_2 = torch.matmul(aug_z, aug_z.t())
+        # neg_logits_2 = neg_logits_2 - masks * LARGE_NUM
+
+        # logits = torch.cat([pos_logits, neg_logits_1, neg_logits_2], dim=1)
+        logits = torch.cat([pos_logits], dim=1)
         logits /= self.T
         labels = torch.arange(z.size(0)).cuda()
 
@@ -281,7 +320,8 @@ class SimCLRNet(nn.Module):
         # neg_z = self.encoder(neg_feature, enc_vars)
         # if self.mlp:
         #     neg_z = self.classifier(neg_z, cls_vars)
-        neg_z = F.normalize(neg_feature, dim=1)
+        neg_z = neg_feature
+        neg_z = F.normalize(neg_z, dim=1)
 
         LARGE_NUM = 1e9
         masks = F.one_hot(torch.arange(z.size(0)), z.size(0)).cuda()
@@ -293,11 +333,85 @@ class SimCLRNet(nn.Module):
         neg_logits_1 = neg_logits_1 - masks * LARGE_NUM
         neg_logits_2 = torch.matmul(aug_z, aug_z.t())
         neg_logits_2 = neg_logits_2 - masks * LARGE_NUM
+
         neg_logits_3 = torch.matmul(z, neg_z.t())
-        neg_logits_4 = torch.matmul(aug_z, neg_z.t())
+        # neg_logits_4 = torch.matmul(aug_z, neg_z.t())
+        # print(pos_logits[0][1])
+        # print(neg_logits_2[0][1])
+        # wandb.log(
+        #     {
+        #         "pos logits 1 max": torch.mean(torch.max(pos_logits, dim=1)[0]).item(),
+        #         "pos logits 1 mean": torch.mean(
+        #             torch.mean(pos_logits, dim=1)[0]
+        #         ).item(),
+        #         "neg logits 3 max": torch.mean(
+        #             torch.max(neg_logits_3, dim=1)[0]
+        #         ).item(),
+        #         "neg logits 3 mean": torch.mean(
+        #             torch.mean(neg_logits_3, dim=1)[0]
+        #         ).item(),
+        #     }
+        # )
+        # print(torch.mean(torch.max(neg_logits_1, dim=1)[0]))
+        # print(torch.mean(torch.mean(neg_logits_1, dim=1)[1]))
+        # print(torch.mean(torch.max(neg_logits_3, dim=1)[0]))
+        # print(torch.mean(torch.mean(neg_logits_3, dim=1)[1]))
 
         logits = torch.cat(
-            [pos_logits, neg_logits_1, neg_logits_2, neg_logits_3, neg_logits_4],
+            [pos_logits, neg_logits_1, neg_logits_2, neg_logits_3],
+            # [pos_logits, neg_logits_3],
+            dim=1,
+        )
+        logits /= self.T
+        labels = torch.arange(z.size(0)).cuda()
+        # labels = torch.zeros(z.size(0), dtype=torch.long).cuda()
+
+        return logits, labels
+
+    def forward_w_nq_detached(self, feature, aug_feature, neg_feature, vars=None):
+        if vars is None:
+            vars = nn.ParameterList()
+            vars.extend(self.encoder.parameters())
+            if self.mlp:
+                vars.extend(self.classifier.parameters())
+
+        enc_vars = vars[: len(self.encoder.parameters())]
+        if self.mlp:
+            cls_vars = vars[len(self.encoder.parameters()) :]
+
+        z = self.encoder(feature, enc_vars)
+        if self.mlp:
+            z = self.classifier(z, cls_vars)
+        z = F.normalize(z, dim=1).detach()
+
+        aug_z = self.encoder(aug_feature, enc_vars)
+        if self.mlp:
+            aug_z = self.classifier(aug_z, cls_vars)
+        aug_z = F.normalize(aug_z, dim=1).detach()
+
+        # neg_z = self.encoder(neg_feature, enc_vars)
+        # if self.mlp:
+        #     neg_z = self.classifier(neg_z, cls_vars)
+        neg_z = neg_feature
+        neg_z = F.normalize(neg_z, dim=1)
+
+        LARGE_NUM = 1e9
+        masks = F.one_hot(torch.arange(z.size(0)), z.size(0)).cuda()
+
+        pos_logits = torch.matmul(z, aug_z.t())
+        # pos_logits = torch.einsum("ij,ij->i", z, aug_z)
+        # pos_logits = torch.unsqueeze(pos_logits, dim=1)
+        neg_logits_1 = torch.matmul(z, z.t())
+        neg_logits_1 = neg_logits_1 - masks * LARGE_NUM
+        neg_logits_2 = torch.matmul(aug_z, aug_z.t())
+        neg_logits_2 = neg_logits_2 - masks * LARGE_NUM
+
+        neg_logits_3 = torch.matmul(z, neg_z.t())
+        # neg_logits_4 = torch.matmul(aug_z, neg_z.t())
+
+        logits = torch.cat(
+            [pos_logits, neg_logits_1, neg_logits_2, neg_logits_3],
+            # [pos_logits, neg_logits_3],
             dim=1,
         )
         logits /= self.T
@@ -369,6 +483,41 @@ class MetaSimCLR1DLearner:
         self.logger = logger
 
     def run(self, train_dataset, val_dataset, test_dataset, neg_dataset=None):
+        # wandb.init(
+        #     project="MetaSimCLR1D",
+        #     config={
+        #         "pretext": self.cfg.pretext,
+        #         "mode": self.cfg.mode,
+        #         "train_dataset_path": self.cfg.train_dataset_path,
+        #         "test_dataset_path": self.cfg.test_dataset_path,
+        #         "epochs": self.cfg.epochs,
+        #         "batch_size": self.cfg.batch_size,
+        #         "lr": self.cfg.lr,
+        #         "wd": self.cfg.wd,
+        #         "pretrained": self.cfg.pretrained,
+        #         "task_per_domain": self.cfg.task_per_domain,
+        #         "num_task": self.cfg.num_task,
+        #         "multi_cond_num_task": self.cfg.multi_cond_num_task,
+        #         "task_size": self.cfg.task_size,
+        #         "task_lr": self.cfg.task_lr,
+        #         "task_steps": self.cfg.task_steps,
+        #         "domain_adaptation": self.cfg.domain_adaptation,
+        #         "adapt_w_neg": self.cfg.adapt_w_neg,
+        #         "bank_size": self.cfg.bank_size,
+        #         "membank_lr": self.cfg.membank_lr,
+        #         "membank_m": self.cfg.membank_m,
+        #         "membank_wd": self.cfg.membank_wd,
+        #         "task_membank_lr": self.cfg.task_membank_lr,
+        #     },
+        # )
+        # if self.cfg.domain_adaptation:
+        #     setting = "domain_adaptation"
+        #     if self.cfg.adapt_w_neg:
+        #         setting = "domain_adaptation_w_neg"
+        # else:
+        #     setting = "no_domain_adaptation"
+        # wandb.run.name = setting
+
         num_gpus = len(self.gpu)
         logs = mp.Manager().list([])
         self.logger.info("Executing SimCLR")
@@ -444,11 +593,11 @@ class MetaSimCLR1DLearner:
                     cls_net, device_ids=[rank], find_unused_parameters=True
                 )
 
-                if not neg_dataset is None:
-                    neg_sampler = DistributedSampler(neg_dataset)
-                    meta_neg_dataset = torch.utils.data.Subset(
-                        neg_dataset, list(neg_sampler)
-                    )
+                # if not neg_dataset is None:
+                #     neg_sampler = DistributedSampler(neg_dataset)
+                #     meta_neg_dataset = torch.utils.data.Subset(
+                #         neg_dataset, list(neg_sampler)
+                #     )
 
                 if len(val_dataset) > 0:
                     val_sampler = DistributedSampler(val_dataset)
@@ -494,8 +643,8 @@ class MetaSimCLR1DLearner:
             if self.cfg.mode == "finetune" or self.cfg.mode == "eval_finetune":
                 cls_net.cuda()
 
-                if not neg_dataset is None:
-                    meta_neg_dataset = neg_dataset
+                # if not neg_dataset is None:
+                #     meta_neg_dataset = neg_dataset
 
                 # collate_fn = subject_collate if self.cfg.mode == 'pretrain' else None
                 collate_fn = None
@@ -561,26 +710,39 @@ class MetaSimCLR1DLearner:
             else:
                 self.log(rank, logs, f"No checkpoint found at '{self.cfg.pretrained}'")
 
+            if os.path.isfile(self.cfg.pretrained_membank):
+                self.log(
+                    rank,
+                    logs,
+                    f"Loading pretrained membank ({self.cfg.pretrained_membank})",
+                )
+                loc = "cuda:{}".format(rank)
+                membank_state = torch.load(
+                    self.cfg.pretrained_membank, map_location=loc
+                )
+                msg = memory_bank.load_state_dict(membank_state["state_dict"])
+                self.log(rank, logs, f"Missing keys: {msg.missing_keys}")
+
             # Meta-train the pretrained model for domain adaptation
             if world_size > 1:
                 train_sampler.set_epoch(0)
                 # for debugging
-                if not neg_dataset is None:
-                    neg_sampler.set_epoch(0)
+                # if not neg_dataset is None:
+                #     neg_sampler.set_epoch(0)
 
             shuffled_idx = torch.randperm(len(meta_train_dataset))
             meta_train_dataset = torch.utils.data.Subset(
                 meta_train_dataset, shuffled_idx
             )
 
-            # for debugging
-            st = 200
-            shuffled_neg_idx = torch.randperm(len(meta_neg_dataset))[
-                st : st + self.cfg.num_negs
-            ]
-            meta_neg_dataset = torch.utils.data.Subset(
-                meta_neg_dataset, shuffled_neg_idx
-            )
+            # # for debugging
+            # st = 200
+            # shuffled_neg_idx = torch.randperm(len(meta_neg_dataset))[
+            #     st : st + self.cfg.num_negs
+            # ]
+            # meta_neg_dataset = torch.utils.data.Subset(
+            #     meta_neg_dataset, shuffled_neg_idx
+            # )
 
             net.eval()
             enc_parameters = list(copy.deepcopy(net.parameters()))
@@ -594,16 +756,24 @@ class MetaSimCLR1DLearner:
                 pos_support = [e[2] for e in meta_train_dataset]
                 pos_support = torch.stack(pos_support, dim=0).cuda()
 
-                # for debugging
-                neg_support = [e[1] for e in meta_neg_dataset]
-                neg_support = torch.stack(neg_support, dim=0).cuda()
+                # # for debugging
+                # neg_support = [e[1] for e in meta_neg_dataset]
+                # neg_support = torch.stack(neg_support, dim=0).cuda()
 
-                enc_parameters = self.meta_train(
+                # for debugging
+                test_support = [e[1] for e in val_dataset]
+                test_support = torch.stack(test_support, dim=0).cuda()
+                test_pos_support = [e[2] for e in val_dataset]
+                test_pos_support = torch.stack(test_pos_support, dim=0).cuda()
+
+                enc_parameters, _ = self.meta_train(
                     rank,
                     net,
                     support,
                     pos_support,
-                    neg_support,
+                    # test_support,
+                    # test_pos_support,
+                    memory_bank,
                     criterion,
                     log_steps=True,
                     logs=logs,
@@ -637,14 +807,20 @@ class MetaSimCLR1DLearner:
                         param.requires_grad = False
                     else:
                         param.requires_grad = True
-        else:
-            if self.cfg.membank_optimizer == "sgd":
-                membank_optimizer = torch.optim.SGD(
-                    memory_bank.parameters(),
-                    self.cfg.membank_lr,
-                    momentum=self.cfg.membank_m,
-                    weight_decay=self.cfg.membank_wd,
-                )
+
+        if self.cfg.membank_optimizer == "sgd":
+            membank_optimizer = torch.optim.SGD(
+                memory_bank.parameters(),
+                self.cfg.membank_lr,
+                momentum=self.cfg.membank_m,
+                weight_decay=self.cfg.membank_wd,
+            )
+        if self.cfg.membank_optimizer == "adam":
+            membank_optimizer = torch.optim.Adam(
+                memory_bank.parameters(),
+                self.cfg.membank_lr,
+                weight_decay=self.cfg.membank_wd,
+            )
 
         parameters = list(filter(lambda p: p.requires_grad, net.parameters()))
 
@@ -691,8 +867,8 @@ class MetaSimCLR1DLearner:
             for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
                 if world_size > 1:
                     train_sampler.set_epoch(epoch)
-                    if not neg_dataset is None:
-                        neg_sampler.set_epoch(epoch)
+                    # if not neg_dataset is None:
+                    #     neg_sampler.set_epoch(epoch)
                     if len(val_dataset) > 0:
                         val_sampler.set_epoch(epoch)
                     test_sampler.set_epoch(epoch)
@@ -791,12 +967,18 @@ class MetaSimCLR1DLearner:
                     ckpt_filename = "checkpoint_{:04d}.pth.tar".format(epoch)
                     ckpt_filename = os.path.join(ckpt_dir, ckpt_filename)
                     state_dict = net.state_dict()
+                    membank_filename = "membank_{:04d}.pth.tar".format(epoch)
+                    membank_filename = os.path.join(ckpt_dir, membank_filename)
+                    membank_state_dict = memory_bank.state_dict()
                     if world_size > 1:
                         for k, v in list(state_dict.items()):
                             if "module." in k:
                                 state_dict[k.replace("module.", "")] = v
                                 del state_dict[k]
                     self.save_checkpoint(ckpt_filename, epoch, state_dict, optimizer)
+                    self.save_checkpoint(
+                        membank_filename, epoch, membank_state_dict, membank_optimizer
+                    )
 
             if self.cfg.mode == "finetune":
                 self.validate_finetune(rank, net, test_loader, criterion, logs)
@@ -972,7 +1154,11 @@ class MetaSimCLR1DLearner:
         net.train()
         net.zero_grad()
 
-        q_losses = []
+        if self.cfg.adapt_w_neg:
+            q_losses_enc = []
+            q_losses_mem = []
+        else:
+            q_losses = []
         num_tasks = len(supports)
         for task_idx in range(num_tasks):
             support = supports[task_idx].cuda()
@@ -991,43 +1177,79 @@ class MetaSimCLR1DLearner:
                 logs=logs,
             )
 
-            negatives = memory_bank(fast_negatives)
             if self.cfg.adapt_w_neg:
-                negatives = memory_bank(fast_negatives)
-                q_logits, q_targets = net.forward_w_nq(
-                    support, pos_support, negatives, fast_weights
+                # negatives_enc = memory_bank(fast_negatives).detach()
+                # q_logits_enc, q_targets_enc = net.forward_w_nq(
+                #     support, pos_support, negatives_enc, fast_weights
+                # )
+                q_logits_enc, q_targets_enc = net.forward(
+                    query, pos_query, fast_weights
                 )
+                # negatives_enc = memory_bank(fast_negatives)
+                negatives_enc = memory_bank()
+                q_logits_mem, q_targets_mem = net.forward_w_nq_detached(
+                    query, pos_query, negatives_enc, fast_weights
+                )
+                q_loss_enc = criterion(q_logits_enc, q_targets_enc)
+                q_loss_mem = -criterion(q_logits_mem, q_targets_mem)
+                q_losses_enc.append(q_loss_enc)
+                q_losses_mem.append(q_loss_mem)
+
+                if task_idx % self.cfg.log_freq == 0:
+                    acc = self.accuracy(q_logits_enc, q_targets_enc, topk=(1, 5))
+                    log = f"Epoch [{epoch+1}/{num_epochs}]  \t({task_idx}/{len(supports)}) "
+                    log += f"Loss: {q_loss_enc.item():.4f}, Acc(1): {acc[0].item():.2f}, Acc(5): {acc[1].item():.2f}"
+                    self.log(rank, logs, log)
+
             else:
                 q_logits, q_targets = net(query, pos_query, fast_weights)
-            q_loss = criterion(q_logits, q_targets)
-            q_losses.append(q_loss)
+                q_loss = criterion(q_logits, q_targets)
+                q_losses.append(q_loss)
 
-            if task_idx % self.cfg.log_freq == 0:
-                acc = self.accuracy(q_logits, q_targets, topk=(1, 5))
-                log = f"Epoch [{epoch+1}/{num_epochs}]  \t({task_idx}/{len(supports)}) "
-                log += f"Loss: {q_loss.item():.4f}, Acc(1): {acc[0].item():.2f}, Acc(5): {acc[1].item():.2f}"
-                if rank == 0:
-                    logs.append(log)
-                    print(log)
+                if task_idx % self.cfg.log_freq == 0:
+                    acc = self.accuracy(q_logits, q_targets, topk=(1, 5))
+                    log = f"Epoch [{epoch+1}/{num_epochs}]  \t({task_idx}/{len(supports)}) "
+                    log += f"Loss: {q_loss.item():.4f}, Acc(1): {acc[0].item():.2f}, Acc(5): {acc[1].item():.2f}"
+                    self.log(rank, logs, log)
 
-        q_losses = torch.stack(q_losses, dim=0)
-        loss = torch.sum(q_losses)
-        # reg_term = torch.sum((q_losses - torch.mean(q_losses))**2)
-        # loss += reg_term * self.cfg.reg_lambda
-        loss = loss / len(supports)
-        # log = f'Epoch [{epoch+1}/{num_epochs}] {loss.item():.4f}'
-        # if rank == 0:
-        #     logs.append(log)
-        #     print(log)
-        optimizer.zero_grad()
-        # loss.backward()
-        loss.backward(retain_graph=True)
-        optimizer.step()
+        if self.cfg.adapt_w_neg:
+            q_losses_enc = torch.stack(q_losses_enc, dim=0)
+            q_losses_mem = torch.stack(q_losses_mem, dim=0)
+            loss_enc = torch.sum(q_losses_enc)
+            loss_mem = torch.sum(q_losses_mem)
+            loss_enc = loss_enc / len(supports)
+            loss_mem = loss_mem / len(supports)
 
-        membank_loss = -loss
-        membank_optimizer.zero_grad()
-        membank_loss.backward()
-        membank_optimizer.step()
+            optimizer.zero_grad()
+            loss_enc.backward()
+            optimizer.step()
+
+            membank_optimizer.zero_grad()
+            loss_mem.backward()
+            membank_optimizer.step()
+
+            # with torch.no_grad():
+            #     query = queries[0].cuda()
+            #     pos_query = pos_queries[0].cuda()
+            #     negatives_enc = memory_bank()
+            #     q_logits_mem, q_targets_mem = net.forward_w_nq_detached(
+            #         query, pos_query, negatives_enc, fast_weights
+            #     )
+            #     q_loss_mem = -criterion(q_logits_mem, q_targets_mem)
+
+            #     acc = self.accuracy(q_logits_mem, q_targets_mem, topk=(1, 5))
+            #     log = f"Epoch [{epoch+1}/{num_epochs}]  \t({task_idx}/{len(supports)}) "
+            #     log += f"Loss: {q_loss_mem.item():.4f}, Acc(1): {acc[0].item():.2f}, Acc(5): {acc[1].item():.2f}"
+            #     self.log(rank, logs, log)
+
+        else:
+            q_losses = torch.stack(q_losses, dim=0)
+            loss = torch.sum(q_losses)
+            loss = loss / len(supports)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            # self.log(rank, logs, f"Epoch [{epoch+1}/{num_epochs}] {loss.item():.4f}")
 
     def meta_train(
         self,
@@ -1035,6 +1257,8 @@ class MetaSimCLR1DLearner:
         net,
         support,
         pos_support,
+        # test_support,
+        # test_pos_support,
         memory_bank,
         criterion,
         log_steps=False,
@@ -1043,160 +1267,114 @@ class MetaSimCLR1DLearner:
         # fast_weights = list(copy.deepcopy(net.parameters()))
         fast_weights = list(net.parameters())
         fast_negatives = list(memory_bank.parameters())
+        # support = support[:5]
+        # pos_support = pos_support[:5]
 
         for i in range(self.cfg.task_steps):
-            # for i in range(0):
             # s_logits, s_targets = net(support, pos_support, fast_weights)
-            if self.cfg.adapt_w_neg:
-                negatives = memory_bank(fast_negatives)
-                s_logits, s_targets = net.forward_w_nq(
-                    support, pos_support, negatives, fast_weights
-                )
-            else:
-                s_logits, s_targets = net(support, pos_support, fast_weights)
-            s_loss = criterion(s_logits, s_targets)
-            grad = torch.autograd.grad(s_loss, fast_weights, retain_graph=True)
-            fast_weights = list(
-                map(lambda p: p[1] - self.cfg.task_lr * p[0], zip(grad, fast_weights))
-            )
+            batch_size = len(support)
+            # batch_size = 16
+            for j in range(len(support) // batch_size):
+                support_batch = support[j * batch_size : (j + 1) * batch_size]
+                pos_support_batch = pos_support[j * batch_size : (j + 1) * batch_size]
+                # print(support_batch.shape)
+                if self.cfg.adapt_w_neg:
+                    negatives = memory_bank(fast_negatives).detach()
+                    s_logits, s_targets = net.forward_w_nq(
+                        support_batch, pos_support_batch, negatives, fast_weights
+                    )
 
-            membank_loss = -s_loss
-            membank_grad = torch.autograd.grad(membank_loss, fast_negatives)
-            fast_negatives = list(
-                map(
-                    lambda p: p[1] - self.cfg.task_membank_lr * p[0],
-                    zip(membank_grad, fast_negatives),
-                )
-            )
+                    s_loss = criterion(s_logits, s_targets)
+                    grad = torch.autograd.grad(s_loss, fast_weights)
+                    fast_weights = list(
+                        map(
+                            lambda p: p[1] - self.cfg.task_lr * p[0],
+                            zip(grad, fast_weights),
+                        )
+                    )
+
+                    # negatives = memory_bank(fast_negatives)
+                    # s_logits, s_targets = net.forward_w_nq_detached(
+                    #     support_batch, pos_support_batch, negatives, fast_weights
+                    # )
+
+                    # membank_loss = -criterion(s_logits, s_targets)
+                    # membank_grad = torch.autograd.grad(membank_loss, fast_negatives)
+                    # fast_negatives = list(
+                    #     map(
+                    #         lambda p: p[1] - self.cfg.task_membank_lr * p[0],
+                    #         zip(membank_grad, fast_negatives),
+                    #     )
+                    # )
+
+                else:
+                    # n = 90
+                    # m = 150
+                    support_ = support_batch
+                    pos_support_ = pos_support_batch
+                    # support_ = test_support
+                    # pos_support_ = test_pos_support
+                    # negatives = support[n:m]
+                    # negatives = test_support[:m]
+                    # pos_negatives = test_pos_support[:m]
+                    # support_ = torch.cat([support_, negatives], dim=0)
+                    # pos_support_ = torch.cat([pos_support_, pos_negatives], dim=0)
+                    # s_logits, s_targets = net.forward_w_nq(
+                    #     support_, pos_support_, negatives, fast_weights
+                    # )
+                    s_logits, s_targets = net.forward(
+                        support_, pos_support_, fast_weights
+                    )
+                    # print(s_logits.shape)
+                    # assert 0
+                    s_loss = criterion(s_logits, s_targets)
+
+                    grad = torch.autograd.grad(s_loss, fast_weights)
+                    fast_weights = list(
+                        map(
+                            lambda p: p[1] - self.cfg.task_lr * p[0],
+                            zip(grad, fast_weights),
+                        )
+                    )
+
+            # with torch.no_grad():
+            #     k = 50
+            #     s_logits, s_targets = net(
+            #         support[:k],
+            #         pos_support[:k],
+            #         fast_weights,
+            #     )
+            #     s_loss = criterion(s_logits, s_targets)
+
+            # k = 50
+            # k_logits, k_targets = net(
+            #     test_support[:k],
+            #     test_pos_support[:k],
+            #     fast_weights,
+            # )
+            # k_loss = criterion(k_logits, k_targets)
+
+            # if log_steps:
+            #     acc = self.accuracy(k_logits, k_targets, topk=(1, 5))
+            #     log = f"\tmeta-train [{i}/{self.cfg.task_steps}] Loss_train: {s_loss.item():.4f}, "
+            #     log += f"Loss_test: {k_loss.item():.4f}, "
+            #     log += f"Acc(1): {acc[0].item():.2f}, Acc(5): {acc[1].item():.2f}"
+            #     self.log(rank, logs, log)
+            # # s_logits, s_targets = net(support, pos_support, fast_weights)
+            # s_logits, s_targets = net(test_support, test_pos_support, fast_weights)
+            # s_loss = criterion(s_logits, s_targets)
 
             if log_steps:
-                acc = self.accuracy(s_logits, s_targets, topk=(1, 5))
+                acc = self.accuracy(s_logits, s_targets, topk=(1, 1))
                 log = f"\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {s_loss.item():.4f}, "
                 log += f"Acc(1): {acc[0].item():.2f}, Acc(5): {acc[1].item():.2f}"
                 self.log(rank, logs, log)
+                # wandb.log(
+                #     {"meta-train loss": s_loss.item(), "meta-train acc": acc[0].item()}
+                # )
 
+        # assert 0
         return fast_weights, fast_negatives
-
-    def meta_eval(self, rank, net, test_dataset, criterion, fast_weights, logs):
-        indices = list(range(len(test_dataset)))
-        random.shuffle(indices)
-        dataset = torch.utils.data.Subset(test_dataset, indices[:90])
-        # dataset = test_dataset
-        support = [e[0] for e in dataset]
-        pos_support = [e[2] for e in dataset]
-        support = torch.stack(support, dim=0).cuda()
-        pos_support = torch.stack(pos_support, dim=0).cuda()
-
-        logits, targets = net(support, pos_support, fast_weights)
-        loss = criterion(logits, targets)
-
-        train_dataset = test_dataset
-        indices_per_class, opp_indices_per_class = self.split_per_class(train_dataset)
-        full_batch_size = len(train_dataset)
-
-        total_logits = []
-        total_targets = []
-
-        for cls, indices in indices_per_class.items():
-            opp_indices = opp_indices_per_class[cls]
-
-            support_ = torch.utils.data.Subset(train_dataset, indices)
-            support = []
-            pos_support = []
-            for e in support_:
-                support.append(e[0])
-                pos_support.append(e[2])
-            support = torch.stack(support, dim=0).cuda()
-            pos_support = torch.stack(pos_support, dim=0).cuda()
-
-            neg_support_ = torch.utils.data.Subset(train_dataset, opp_indices)
-            neg_support = []
-            neg_aug_support = []
-            for e in neg_support_:
-                neg_support.append(e[0])
-                neg_aug_support.append(e[2])
-            neg_support = torch.stack(neg_support, dim=0).cuda()
-            neg_aug_support = torch.stack(neg_aug_support, dim=0).cuda()
-
-            logits, targets = net.adapt(
-                support,
-                pos_support,
-                neg_support,
-                neg_aug_support,
-                full_batch_size,
-                fast_weights,
-            )
-            total_logits.append(logits)
-            total_targets.append(targets)
-
-        logits = torch.cat(total_logits, dim=0)
-        targets = torch.cat(total_targets, dim=0)
-        loss = criterion(logits, targets)
-
-        if rank == 0:
-            acc = self.accuracy(logits, targets, topk=(1, 5))
-            log = f"\tmeta-eval Loss: {loss.item():.4f}, Acc(1): {acc[0].item():.2f}, Acc(5): {acc[1].item():.2f}"
-            logs.append(log)
-            print(log)
-
-    def adapt(self, rank, net, train_dataset, criterion, log_steps=False, logs=None):
-        fast_weights = list(net.parameters())
-        indices_per_class, opp_indices_per_class = self.split_per_class(train_dataset)
-        full_batch_size = len(train_dataset)
-
-        for i in range(self.cfg.task_steps):
-            total_logits = []
-            total_targets = []
-
-            for cls, indices in indices_per_class.items():
-                opp_indices = opp_indices_per_class[cls]
-
-                support_ = torch.utils.data.Subset(train_dataset, indices)
-                support = []
-                pos_support = []
-                for e in support_:
-                    support.append(e[1])
-                    pos_support.append(e[2])
-                support = torch.stack(support, dim=0).cuda()
-                pos_support = torch.stack(pos_support, dim=0).cuda()
-
-                neg_support_ = torch.utils.data.Subset(train_dataset, opp_indices)
-                neg_support = []
-                neg_aug_support = []
-                for e in neg_support_:
-                    neg_support.append(e[1])
-                    neg_aug_support.append(e[2])
-                neg_support = torch.stack(neg_support, dim=0).cuda()
-                neg_aug_support = torch.stack(neg_aug_support, dim=0).cuda()
-
-                logits, targets = net.adapt(
-                    support,
-                    pos_support,
-                    neg_support,
-                    neg_aug_support,
-                    full_batch_size,
-                    fast_weights,
-                )
-                total_logits.append(logits)
-                total_targets.append(targets)
-
-            total_logits = torch.cat(total_logits, dim=0)
-            total_targets = torch.cat(total_targets, dim=0)
-            loss = criterion(total_logits, total_targets)
-            grad = torch.autograd.grad(loss, fast_weights)
-            for g, p in zip(grad, fast_weights):
-                g += self.cfg.task_wd * p
-            fast_weights = list(
-                map(lambda p: p[1] - self.cfg.task_lr * p[0], zip(grad, fast_weights))
-            )
-
-            if log_steps and rank == 0:
-                acc = self.accuracy(total_logits, total_targets, topk=(1, 5))
-                log = f"\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {loss.item():.4f}, Acc(1): {acc[0].item():.2f}, Acc(5): {acc[1].item():.2f}"
-                logs.append(log)
-                print(log)
-
-        return fast_weights
 
     # def validate_pretrain(self, rank, net, val_loader, criterion, logs):
     #     net.eval()
