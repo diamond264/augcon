@@ -16,7 +16,7 @@ if [ ! -d "$config_dir" ]; then
 fi
 
 # Loop through each .yaml file in the directory
-for seed_dir in "$config_dir"/*; do
+for seed_dir in "$config_dir"/*/*/*; do
   for config_file in "$seed_dir"/*.yaml; do
     # Check if the file exists
     if [ -e "$config_file" ]; then
