@@ -56,7 +56,7 @@ SORT_LIST_DSA = ["T", "RA", "LA", "RL", "LL"]
 
 def run(args):
     res = {}
-    logs = glob(os.path.join(args.dir, "*.log"))
+    logs = glob(os.path.join(args.dir + "*", "*.log"))
     logs.sort()
     for log in logs:
         domain = log.split("target_")[1].split(".yaml")[0]
