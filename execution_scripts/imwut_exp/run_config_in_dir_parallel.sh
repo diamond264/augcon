@@ -20,7 +20,9 @@ for config_file in "$config_dir"/*.yaml; do
   # Check if the file exists
   if [ -e "$config_file" ]; then
     # Run your Python script with the config file as an argument in the background
-    ./experiment.py --config "$config_file" &
+    SESSION_NAME=$(basename "$config_file" .yaml)
+    GPU_NUM=$(echo "$SESSION_NAME" | grep -oP '^gpu\K\d+')
+    CUDA_VISIBLE_DEVICES=${GPU_NUM} ./experiment.py --config "$config_file" &
   fi
 done
 
