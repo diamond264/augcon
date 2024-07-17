@@ -36,7 +36,7 @@ MODEL_PATH = (
 
 
 def gen_pretrain_config():
-    for mlr in [0.1, 0.01, 0.001, 0.0001]:
+    for mlr in [1]:
         for dataset in DATASETS:
             data_path = DATA_PATH[dataset]
             param = PRETRAIN_HPS[dataset]
