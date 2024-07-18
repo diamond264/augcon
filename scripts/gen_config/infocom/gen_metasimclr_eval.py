@@ -4,10 +4,10 @@ from glob import glob
 PRETEXT = "metasimclr"
 PRETRAIN_CRITERION = "crossentropy"
 PRETRAIN_HPS = {
-    "ichar": {"lr": 0.001, "wd": 0.0, "tlr": 0.001},
-    "hhar": {"lr": 0.001, "wd": 0.0001, "tlr": 0.01},
-    "pamap2": {"lr": 0.001, "wd": 0.0, "tlr": 0.01},
-    "dsa": {"lr": 0.005, "wd": 0.0, "tlr": 0.001},
+    "ichar": {"lr": 0.0005, "wd": 0.0, "tlr": 0.001},
+    "hhar": {"lr": 0.0005, "wd": 0.0001, "tlr": 0.01},
+    "pamap2": {"lr": 0.0005, "wd": 0.0, "tlr": 0.01},
+    "dsa": {"lr": 0.001, "wd": 0.0, "tlr": 0.001},
 }
 
 DATASETS = ["ichar", "hhar", "pamap2", "dsa"]
@@ -23,20 +23,16 @@ NUM_CLS = {"ichar": 9, "hhar": 6, "pamap2": 12, "dsa": 19}
 use_supcon = True
 if use_supcon:
     USE_SUPCON = "true"
-    CONFIG_PATH = (
-        "/mnt/sting/hjyoon/projects/aaa/configs/infocom/hps/metasimclr_w_neg_membank_lr"
-    )
+    CONFIG_PATH = "/mnt/sting/hjyoon/projects/aaa/configs/infocom/hps/metasimclr_w_neg_large_lr_membank_lr"
 else:
     USE_SUPCON = "false"
     CONFIG_PATH = "/mnt/sting/hjyoon/projects/aaa/configs/supervised_adaptation/main_eval/baseline"
 
-MODEL_PATH = (
-    "/mnt/sting/hjyoon/projects/aaa/models/infocom/hps/metasimclr_w_neg_membank_lr"
-)
+MODEL_PATH = "/mnt/sting/hjyoon/projects/aaa/models/infocom/hps/metasimclr_w_neg_large_lr_membank_lr"
 
 
 def gen_pretrain_config():
-    for mlr in [1]:
+    for mlr in [0.1]:
         for dataset in DATASETS:
             data_path = DATA_PATH[dataset]
             param = PRETRAIN_HPS[dataset]
