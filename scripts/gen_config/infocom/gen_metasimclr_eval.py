@@ -4,10 +4,10 @@ from glob import glob
 PRETEXT = "metasimclr"
 PRETRAIN_CRITERION = "crossentropy"
 PRETRAIN_HPS = {
-    "ichar": {"lr": 0.0005, "wd": 0.0, "tlr": 0.001},
-    "hhar": {"lr": 0.0005, "wd": 0.0001, "tlr": 0.01},
-    "pamap2": {"lr": 0.0005, "wd": 0.0, "tlr": 0.01},
-    "dsa": {"lr": 0.001, "wd": 0.0, "tlr": 0.001},
+    "ichar": {"lr": 0.005, "wd": 0.0, "tlr": 0.001},
+    "hhar": {"lr": 0.005, "wd": 0.0001, "tlr": 0.01},
+    "pamap2": {"lr": 0.005, "wd": 0.0, "tlr": 0.01},
+    "dsa": {"lr": 0.01, "wd": 0.0, "tlr": 0.001},
 }
 
 DATASETS = ["ichar", "hhar", "pamap2", "dsa"]
