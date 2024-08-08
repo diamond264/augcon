@@ -6,17 +6,18 @@ import numpy as np
 import random
 from tqdm import tqdm
 from collections import defaultdict
+import scipy.io as sio
 from multiprocessing import Pool
 
 # import itertools
 
 
-class ProcessWESAD:
+class ProcessNinaproDB5:
     def __init__(
         self,
         file,
         class_type,
-        seq_len=700 * 10,
+        seq_len=int(200 * 0.3),
         split_ratio=0.7,
         drop_size_threshold=500,
         shots=[20, 10, 5, 2, 1],
@@ -25,30 +26,25 @@ class ProcessWESAD:
     ):
         self.metadata = {
             "domain": [
-                "S2",
-                "S3",
-                "S4",
-                "S5",
-                "S6",
-                "S7",
-                "S8",
-                "S9",
-                "S10",
-                "S11",
-                "S13",
-                "S14",
-                "S15",
-                "S16",
-                "S17",
+                "s1",
+                "s2",
+                "s3",
+                "s4",
+                "s5",
+                "s6",
+                "s7",
+                "s8",
+                "s9",
+                "s10",
             ],
-            "activity": ["neutral", "stress", "amusement"],
+            "activity": [str(i) for i in range(1, 13)],
         }
 
         self.finetune_test_size = finetune_test_size
         self.finetune_val_size = finetune_val_size
 
         self.seq_len = seq_len
-        self.OVERLAPPING_WIN_LEN = int(700 * 0.25)
+        self.OVERLAPPING_WIN_LEN = int(200 * 0.15)
         self.WIN_LEN = self.seq_len
 
         self.domain_type = "domain"
@@ -74,9 +70,14 @@ class ProcessWESAD:
         doms = self.metadata["domain"]
         data_dics = {}
         for dom in tqdm(doms):
-            fpath = os.path.join(file, f"{dom}", f"{dom}.pkl")
-            dic = pd.read_pickle(fpath)
-            data_dics[dom] = dic
+            ex_2_file = os.path.join(file, f"{dom}", f"{dom.upper()}_E1_A1.mat")
+            # ex_3_file = os.path.join(file, f"{dom}", f"{dom.upper()}_E3_A1.mat")
+
+            ex_2_d = sio.loadmat(ex_2_file)
+            # ex_3_d = sio.loadmat(ex_3_file)
+
+            # data_dics[dom] = (ex_2_d, ex_3_d)
+            data_dics[dom] = ex_2_d
 
         return data_dics
 
@@ -294,30 +295,55 @@ class ProcessWESAD:
         min = float("inf")
         max = -float("inf")
         print("splitting windows...")
-        for domain, dic in tqdm(dics.items()):
-            data = dic["signal"]["chest"]["ECG"]
-            data = np.array(data)
-            data = data.reshape(-1)
-            labels = dic["label"]
+        for domain, ex_2_d in tqdm(dics.items()):
+            # for domain, (ex_2_d, ex_3_d) in tqdm(dics.items()):
+            ex_2_data = np.array(ex_2_d["emg"])
+            ex_2_label = np.array(ex_2_d["restimulus"])
+            # ex_3_data = np.array(ex_3_d["emg"])
+            # ex_3_label = np.array(ex_3_d["restimulus"])
+
+            # data = dic["signal"]["chest"]["ECG"]
+            # data = np.array(data)
+            # data = data.reshape(-1)
+            # labels = dic["label"]
 
             idx = 0
-            while idx < len(data) - self.seq_len:
-                feature = data[idx : idx + self.seq_len]
-                feature = feature[::7]
+            while idx < len(ex_2_data) - self.seq_len:
+                feature = ex_2_data[idx : idx + self.seq_len]
                 if min > np.min(feature):
                     min = np.min(feature)
                 if max < np.max(feature):
                     max = np.max(feature)
-                label = labels[idx + int(self.seq_len / 2)]
-                if label not in [1, 2, 3]:  # neutral, stress, amusement
+                label = ex_2_label[idx + int(self.seq_len / 2)][0]
+                if label == 0:
                     idx += self.OVERLAPPING_WIN_LEN
                     continue
-                feature = feature.reshape(1, -1)
+                feature = feature.T
                 features.append(feature)
                 class_labels.append(label)
                 d = self.class_to_number("domain", domain)
                 domain_labels.append(d)
                 idx += self.OVERLAPPING_WIN_LEN
+
+            # idx = 0
+            # while idx < len(ex_3_data) - self.seq_len:
+            #     feature = ex_3_data[idx : idx + self.seq_len]
+            #     if min > np.min(feature):
+            #         min = np.min(feature)
+            #     if max < np.max(feature):
+            #         max = np.max(feature)
+            #     label = ex_3_label[idx + int(self.seq_len / 2)][0]
+            #     if label != 0:
+            #         label += 17
+            #     else:
+            #         idx += self.OVERLAPPING_WIN_LEN
+            #         continue
+            #     feature = feature.T
+            #     features.append(feature)
+            #     class_labels.append(label)
+            #     d = self.class_to_number("domain", domain)
+            #     domain_labels.append(d)
+            #     idx += self.OVERLAPPING_WIN_LEN
 
         features = np.array(features)
         features = (features - min) / (max - min) * 2 - 1
@@ -350,29 +376,24 @@ class ProcessWESAD:
 
 
 if __name__ == "__main__":
-    file_path = "/mnt/sting/hjyoon/projects/moi/dataset/WESAD/raw/WESAD"
-    base_out_dir = "/mnt/sting/hjyoon/projects/cross/WESAD/augcon"
+    file_path = "/mnt/sting/hjyoon/projects/cross/NinaproDB5/raw"
+    base_out_dir = "/mnt/sting/hjyoon/projects/cross/NinaproDB5/augcon"
 
     class_type = "activity"
     domains = [
-        "S2",
-        "S3",
-        "S4",
-        "S5",
-        "S6",
-        "S7",
-        "S8",
-        "S9",
-        "S10",
-        "S11",
-        "S13",
-        "S14",
-        "S15",
-        "S16",
-        "S17",
+        "s1",
+        "s2",
+        "s3",
+        "s4",
+        "s5",
+        "s6",
+        "s7",
+        "s8",
+        "s9",
+        "s10",
     ]
 
-    dataset = ProcessWESAD(file_path, class_type)
+    dataset = ProcessNinaproDB5(file_path, class_type)
 
     def process_domain(domain):
         pretrain_dir = os.path.join(base_out_dir, f"target_domain_{domain}", "pretrain")

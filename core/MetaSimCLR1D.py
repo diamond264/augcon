@@ -482,7 +482,7 @@ class MetaSimCLR1DLearner:
         self.gpu = gpu
         self.logger = logger
 
-    def run(self, train_dataset, val_dataset, test_dataset, neg_dataset=None):
+    def run(self, train_dataset, val_dataset, test_dataset):
         # wandb.init(
         #     project="MetaSimCLR1D",
         #     config={
@@ -530,14 +530,13 @@ class MetaSimCLR1DLearner:
                     train_dataset,
                     val_dataset,
                     test_dataset,
-                    neg_dataset,
                     logs,
                 ),
                 nprocs=num_gpus,
             )
         else:
             self.main_worker(
-                0, 1, train_dataset, val_dataset, test_dataset, neg_dataset, logs
+                0, 1, train_dataset, val_dataset, test_dataset, logs
             )
 
         for log in logs:
@@ -555,7 +554,6 @@ class MetaSimCLR1DLearner:
         train_dataset,
         val_dataset,
         test_dataset,
-        neg_dataset,
         logs,
     ):
         # Model initialization

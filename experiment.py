@@ -117,12 +117,12 @@ class Experiment:
         for episode in range(episodes):
             self.logger.info(f"================= Episode {episode} =================")
             default_data_loader = DefaultDataLoader(self.cfg, self.logger)
-            train_dataset, val_dataset, test_dataset, neg_dataset = (
+            train_dataset, val_dataset, test_dataset = (
                 default_data_loader.get_datasets()
             )
 
             # Start training
-            learner.run(train_dataset, val_dataset, test_dataset, neg_dataset)
+            learner.run(train_dataset, val_dataset, test_dataset)  # , neg_dataset)
 
 
 if __name__ == "__main__":

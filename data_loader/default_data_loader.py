@@ -1,6 +1,3 @@
-import os
-import random
-import torch
 import pickle
 from data_loader.CPCDataset import CPCDataset
 from data_loader.SimCLRDataset import SimCLRDataset
@@ -24,25 +21,24 @@ class DefaultDataLoader:
         with open(self.cfg.val_dataset_path, "rb") as f:
             self.val_dataset = pickle.load(f)
 
-        self.neg_dataset = None
-        if not self.cfg.neg_dataset_path is None:
-            with open(self.cfg.neg_dataset_path, "rb") as f:
-                self.neg_dataset = pickle.load(f)
-
     def get_datasets(self):
+        if self.cfg.dataset_name == "wesad" or self.cfg.dataset_name == "ninaprodb5":
+            reduce_augs = True
+        else:
+            reduce_augs = False
         if self.cfg.pretext == "tpn" or self.cfg.pretext == "metatpn":
-            self.train_dataset = TPNDataset(self.train_dataset)
-            self.val_dataset = TPNDataset(self.val_dataset)
-            self.test_dataset = TPNDataset(self.test_dataset)
+            train_dataset = TPNDataset(self.train_dataset, reduce_augs=reduce_augs)
+            val_dataset = TPNDataset(self.val_dataset, reduce_augs=reduce_augs)
+            test_dataset = TPNDataset(self.test_dataset, reduce_augs=reduce_augs)
         if (
             self.cfg.pretext == "cpc"
             or self.cfg.pretext == "metacpc"
             or self.cfg.pretext == "autoencoder"
             or self.cfg.pretext == "metaautoencoder"
         ):
-            self.train_dataset = CPCDataset(self.train_dataset)
-            self.val_dataset = CPCDataset(self.val_dataset)
-            self.test_dataset = CPCDataset(self.test_dataset)
+            train_dataset = CPCDataset(self.train_dataset)
+            val_dataset = CPCDataset(self.val_dataset)
+            test_dataset = CPCDataset(self.test_dataset)
         if (
             self.cfg.pretext == "simclr"
             or self.cfg.pretext == "metasimclr"
@@ -50,10 +46,8 @@ class DefaultDataLoader:
             or self.cfg.pretext == "metasimsiam"
             or self.cfg.pretext == "setsimclr"
         ):
-            self.train_dataset = SimCLRDataset(self.train_dataset)
-            self.val_dataset = SimCLRDataset(self.val_dataset)
-            self.test_dataset = SimCLRDataset(self.test_dataset)
-            if not self.cfg.neg_dataset_path is None:
-                self.neg_dataset = SimCLRDataset(self.neg_dataset)
+            train_dataset = SimCLRDataset(self.train_dataset, reduce_augs=reduce_augs)
+            val_dataset = SimCLRDataset(self.val_dataset, reduce_augs=reduce_augs)
+            test_dataset = SimCLRDataset(self.test_dataset, reduce_augs=reduce_augs)
 
-        return self.train_dataset, self.val_dataset, self.test_dataset, self.neg_dataset
+        return train_dataset, val_dataset, test_dataset
