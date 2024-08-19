@@ -15,6 +15,8 @@ from torch.utils.data import DataLoader, Dataset, DistributedSampler
 
 
 from torch.utils.tensorboard import SummaryWriter
+
+
 class Encoder(nn.Module):
     def __init__(self, input_channels, z_dim):
         super(Encoder, self).__init__()
@@ -66,6 +68,7 @@ class Encoder(nn.Module):
     def parameters(self):
         return self.vars
 
+
 class TaskspecificHead(nn.Module):
     def __init__(self, input_size, hidden_size, num_cls):
         super(TaskspecificHead, self).__init__()
@@ -82,7 +85,7 @@ class TaskspecificHead(nn.Module):
         b = fc2.bias
         self.vars.append(w)
         self.vars.append(b)
-        
+
     def forward(self, x, vars=None):
         if vars is None:
             vars = self.vars
@@ -105,6 +108,7 @@ class TaskspecificHead(nn.Module):
 
     def parameters(self):
         return self.vars
+
 
 class TPNNet(nn.Module):
     def __init__(self, input_channels=3, z_dim=96, out_dim=2):
@@ -134,15 +138,29 @@ class TPNNet(nn.Module):
             vars.extend(self.time_warp_head.parameters())
             vars.extend(self.channel_shuffle_head.parameters())
 
-        enc_vars = vars[:len(self.encoder.parameters())]
-        noise_vars = vars[len(self.encoder.parameters()):len(self.encoder.parameters()) + 4]
-        scale_vars = vars[len(self.encoder.parameters()) + 4:len(self.encoder.parameters()) + 8]
-        rotate_vars = vars[len(self.encoder.parameters()) + 8:len(self.encoder.parameters()) + 12]
-        negate_vars = vars[len(self.encoder.parameters()) + 12:len(self.encoder.parameters()) + 16]
-        flip_vars = vars[len(self.encoder.parameters()) + 16:len(self.encoder.parameters()) + 20]
-        permute_vars = vars[len(self.encoder.parameters()) + 20:len(self.encoder.parameters()) + 24]
-        time_vars = vars[len(self.encoder.parameters()) + 24:len(self.encoder.parameters()) + 28]
-        channel_vars = vars[len(self.encoder.parameters()) + 28:]
+        enc_vars = vars[: len(self.encoder.parameters())]
+        noise_vars = vars[
+            len(self.encoder.parameters()) : len(self.encoder.parameters()) + 4
+        ]
+        scale_vars = vars[
+            len(self.encoder.parameters()) + 4 : len(self.encoder.parameters()) + 8
+        ]
+        rotate_vars = vars[
+            len(self.encoder.parameters()) + 8 : len(self.encoder.parameters()) + 12
+        ]
+        negate_vars = vars[
+            len(self.encoder.parameters()) + 12 : len(self.encoder.parameters()) + 16
+        ]
+        flip_vars = vars[
+            len(self.encoder.parameters()) + 16 : len(self.encoder.parameters()) + 20
+        ]
+        permute_vars = vars[
+            len(self.encoder.parameters()) + 20 : len(self.encoder.parameters()) + 24
+        ]
+        time_vars = vars[
+            len(self.encoder.parameters()) + 24 : len(self.encoder.parameters()) + 28
+        ]
+        channel_vars = vars[len(self.encoder.parameters()) + 28 :]
 
         z = self.encoder(x, enc_vars)
 
@@ -155,7 +173,16 @@ class TPNNet(nn.Module):
         time_warp_y = self.time_warp_head(z, time_vars)
         channel_shuffle_y = self.channel_shuffle_head(z, channel_vars)
 
-        return noise_y, scale_y, rotate_y, negate_y, flip_y, permute_y, time_warp_y, channel_shuffle_y
+        return (
+            noise_y,
+            scale_y,
+            rotate_y,
+            negate_y,
+            flip_y,
+            permute_y,
+            time_warp_y,
+            channel_shuffle_y,
+        )
 
     def zero_grad(self, vars=None):
         with torch.no_grad():
@@ -189,6 +216,7 @@ class TPNNet(nn.Module):
 
         return vars
 
+
 class ClassificationHead(nn.Module):
     def __init__(self, input_size, hidden_size, num_cls, mlp=False):
         super().__init__()
@@ -212,6 +240,7 @@ class ClassificationHead(nn.Module):
     def forward(self, x):
         x = self.block(x)
         return x
+
 
 class TPNClassifier(nn.Module):
     def __init__(self, input_channels, z_dim, num_cls, mlp=True):
@@ -237,106 +266,158 @@ class MetaTPNLearner:
         self.logger.info("Executing Meta TPN")
         self.logger.info("Logs are skipped during training")
         if num_gpus > 1:
-            mp.spawn(self.main_worker,
-                     args=(num_gpus, train_dataset, val_dataset, test_dataset, logs),
-                     nprocs=num_gpus)
+            mp.spawn(
+                self.main_worker,
+                args=(num_gpus, train_dataset, val_dataset, test_dataset, logs),
+                nprocs=num_gpus,
+            )
         else:
             self.main_worker(0, 1, train_dataset, val_dataset, test_dataset, logs)
 
         for log in logs:
             self.logger.info(log)
 
-    def main_worker(self, rank, world_size, train_dataset, val_dataset, test_dataset, logs):
+    def main_worker(
+        self, rank, world_size, train_dataset, val_dataset, test_dataset, logs
+    ):
         # Model initialization
         net = TPNNet(self.cfg.input_channels, self.cfg.z_dim, self.cfg.out_dim)
-        if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
-            cls_net = TPNClassifier(self.cfg.input_channels, self.cfg.z_dim, self.cfg.num_cls, self.cfg.mlp)
+        if self.cfg.mode == "finetune" or self.cfg.mode == "eval":
+            cls_net = TPNClassifier(
+                self.cfg.input_channels, self.cfg.z_dim, self.cfg.num_cls, self.cfg.mlp
+            )
 
         # DDP setting
         if world_size > 1:
-            dist.init_process_group(backend='nccl',
-                                    init_method=self.cfg.dist_url,
-                                    world_size=world_size,
-                                    rank=rank)
+            dist.init_process_group(
+                backend="nccl",
+                init_method=self.cfg.dist_url,
+                world_size=world_size,
+                rank=rank,
+            )
             torch.cuda.set_device(rank)
             net.cuda()
-            net = nn.parallel.DistributedDataParallel(net, device_ids=[rank], find_unused_parameters=True)
-            if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
+            net = nn.parallel.DistributedDataParallel(
+                net, device_ids=[rank], find_unused_parameters=True
+            )
+            if self.cfg.mode == "finetune" or self.cfg.mode == "eval":
                 cls_net.cuda()
-                cls_net = nn.parallel.DistributedDataParallel(cls_net, device_ids=[rank], find_unused_parameters=True)
+                cls_net = nn.parallel.DistributedDataParallel(
+                    cls_net, device_ids=[rank], find_unused_parameters=True
+                )
 
             train_sampler = DistributedSampler(train_dataset)
-            if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
+            if self.cfg.mode == "finetune" or self.cfg.mode == "eval":
                 if len(val_dataset) > 0:
                     val_sampler = DistributedSampler(val_dataset)
                 test_sampler = DistributedSampler(test_dataset)
-                train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size // world_size,
-                                          shuffle=False, sampler=train_sampler, num_workers=self.cfg.num_workers,
-                                          drop_last=True)
+                train_loader = DataLoader(
+                    train_dataset,
+                    batch_size=self.cfg.batch_size // world_size,
+                    shuffle=False,
+                    sampler=train_sampler,
+                    num_workers=self.cfg.num_workers,
+                    drop_last=True,
+                )
                 if len(val_dataset) > 0:
-                    val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size // world_size,
-                                            shuffle=False, sampler=val_sampler, num_workers=self.cfg.num_workers,
-                                            drop_last=True)
-                test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size // world_size,
-                                         shuffle=False, sampler=test_sampler, num_workers=self.cfg.num_workers,
-                                         drop_last=True)
-            meta_train_dataset = torch.utils.data.Subset(train_dataset, list(train_sampler))
+                    val_loader = DataLoader(
+                        val_dataset,
+                        batch_size=self.cfg.batch_size // world_size,
+                        shuffle=False,
+                        sampler=val_sampler,
+                        num_workers=self.cfg.num_workers,
+                        drop_last=True,
+                    )
+                test_loader = DataLoader(
+                    test_dataset,
+                    batch_size=self.cfg.batch_size // world_size,
+                    shuffle=False,
+                    sampler=test_sampler,
+                    num_workers=self.cfg.num_workers,
+                    drop_last=True,
+                )
+            meta_train_dataset = torch.utils.data.Subset(
+                train_dataset, list(train_sampler)
+            )
             if rank == 0:
                 log = "DDP is used for training - training {} instances for each worker".format(
-                    len(list(train_sampler)))
+                    len(list(train_sampler))
+                )
                 logs.append(log)
                 print(log)
         else:
             torch.cuda.set_device(rank)
             net.cuda()
-            if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
+            if self.cfg.mode == "finetune" or self.cfg.mode == "eval":
                 cls_net.cuda()
-            if self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
-                train_loader = DataLoader(train_dataset, batch_size=self.cfg.batch_size,
-                                          shuffle=True, num_workers=self.cfg.num_workers, drop_last=False)
+            if self.cfg.mode == "finetune" or self.cfg.mode == "eval":
+                train_loader = DataLoader(
+                    train_dataset,
+                    batch_size=self.cfg.batch_size,
+                    shuffle=True,
+                    num_workers=self.cfg.num_workers,
+                    drop_last=False,
+                )
                 if len(val_dataset) > 0:
-                    val_loader = DataLoader(val_dataset, batch_size=self.cfg.batch_size,
-                                            shuffle=True, num_workers=self.cfg.num_workers, drop_last=False)
-                test_loader = DataLoader(test_dataset, batch_size=self.cfg.batch_size,
-                                         shuffle=True, num_workers=self.cfg.num_workers, drop_last=False)
+                    val_loader = DataLoader(
+                        val_dataset,
+                        batch_size=self.cfg.batch_size,
+                        shuffle=True,
+                        num_workers=self.cfg.num_workers,
+                        drop_last=False,
+                    )
+                test_loader = DataLoader(
+                    test_dataset,
+                    batch_size=self.cfg.batch_size,
+                    shuffle=True,
+                    num_workers=self.cfg.num_workers,
+                    drop_last=False,
+                )
             meta_train_dataset = train_dataset
             if rank == 0:
                 log = "Single GPU is used for training - training {} instances for each worker".format(
-                    len(train_dataset))
+                    len(train_dataset)
+                )
                 logs.append(log)
                 print(log)
 
         # Define criterion
-        if self.cfg.criterion == 'crossentropy':
+        if self.cfg.criterion == "crossentropy":
             criterion = nn.CrossEntropyLoss().cuda()
 
-        if self.cfg.mode == 'pretrain':
+        if self.cfg.mode == "pretrain":
             parameters = list(filter(lambda p: p.requires_grad, net.parameters()))
-            if self.cfg.optimizer == 'sgd':
-                optimizer = torch.optim.SGD(parameters, self.cfg.lr,
-                                            momentum=self.cfg.momentum,
-                                            weight_decay=self.cfg.wd)
-            elif self.cfg.optimizer == 'adam':
-                optimizer = torch.optim.Adam(parameters, self.cfg.lr,
-                                             weight_decay=self.cfg.wd)
+            if self.cfg.optimizer == "sgd":
+                optimizer = torch.optim.SGD(
+                    parameters,
+                    self.cfg.lr,
+                    momentum=self.cfg.momentum,
+                    weight_decay=self.cfg.wd,
+                )
+            elif self.cfg.optimizer == "adam":
+                optimizer = torch.optim.Adam(
+                    parameters, self.cfg.lr, weight_decay=self.cfg.wd
+                )
 
             # Load checkpoint if exists
             if os.path.isfile(self.cfg.resume):
                 if rank == 0:
-                    log = "Loading state_dict from checkpoint - {}".format(self.cfg.resume)
+                    log = "Loading state_dict from checkpoint - {}".format(
+                        self.cfg.resume
+                    )
                     logs.append(log)
                     print(log)
-                loc = 'cuda:{}'.format(rank)
+                loc = "cuda:{}".format(rank)
                 state = torch.load(self.cfg.resume, map_location=loc)
-                for k, v in list(state['state_dict'].items()):
+                for k, v in list(state["state_dict"].items()):
                     if world_size > 1:
-                        k = 'module.' + k
+                        k = "module." + k
                     if k in net.state_dict().keys():
-                        state['state_dict'][k] = v
+                        state["state_dict"][k] = v
 
-                net.load_state_dict(state['state_dict'], strict=False)
-                optimizer.load_state_dict(state['optimizer'])
-                self.cfg.start_epoch = state['epoch']
+                net.load_state_dict(state["state_dict"], strict=False)
+                optimizer.load_state_dict(state["optimizer"])
+                self.cfg.start_epoch = state["epoch"]
 
             # Pretrain
             indices_per_domain = self.split_per_domain(meta_train_dataset)
@@ -350,28 +431,47 @@ class MetaTPNLearner:
                 target_supports = []
                 target_queries = []
                 if self.cfg.task_per_domain:
-                    supports, queries, target_supports, target_queries = self.gen_per_domain_tasks(
-                        meta_train_dataset,
-                        indices_per_domain,
-                        self.cfg.task_size,
-                        self.cfg.num_task
+                    supports, queries, target_supports, target_queries = (
+                        self.gen_per_domain_tasks(
+                            meta_train_dataset,
+                            indices_per_domain,
+                            self.cfg.task_size,
+                            self.cfg.num_task,
+                        )
                     )
                 if self.cfg.multi_cond_num_task > 0:
-                    multi_cond_supports, multi_cond_queries, target_multi_cond_supports, target_multi_cond_queries = self.gen_random_tasks(
+                    (
+                        multi_cond_supports,
+                        multi_cond_queries,
+                        target_multi_cond_supports,
+                        target_multi_cond_queries,
+                    ) = self.gen_random_tasks(
                         meta_train_dataset,
                         self.cfg.task_size,
-                        self.cfg.multi_cond_num_task
+                        self.cfg.multi_cond_num_task,
                     )
                     supports = supports + multi_cond_supports
                     queries = queries + multi_cond_queries
                     target_supports = target_supports + target_multi_cond_supports
                     target_queries = target_queries + target_multi_cond_queries
 
-                self.pretrain(rank, net, supports, queries, target_supports, target_queries, criterion, optimizer, epoch, self.cfg.epochs, logs)
+                self.pretrain(
+                    rank,
+                    net,
+                    supports,
+                    queries,
+                    target_supports,
+                    target_queries,
+                    criterion,
+                    optimizer,
+                    epoch,
+                    self.cfg.epochs,
+                    logs,
+                )
 
                 if rank == 0 and (epoch + 1) % self.cfg.save_freq == 0:
                     ckpt_dir = self.cfg.ckpt_dir
-                    ckpt_filename = 'checkpoint_{:04d}.pth.tar'.format(epoch)
+                    ckpt_filename = "checkpoint_{:04d}.pth.tar".format(epoch)
                     ckpt_filename = os.path.join(ckpt_dir, ckpt_filename)
                     if world_size > 1:
                         state_dict = net.module.state_dict()
@@ -379,45 +479,53 @@ class MetaTPNLearner:
                         state_dict = net.state_dict()
                     self.save_checkpoint(ckpt_filename, epoch, state_dict, optimizer)
 
-        elif self.cfg.mode == 'finetune' or self.cfg.mode == 'eval':
+        elif self.cfg.mode == "finetune" or self.cfg.mode == "eval":
             # Freeze the encoder part of the network
             if self.cfg.freeze:
                 for name, param in cls_net.named_parameters():
-                    if not 'classifier' in name:
+                    if not "classifier" in name:
                         param.requires_grad = False
                     else:
                         param.requires_grad = True
 
             # Defining optimizer for classifier
             parameters = list(filter(lambda p: p.requires_grad, cls_net.parameters()))
-            if self.cfg.optimizer == 'sgd':
-                optimizer = torch.optim.SGD(parameters, self.cfg.lr,
-                                            momentum=self.cfg.momentum,
-                                            weight_decay=self.cfg.wd)
-            elif self.cfg.optimizer == 'adam':
-                optimizer = torch.optim.Adam(parameters, self.cfg.lr,
-                                             weight_decay=self.cfg.wd)
+            if self.cfg.optimizer == "sgd":
+                optimizer = torch.optim.SGD(
+                    parameters,
+                    self.cfg.lr,
+                    momentum=self.cfg.momentum,
+                    weight_decay=self.cfg.wd,
+                )
+            elif self.cfg.optimizer == "adam":
+                optimizer = torch.optim.Adam(
+                    parameters, self.cfg.lr, weight_decay=self.cfg.wd
+                )
 
             if not os.path.isfile(self.cfg.resume):
                 # Load pretrained model to net
                 if os.path.isfile(self.cfg.pretrained):
                     if rank == 0:
-                        log = "Loading pretrained model from checkpoint - {}".format(self.cfg.pretrained)
+                        log = "Loading pretrained model from checkpoint - {}".format(
+                            self.cfg.pretrained
+                        )
                         logs.append(log)
                         print(log)
-                    loc = 'cuda:{}'.format(rank)
-                    state = torch.load(self.cfg.pretrained, map_location=loc)['state_dict']
+                    loc = "cuda:{}".format(rank)
+                    state = torch.load(self.cfg.pretrained, map_location=loc)[
+                        "state_dict"
+                    ]
 
                     if self.cfg.no_vars:
                         enc_dict = {}
                         for idx, k in enumerate(list(net.state_dict().keys())):
-                            if not 'classifier' in k:
+                            if not "classifier" in k:
                                 enc_dict[k] = list(state.items())[idx][1]
                         msg = net.load_state_dict(enc_dict, strict=False)
                     else:
                         for k, v in list(state.items()):
                             if world_size > 1:
-                                k = 'module.' + k
+                                k = "module." + k
                             if k in net.state_dict().keys():
                                 state[k] = v
 
@@ -444,7 +552,15 @@ class MetaTPNLearner:
                         target_support.append(torch.tensor(e[2]))
                     support = torch.stack(support, dim=0).cuda()
                     target_support = torch.stack(target_support, dim=0).cuda()
-                    enc_parameters = self.meta_train(rank, net, support, target_support, criterion, log_internals=True, logs=logs)
+                    enc_parameters = self.meta_train(
+                        rank,
+                        net,
+                        support,
+                        target_support,
+                        criterion,
+                        log_internals=True,
+                        logs=logs,
+                    )
                 else:
                     enc_parameters = list(net.parameters())
 
@@ -455,7 +571,7 @@ class MetaTPNLearner:
 
                 enc_dict = {}
                 for idx, k in enumerate(list(cls_net.state_dict().keys())):
-                    if not 'classifier' in k:
+                    if not "classifier" in k:
                         enc_dict[k] = enc_parameters[idx]
 
                 msg = cls_net.load_state_dict(enc_dict, strict=False)
@@ -463,38 +579,26 @@ class MetaTPNLearner:
                     log = "Missing keys: {}".format(msg.missing_keys)
                     logs.append(log)
                     print(log)
-
-                if self.cfg.visualization:
-                    is_meta = True if "meta" in self.cfg.pretrained else False
-                    tag = f'{self.cfg.dataset_name}_{self.cfg.pretext}_{self.cfg.domain_adaptation}_meta{is_meta}'
-                    writer = SummaryWriter(f'./logs/{tag}')
-
-                    if rank == 0:
-                        log = "Missing keys: {}".format(msg.missing_keys)
-                        logs.append(log)
-                        print(log)
-
-                    self.visualize(rank, cls_net, test_loader, criterion, logs, writer, tag)
-                    print(f"Visualization finished")
-                    exit(0)
             else:
                 if rank == 0:
-                    log = "Loading state_dict from checkpoint - {}".format(self.cfg.resume)
+                    log = "Loading state_dict from checkpoint - {}".format(
+                        self.cfg.resume
+                    )
                     logs.append(log)
                     print(log)
-                loc = 'cuda:{}'.format(rank)
+                loc = "cuda:{}".format(rank)
                 state = torch.load(self.cfg.resume, map_location=loc)
-                for k, v in list(state['state_dict'].items()):
+                for k, v in list(state["state_dict"].items()):
                     if world_size > 1:
-                        k = 'module.' + k
+                        k = "module." + k
                     if k in cls_net.state_dict().keys():
-                        state['state_dict'][k] = v
+                        state["state_dict"][k] = v
 
-                cls_net.load_state_dict(state['state_dict'], strict=False)
-                optimizer.load_state_dict(state['optimizer'])
-                self.cfg.start_epoch = state['epoch']
+                cls_net.load_state_dict(state["state_dict"], strict=False)
+                optimizer.load_state_dict(state["optimizer"])
+                self.cfg.start_epoch = state["epoch"]
 
-            if self.cfg.mode == 'finetune':
+            if self.cfg.mode == "finetune":
                 for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
                     if world_size > 1:
                         train_sampler.set_epoch(epoch)
@@ -502,21 +606,32 @@ class MetaTPNLearner:
                             val_sampler.set_epoch(epoch)
                         test_sampler.set_epoch(epoch)
 
-                    self.finetune(rank, cls_net, train_loader, criterion, optimizer, epoch, self.cfg.epochs, logs)
+                    self.finetune(
+                        rank,
+                        cls_net,
+                        train_loader,
+                        criterion,
+                        optimizer,
+                        epoch,
+                        self.cfg.epochs,
+                        logs,
+                    )
                     # if len(val_dataset) > 0:
                     #     self.validate(rank, cls_net, val_loader, criterion, logs)
 
                     if rank == 0 and (epoch + 1) % self.cfg.save_freq == 0:
                         ckpt_dir = self.cfg.ckpt_dir
-                        ckpt_filename = 'checkpoint_{:04d}.pth.tar'.format(epoch)
+                        ckpt_filename = "checkpoint_{:04d}.pth.tar".format(epoch)
                         ckpt_filename = os.path.join(ckpt_dir, ckpt_filename)
                         state_dict = cls_net.state_dict()
                         if world_size > 1:
                             for k, v in list(state_dict.items()):
-                                if 'module.' in k:
-                                    state_dict[k.replace('module.', '')] = v
+                                if "module." in k:
+                                    state_dict[k.replace("module.", "")] = v
                                     del state_dict[k]
-                        self.save_checkpoint(ckpt_filename, epoch, state_dict, optimizer)
+                        self.save_checkpoint(
+                            ckpt_filename, epoch, state_dict, optimizer
+                        )
 
             self.validate_finetune(rank, cls_net, test_loader, criterion, logs)
 
@@ -537,7 +652,9 @@ class MetaTPNLearner:
                     opp_indices_per_class[cls].append(i)
         return indices_per_class, opp_indices_per_class
 
-    def gen_per_domain_tasks(self, dataset, indices_per_domain, task_size, num_task=None):
+    def gen_per_domain_tasks(
+        self, dataset, indices_per_domain, task_size, num_task=None
+    ):
         supports = []
         queries = []
         target_supports = []
@@ -556,7 +673,9 @@ class MetaTPNLearner:
                     support = torch.stack(support, dim=0)
                     target_support = torch.stack(target_support, dim=0)
 
-                    query_ = torch.utils.data.Subset(dataset, indices[task_size:2 * task_size])
+                    query_ = torch.utils.data.Subset(
+                        dataset, indices[task_size : 2 * task_size]
+                    )
                     target_query = []
                     query = []
                     for data in query_:
@@ -585,8 +704,14 @@ class MetaTPNLearner:
                         support = support[:task_size]
                         target_support = target_support[:task_size]
                     else:
-                        support = support * (task_size // len(support)) + support[:task_size % len(support)]
-                        target_support = target_support * (task_size // len(target_support)) + target_support[:task_size % len(target_support)]
+                        support = (
+                            support * (task_size // len(support))
+                            + support[: task_size % len(support)]
+                        )
+                        target_support = (
+                            target_support * (task_size // len(target_support))
+                            + target_support[: task_size % len(target_support)]
+                        )
                         # supplementary = random.sample(support, task_size % len(support))
                         # selected_indices = [support.index(element) for element in supplementary]
                         # support = support * (task_size // len(support)) + supplementary
@@ -598,7 +723,9 @@ class MetaTPNLearner:
                     # print(target_support.shape)
 
                     # query = torch.utils.data.Subset(dataset, indices[task_size:2*task_size])
-                    query_ = torch.utils.data.Subset(dataset, indices[task_size:2*task_size])
+                    query_ = torch.utils.data.Subset(
+                        dataset, indices[task_size : 2 * task_size]
+                    )
                     query = []
                     target_query = []
                     for e in query_:
@@ -608,8 +735,14 @@ class MetaTPNLearner:
                         query = query[:task_size]
                         target_query = target_query[:task_size]
                     else:
-                        query = query * (task_size // len(query)) + query[:task_size % len(query)]
-                        target_query = target_query * (task_size // len(target_query)) + target_query[:task_size % len(target_query)]
+                        query = (
+                            query * (task_size // len(query))
+                            + query[: task_size % len(query)]
+                        )
+                        target_query = (
+                            target_query * (task_size // len(target_query))
+                            + target_query[: task_size % len(target_query)]
+                        )
                         # supplementary = random.sample(query, task_size % len(query))
                         # selected_indices = [query.index(element) for element in supplementary]
                         # query = query * (task_size // len(query)) + supplementary
@@ -664,11 +797,24 @@ class MetaTPNLearner:
 
         return supports, queries, target_supports, target_queries
 
-    def pretrain(self, rank, net, supports, queries, target_supports, target_queries, criterion, optimizer, epoch, num_epochs, logs):
+    def pretrain(
+        self,
+        rank,
+        net,
+        supports,
+        queries,
+        target_supports,
+        target_queries,
+        criterion,
+        optimizer,
+        epoch,
+        num_epochs,
+        logs,
+    ):
         net.train()
         net.zero_grad()
 
-        log = f'Epoch [{epoch + 1}/{num_epochs}]'
+        log = f"Epoch [{epoch + 1}/{num_epochs}]"
         if rank == 0:
             logs.append(log)
             print(log)
@@ -680,24 +826,33 @@ class MetaTPNLearner:
             target_support = target_supports[task_idx].cuda().long()
             target_query = target_queries[task_idx].cuda()
 
-            fast_weights = self.meta_train(rank, net, support, target_support, criterion, log_internals=self.cfg.log_meta_train,
-                                           logs=logs)
+            fast_weights = self.meta_train(
+                rank,
+                net,
+                support,
+                target_support,
+                criterion,
+                log_internals=self.cfg.log_meta_train,
+                logs=logs,
+            )
 
             q_logits = net(query, fast_weights)
             q_loss = 0
             for i in range(len(q_logits)):
-                q_loss += criterion(q_logits[i], target_query[:,i])
+                q_loss += criterion(q_logits[i], target_query[:, i])
             q_loss /= len(q_logits)
             q_losses.append(q_loss)
 
             if task_idx % self.cfg.log_freq == 0:
                 q_logits = torch.cat(q_logits)
                 target_query = torch.transpose(target_query, 0, 1)
-                target_query = target_query.reshape(-1, )
+                target_query = target_query.reshape(
+                    -1,
+                )
                 acc1, acc3 = self.accuracy(q_logits, target_query, topk=(1, 1))
 
-                log = f'\t({task_idx}/{len(supports)}) '
-                log += f'Loss: {q_loss.item():.4f}, Acc(1): {acc1.item():.2f}'
+                log = f"\t({task_idx}/{len(supports)}) "
+                log += f"Loss: {q_loss.item():.4f}, Acc(1): {acc1.item():.2f}"
                 if rank == 0:
                     logs.append(log)
                     print(log)
@@ -706,12 +861,21 @@ class MetaTPNLearner:
         loss = torch.sum(q_losses)
         # reg_term = torch.sum((q_losses - torch.mean(q_losses))**2)
         # loss += reg_term * self.cfg.reg_lambda
-        loss = loss/len(supports)
+        loss = loss / len(supports)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
-    def meta_train(self, rank, net, support, target_support, criterion, log_internals=False, logs=None):
+    def meta_train(
+        self,
+        rank,
+        net,
+        support,
+        target_support,
+        criterion,
+        log_internals=False,
+        logs=None,
+    ):
         fast_weights = list(net.parameters())
         for i in range(self.cfg.task_steps):
             shuffled_idx = torch.randperm(len(support))
@@ -724,38 +888,45 @@ class MetaTPNLearner:
             for j in range(len(s_logits)):
                 # print(s_logits[i].shape)
                 # print(target_support[:,i].shape)
-                s_loss += criterion(s_logits[j], target_support[:,j])
+                s_loss += criterion(s_logits[j], target_support[:, j])
             s_loss /= len(s_logits)
 
             grad = torch.autograd.grad(s_loss, fast_weights)
-            fast_weights = list(map(lambda p: p[1] - self.cfg.task_lr * p[0], zip(grad, fast_weights)))
+            fast_weights = list(
+                map(lambda p: p[1] - self.cfg.task_lr * p[0], zip(grad, fast_weights))
+            )
 
             if log_internals and rank == 0:
                 TPN_pred = torch.cat(s_logits)
                 TPN_target = torch.transpose(target_support, 0, 1)
-                TPN_target = TPN_target.reshape(-1, )
+                TPN_target = TPN_target.reshape(
+                    -1,
+                )
                 acc1, acc3 = self.accuracy(TPN_pred, TPN_target, topk=(1, 1))
-                log = f'\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {s_loss.item():.4f}, Acc(1): {acc1.item():.2f}'
+                log = f"\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {s_loss.item():.4f}, Acc(1): {acc1.item():.2f}"
                 logs.append(log)
                 print(log)
 
         return fast_weights
-    
-    def finetune(self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs):
+
+    def finetune(
+        self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs
+    ):
         net.eval()
 
         for batch_idx, data in enumerate(train_loader):
             features = data[0].cuda()
             targets = data[3].cuda()
+            targets = targets.type(torch.LongTensor).cuda() - 1
 
             logits = net(features)
             loss = criterion(logits, targets)
 
             if rank == 0:
                 if batch_idx % self.cfg.log_freq == 0:
-                    acc1, acc5 = self.accuracy(logits, targets, topk=(1, 5))
-                    log = f'Epoch [{epoch + 1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) '
-                    log += f'\tLoss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
+                    acc1, acc5 = self.accuracy(logits, targets, topk=(1, 3))
+                    log = f"Epoch [{epoch + 1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) "
+                    log += f"\tLoss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}"
                     logs.append(log)
                     print(log)
 
@@ -774,6 +945,7 @@ class MetaTPNLearner:
             for batch_idx, data in enumerate(val_loader):
                 features = data[0].cuda()
                 targets = data[3].cuda()
+                targets = targets.type(torch.LongTensor).cuda()
 
                 logits = net(features)
 
@@ -784,13 +956,13 @@ class MetaTPNLearner:
             if len(total_targets) > 0:
                 total_targets = torch.cat(total_targets, dim=0)
                 total_logits = torch.cat(total_logits, dim=0)
-                acc1, acc5 = self.accuracy(total_logits, total_targets, topk=(1, 5))
+                acc1, acc5 = self.accuracy(total_logits, total_targets, topk=(1, 3))
                 f1, recall, precision = self.scores(total_logits, total_targets)
             total_loss /= len(val_loader)
 
             if rank == 0:
-                log = f'[Finetune] Validation Loss: {total_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
-                log += f', F1: {f1.item():.2f}, Recall: {recall.item():.2f}, Precision: {precision.item():.2f}'
+                log = f"[Finetune] Validation Loss: {total_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}"
+                log += f", F1: {f1.item():.2f}, Recall: {recall.item():.2f}, Precision: {precision.item():.2f}"
                 logs.append(log)
                 print(log)
 
@@ -813,7 +985,9 @@ class MetaTPNLearner:
 
         total_targets = torch.cat(total_targets, dim=0)
         total_logits = torch.cat(total_logits, dim=0)
-        writer.add_embedding(total_logits, metadata=total_targets, global_step=0, tag="feature")
+        writer.add_embedding(
+            total_logits, metadata=total_targets, global_step=0, tag="feature"
+        )
 
     def save_checkpoint(self, filename, epoch, state_dict, optimizer):
         directory = os.path.dirname(filename)
@@ -821,9 +995,9 @@ class MetaTPNLearner:
             os.makedirs(directory)
 
         state = {
-            'epoch': epoch + 1,
-            'state_dict': state_dict,
-            'optimizer': optimizer.state_dict()
+            "epoch": epoch + 1,
+            "state_dict": state_dict,
+            "optimizer": optimizer.state_dict(),
         }
         torch.save(state, filename)
 
@@ -855,11 +1029,7 @@ class MetaTPNLearner:
             recall = metrics.recall_score(
                 target_val, out_val, average="macro", zero_division=0
             )
-            f1 = metrics.f1_score(
-                target_val, out_val, average="macro", zero_division=0
-            )
-            acc = metrics.accuracy_score(
-                target_val, out_val
-            )
+            f1 = metrics.f1_score(target_val, out_val, average="macro", zero_division=0)
+            acc = metrics.accuracy_score(target_val, out_val)
 
             return f1, recall, precision

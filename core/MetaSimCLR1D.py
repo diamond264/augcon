@@ -535,9 +535,7 @@ class MetaSimCLR1DLearner:
                 nprocs=num_gpus,
             )
         else:
-            self.main_worker(
-                0, 1, train_dataset, val_dataset, test_dataset, logs
-            )
+            self.main_worker(0, 1, train_dataset, val_dataset, test_dataset, logs)
 
         for log in logs:
             self.logger.info(log)
@@ -1428,6 +1426,7 @@ class MetaSimCLR1DLearner:
         for batch_idx, data in enumerate(train_loader):
             features = data[0].cuda()
             targets = data[3].cuda()
+            targets = targets.type(torch.LongTensor).cuda()
 
             logits = net(features)
             loss = criterion(logits, targets)
@@ -1455,6 +1454,7 @@ class MetaSimCLR1DLearner:
             for batch_idx, data in enumerate(val_loader):
                 features = data[0].cuda()
                 targets = data[3].cuda()
+                targets = targets.type(torch.LongTensor).cuda()
 
                 logits = net(features)
 

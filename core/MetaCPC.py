@@ -731,22 +731,6 @@ class MetaCPCLearner:
                     log = "Missing keys: {}".format(msg.missing_keys)
                     logs.append(log)
                     print(log)
-
-                if self.cfg.visualization:
-                    is_meta = True if "meta" in self.cfg.pretrained else False
-                    tag = f"{self.cfg.dataset_name}_{self.cfg.pretext}_{self.cfg.domain_adaptation}_meta{is_meta}"
-                    writer = SummaryWriter(f"./logs/{tag}")
-
-                    if rank == 0:
-                        log = "Missing keys: {}".format(msg.missing_keys)
-                        logs.append(log)
-                        print(log)
-
-                    self.visualize(
-                        rank, cls_net, test_loader, criterion, logs, writer, tag
-                    )
-                    print(f"Visualization finished")
-                    exit(0)
             else:
                 if rank == 0:
                     log = "Loading state_dict from checkpoint - {}".format(
@@ -954,6 +938,7 @@ class MetaCPCLearner:
         for batch_idx, data in enumerate(train_loader):
             features = data[0].cuda()
             targets = data[1].cuda()
+            targets = targets.type(torch.LongTensor).cuda()
 
             logits = net(features)
             loss = criterion(logits, targets)
@@ -997,6 +982,7 @@ class MetaCPCLearner:
         for batch_idx, data in enumerate(val_loader):
             features = data[0].cuda()
             targets = data[1].cuda()
+            targets = targets.type(torch.LongTensor).cuda()
 
             logits = net(features)
             total_loss += criterion(logits, targets)
