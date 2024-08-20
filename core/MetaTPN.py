@@ -917,7 +917,7 @@ class MetaTPNLearner:
         for batch_idx, data in enumerate(train_loader):
             features = data[0].cuda()
             targets = data[3].cuda()
-            targets = targets.type(torch.LongTensor).cuda() - 1
+            targets = targets.type(torch.LongTensor).cuda()
 
             logits = net(features)
             loss = criterion(logits, targets)

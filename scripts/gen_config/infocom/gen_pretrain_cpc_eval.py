@@ -16,7 +16,7 @@ DATA_PATH = {
 
 NUM_CLS = {
     "wesad": 3,
-    "ninaprodb5": 40,
+    "ninaprodb5": 12,
 }
 
 INPUT_CHANNELS = {

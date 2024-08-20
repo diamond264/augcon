@@ -1433,7 +1433,7 @@ class MetaSimCLR1DLearner:
 
             if rank == 0:
                 if batch_idx % self.cfg.log_freq == 0:
-                    acc1, acc5 = self.accuracy(logits, targets, topk=(1, 5))
+                    acc1, acc5 = self.accuracy(logits, targets, topk=(1, 3))
                     log = f"Epoch [{epoch+1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) "
                     log += f"\tLoss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}"
                     logs.append(log)
@@ -1465,7 +1465,7 @@ class MetaSimCLR1DLearner:
             if len(total_targets) > 0:
                 total_targets = torch.cat(total_targets, dim=0)
                 total_logits = torch.cat(total_logits, dim=0)
-                acc1, acc5 = self.accuracy(total_logits, total_targets, topk=(1, 5))
+                acc1, acc5 = self.accuracy(total_logits, total_targets, topk=(1, 3))
                 f1, recall, precision = self.scores(total_logits, total_targets)
             total_loss /= len(val_loader)
 
