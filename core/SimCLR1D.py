@@ -289,7 +289,7 @@ class SimCLR1DLearner:
                 logs.append(log)
                 print(log)
 
-        # self.all_domains = self.split_per_domain(train_dataset)
+        self.all_domains = self.split_per_domain(train_dataset)
 
         # Define criterion
         if self.cfg.criterion == "crossentropy":
