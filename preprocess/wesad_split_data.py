@@ -19,7 +19,7 @@ class ProcessWESAD:
         seq_len=700 * 10,
         split_ratio=0.7,
         drop_size_threshold=500,
-        shots=[20, 10, 5, 2, 1],
+        shots=[1],
         finetune_test_size=100,
         finetune_val_size=100,
     ):
@@ -192,10 +192,10 @@ class ProcessWESAD:
         ft_source_data, ft_target_data = self.split_source_target(self.ft_data)
         print(f"Loaded target domain fine-tuning data({len(ft_target_data[0])})")
 
-        self.save_pretrain_data(pt_source_data, pretrain_dir)
-        print(f"Saved pre-training data of source domain")
-        self.save_pretrain_data(pt_target_data, pretrain_dir + "_target")
-        print(f"Saved pre-training data of target domain")
+        # self.save_pretrain_data(pt_source_data, pretrain_dir)
+        # print(f"Saved pre-training data of source domain")
+        # self.save_pretrain_data(pt_target_data, pretrain_dir + "_target")
+        # print(f"Saved pre-training data of target domain")
 
         target_features, target_class_labels, target_domain_labels = ft_target_data
         idx_per_target_classes = {}
@@ -314,7 +314,7 @@ class ProcessWESAD:
                     continue
                 feature = feature.reshape(1, -1)
                 features.append(feature)
-                class_labels.append(label)
+                class_labels.append(label - 1)
                 d = self.class_to_number("domain", domain)
                 domain_labels.append(d)
                 idx += self.OVERLAPPING_WIN_LEN

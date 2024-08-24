@@ -320,7 +320,7 @@ class ProcessNinaproDB5:
                     continue
                 feature = feature.T
                 features.append(feature)
-                class_labels.append(label)
+                class_labels.append(label - 1)
                 d = self.class_to_number("domain", domain)
                 domain_labels.append(d)
                 idx += self.OVERLAPPING_WIN_LEN
