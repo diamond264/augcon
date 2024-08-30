@@ -84,7 +84,7 @@ def gen_pretrain_config():
                         finetune_ckpt_path = f"{MODEL_PATH}/{dataset}/{PRETEXT}/finetune/{shot}shot/{setting}/seed{seed}/{domain}"
                         epoch = 4999
                         pretrained_path = (
-                            f"{pretrain_ckpt_path}/checkpoint_{epoch}.pth.tar"
+                            f"{pretrain_ckpt_path}/checkpoint_1999.pth.tar"
                         )
                         ft_lr = 0.005 if freeze else 0.001
                         bs = 4 if shot != 1 else 1
