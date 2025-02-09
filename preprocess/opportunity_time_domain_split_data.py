@@ -6,45 +6,32 @@ import numpy as np
 import random
 from tqdm import tqdm
 from collections import defaultdict
-import scipy.io as sio
-from multiprocessing import Pool
 
 # import itertools
 
 
-class ProcessNinaproDB5:
+class ProcessOpportunity:
     def __init__(
         self,
         file,
         class_type,
-        seq_len=int(200 * 0.3),
-        split_ratio=0.7,
-        drop_size_threshold=500,
-        shots=[20, 10, 5, 2, 1],
-        finetune_test_size=100,
+        seq_len=256,
+        split_ratio=0.6,
+        drop_size_threshold=150,
+        shots=[10, 5, 2, 1],
+        finetune_test_size=0,
         finetune_val_size=100,
     ):
         self.metadata = {
-            "domain": [
-                "s1",
-                "s2",
-                "s3",
-                "s4",
-                "s5",
-                "s6",
-                "s7",
-                "s8",
-                "s9",
-                "s10",
-            ],
-            "activity": [str(i) for i in range(1, 13)],
+            "domain": ["1", "2", "3", "4", "5"],
+            "activity": ["Stand", "Walk", "Sit", "Lie"],
         }
 
         self.finetune_test_size = finetune_test_size
         self.finetune_val_size = finetune_val_size
 
         self.seq_len = seq_len
-        self.OVERLAPPING_WIN_LEN = int(200 * 0.15)
+        self.OVERLAPPING_WIN_LEN = self.seq_len // 8
         self.WIN_LEN = self.seq_len
 
         self.domain_type = "domain"
@@ -54,10 +41,11 @@ class ProcessNinaproDB5:
         self.shots = shots
         self.shots.sort(reverse=True)
 
-        print("Loading data from file...")
-        self.data_dics = self.load_dics(file)
+        print(f"Loading data from file...")
+        self.df = pd.read_csv(file)
+        self.df.columns = self.df.columns.str.lower()
         self.features, self.class_labels, self.domain_labels = self.split_window(
-            self.data_dics
+            self.df
         )
         self.valid_domains = self.drop_minorities(drop_size_threshold)
         print(f"Valid domains (size {len(self.valid_domains)}):")
@@ -66,26 +54,15 @@ class ProcessNinaproDB5:
         data = (self.features, self.class_labels, self.domain_labels)
         self.pt_data, self.ft_data = self.split_pt_ft(data)
 
-    def load_dics(self, file):
-        doms = self.metadata["domain"]
-        data_dics = {}
-        for dom in tqdm(doms):
-            ex_file = os.path.join(file, f"{dom}", f"{dom.upper()}_E1_A1.mat")
-            ex_d = sio.loadmat(ex_file)
-            data_dics[dom] = ex_d
-        return data_dics
-
     def set_domain(self, domain=None):
-        # self.domain_ = domain
-
-        # domain_dic = {
-        #     "domain": (
-        #         self.class_to_number("domain", self.domain_) if self.domain_ else None
-        #     )
-        # }
-        # self.domain = domain_dic[self.domain_type]
         self.domain_ = domain
-        self.domain = self.class_to_number("domain", self.domain_)
+
+        domain_dic = {
+            "domain": (
+                self.class_to_number("domain", self.domain_) if self.domain_ else None
+            )
+        }
+        self.domain = domain_dic[self.domain_type]
         print(f"Set target domain: {self.domain}")
 
         if not self.domain in self.valid_domains:
@@ -207,6 +184,7 @@ class ProcessNinaproDB5:
                 random.shuffle(idxs)
                 if len(idxs) < shot:
                     print(f"not enough data for {class_label} (size {len(idxs)})")
+                    print(len(target_features))
                     assert 0
                 train_idxs.extend(idxs[:shot])
                 remaining_idxs.extend(idxs[shot:])
@@ -281,76 +259,47 @@ class ProcessNinaproDB5:
         )
         return data_1, data_2
 
-    def split_window(self, dics):
+    def split_window(self, df):
         features = []
         class_labels = []
         domain_labels = []
 
-        min = float("inf")
-        max = -float("inf")
         print("splitting windows...")
-        for domain, ex_2_d in tqdm(dics.items()):
-            # for domain, (ex_2_d, ex_3_d) in tqdm(dics.items()):
-            ex_2_data = np.array(ex_2_d["emg"])
-            ex_2_label = np.array(ex_2_d["restimulus"])
-            # ex_3_data = np.array(ex_3_d["emg"])
-            # ex_3_label = np.array(ex_3_d["restimulus"])
+        for idx in tqdm(range(max(len(df) // self.OVERLAPPING_WIN_LEN - 1, 0))):
+            domain_ = df.iloc[idx * self.OVERLAPPING_WIN_LEN, 3]
+            activity = df.iloc[idx * self.OVERLAPPING_WIN_LEN, 4]
+            if activity == "Unknown":
+                continue
+            domain_ = self.class_to_number("domain", domain_)
+            activity = self.class_to_number("activity", activity)
 
-            # data = dic["signal"]["chest"]["ECG"]
-            # data = np.array(data)
-            # data = data.reshape(-1)
-            # labels = dic["label"]
+            if self.class_type == "domain":
+                class_label = domain_
+                domain = activity
+            elif self.class_type == "activity":
+                class_label = activity
+                domain = domain_
 
-            idx = 0
-            while idx < len(ex_2_data) - self.seq_len:
-                feature = ex_2_data[idx : idx + self.seq_len]
-                if min > np.min(feature):
-                    min = np.min(feature)
-                if max < np.max(feature):
-                    max = np.max(feature)
-                label = ex_2_label[idx + int(self.seq_len / 2)][0]
-                if label == 0:
-                    idx += self.OVERLAPPING_WIN_LEN
-                    continue
-                feature = feature.T
-                features.append(feature)
-                class_labels.append(label - 1)
-                d = self.class_to_number("domain", domain)
-                domain_labels.append(d)
-                idx += self.OVERLAPPING_WIN_LEN
+            feature = df.iloc[
+                idx * self.OVERLAPPING_WIN_LEN : (idx + 2) * self.OVERLAPPING_WIN_LEN,
+                0:3,
+            ].values
+            feature = feature.T
 
-            # idx = 0
-            # while idx < len(ex_3_data) - self.seq_len:
-            #     feature = ex_3_data[idx : idx + self.seq_len]
-            #     if min > np.min(feature):
-            #         min = np.min(feature)
-            #     if max < np.max(feature):
-            #         max = np.max(feature)
-            #     label = ex_3_label[idx + int(self.seq_len / 2)][0]
-            #     if label != 0:
-            #         label += 17
-            #     else:
-            #         idx += self.OVERLAPPING_WIN_LEN
-            #         continue
-            #     feature = feature.T
-            #     features.append(feature)
-            #     class_labels.append(label)
-            #     d = self.class_to_number("domain", domain)
-            #     domain_labels.append(d)
-            #     idx += self.OVERLAPPING_WIN_LEN
-
-        features = np.array(features)
-        features = (features - min) / (max - min) * 2 - 1
+            features.append(feature)
+            class_labels.append(class_label)
+            domain_labels.append(domain)
 
         return (features, class_labels, domain_labels)
 
     def class_to_number(self, class_type, label):
+        label = str(label)
         classes = self.metadata[class_type]
         dic = {v: i for i, v in enumerate(classes)}
         if label in dic.keys():
             return dic[label]
         else:
-            print(label)
+            print(classes, label)
             assert 0, f"no such label in class info"
             return -1
 
@@ -370,30 +319,15 @@ class ProcessNinaproDB5:
 
 
 if __name__ == "__main__":
-    file_path = "/mnt/sting/hjyoon/projects/cross/NinaproDB5/raw"
-    base_out_dir = "/mnt/sting/hjyoon/projects/cross/NinaproDB5/augcon"
+    file_path = "/mnt/sting/hjyoon/projects/cross/Opportunity/csvs/S1_timedomain.csv"
+    base_out_dir = "/mnt/sting/hjyoon/projects/cross/Opportunity/augcon_timedomain"
 
     class_type = "activity"
-    domains = [
-        "s1",
-        "s2",
-        "s3",
-        "s4",
-        "s5",
-        "s6",
-        "s7",
-        "s8",
-        "s9",
-        "s10",
-    ]
+    domains = ["1", "2", "3", "4", "5"]
 
-    dataset = ProcessNinaproDB5(file_path, class_type)
-
-    def process_domain(domain):
+    dataset = ProcessOpportunity(file_path, "activity")
+    for domain in domains:
         pretrain_dir = os.path.join(base_out_dir, f"target_domain_{domain}", "pretrain")
         finetune_dir = os.path.join(base_out_dir, f"target_domain_{domain}", "finetune")
         dataset.set_domain(domain=domain)
         dataset.process(pretrain_dir=pretrain_dir, finetune_dir=finetune_dir)
-
-    with Pool() as pool:
-        pool.map(process_domain, domains)

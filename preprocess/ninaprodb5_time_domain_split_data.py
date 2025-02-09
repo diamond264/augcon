@@ -18,24 +18,20 @@ class ProcessNinaproDB5:
         file,
         class_type,
         seq_len=int(200 * 0.3),
-        split_ratio=0.7,
-        drop_size_threshold=500,
-        shots=[20, 10, 5, 2, 1],
+        split_ratio=0.6,
+        drop_size_threshold=200,
+        shots=[10, 5, 2, 1],
         finetune_test_size=100,
         finetune_val_size=100,
     ):
         self.metadata = {
             "domain": [
-                "s1",
-                "s2",
-                "s3",
-                "s4",
-                "s5",
-                "s6",
-                "s7",
-                "s8",
-                "s9",
-                "s10",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
             ],
             "activity": [str(i) for i in range(1, 13)],
         }
@@ -44,7 +40,7 @@ class ProcessNinaproDB5:
         self.finetune_val_size = finetune_val_size
 
         self.seq_len = seq_len
-        self.OVERLAPPING_WIN_LEN = int(200 * 0.15)
+        self.OVERLAPPING_WIN_LEN = seq_len // 8
         self.WIN_LEN = self.seq_len
 
         self.domain_type = "domain"
@@ -70,7 +66,7 @@ class ProcessNinaproDB5:
         doms = self.metadata["domain"]
         data_dics = {}
         for dom in tqdm(doms):
-            ex_file = os.path.join(file, f"{dom}", f"{dom.upper()}_E1_A1.mat")
+            ex_file = os.path.join(file, f"{dom}", f"data.mat")
             ex_d = sio.loadmat(ex_file)
             data_dics[dom] = ex_d
         return data_dics
@@ -311,7 +307,6 @@ class ProcessNinaproDB5:
                 label = ex_2_label[idx + int(self.seq_len / 2)][0]
                 if label == 0:
                     idx += self.OVERLAPPING_WIN_LEN
-                    continue
                 feature = feature.T
                 features.append(feature)
                 class_labels.append(label - 1)
@@ -370,21 +365,17 @@ class ProcessNinaproDB5:
 
 
 if __name__ == "__main__":
-    file_path = "/mnt/sting/hjyoon/projects/cross/NinaproDB5/raw"
-    base_out_dir = "/mnt/sting/hjyoon/projects/cross/NinaproDB5/augcon"
+    file_path = "/mnt/sting/hjyoon/projects/cross/NinaproDB5/raw_timedomain/s1"
+    base_out_dir = "/mnt/sting/hjyoon/projects/cross/NinaproDB5/augcon_timedomain"
 
     class_type = "activity"
     domains = [
-        "s1",
-        "s2",
-        "s3",
-        "s4",
-        "s5",
-        "s6",
-        "s7",
-        "s8",
-        "s9",
-        "s10",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
     ]
 
     dataset = ProcessNinaproDB5(file_path, class_type)

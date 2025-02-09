@@ -76,14 +76,6 @@ class ProcessNinaproDB5:
         return data_dics
 
     def set_domain(self, domain=None):
-        # self.domain_ = domain
-
-        # domain_dic = {
-        #     "domain": (
-        #         self.class_to_number("domain", self.domain_) if self.domain_ else None
-        #     )
-        # }
-        # self.domain = domain_dic[self.domain_type]
         self.domain_ = domain
         self.domain = self.class_to_number("domain", self.domain_)
         print(f"Set target domain: {self.domain}")

@@ -22,7 +22,7 @@ class DefaultDataLoader:
             self.val_dataset = pickle.load(f)
 
     def get_datasets(self):
-        if self.cfg.dataset_name == "wesad" or self.cfg.dataset_name == "ninaprodb5":
+        if self.cfg.dataset_name == "wesad" or self.cfg.dataset_name == "ninaprodb5" or self.cfg.dataset_name == "opportunity":
             reduce_augs = True
         else:
             reduce_augs = False
