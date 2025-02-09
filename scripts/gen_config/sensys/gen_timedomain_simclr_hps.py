@@ -6,7 +6,7 @@ PRETRAIN_CRITERION = "crossentropy"
 PRETRAIN_HPS = {
     "lr": [0.001, 0.0005, 0.0001],
     "wd": [0.0],
-    "bs": [1024, 2048, 4096],
+    "bs": [64],
 }
 
 DATASETS = ["opportunity", "ninaprodb5"]
