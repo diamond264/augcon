@@ -4,7 +4,7 @@ from glob import glob
 PRETEXT = "metasimclr"
 PRETRAIN_CRITERION = "crossentropy"
 PRETRAIN_HPS = {
-    "opportunity": {"lr": 0.001, "wd": 0.0, "tlr": 0.001}, #####
+    "opportunity": {"lr": 0.005, "wd": 0.0, "tlr": 0.005}, #####
     "ninaprodb5": {"lr": 0.005, "wd": 0.0, "tlr": 0.001},
 }
 
