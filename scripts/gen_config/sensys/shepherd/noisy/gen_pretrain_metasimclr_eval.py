@@ -76,13 +76,13 @@ def gen_pretrain_config():
                     for shot in [1, 2, 5, 10, 20]:
                         for freeze in [True]:
                             setting = "linear" if freeze else "endtoend"
-                            finetune_config_path = f"{CONFIG_PATH}/{dataset}/{PRETEXT}/finetune/{shot}shot/{setting}/seed{seed}/gpu{gpu}_{domain}.yaml"
+                            finetune_config_path = f"{CONFIG_PATH}/{dataset}/{PRETEXT}/finetune/noisy{noisy_level}/{shot}shot/{setting}/seed{seed}/gpu{gpu}_{domain}.yaml"
                             print(f"Generating {finetune_config_path}")
 
                             finetune_path = (
                                 f"{data_path}{domain}/finetune/{shot}shot/target"
                             )
-                            finetune_ckpt_path = f"{MODEL_PATH}/{dataset}/{PRETEXT}/finetune/{shot}shot/{setting}/seed{seed}/{domain}"
+                            finetune_ckpt_path = f"{MODEL_PATH}/{dataset}/{PRETEXT}/finetune/noisy{noisy_level}/{shot}shot/{setting}/seed{seed}/{domain}"
                             pretrained_path = (
                                 f"{pretrain_ckpt_path}/checkpoint_4999.pth.tar"
                             )

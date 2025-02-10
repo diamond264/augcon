@@ -481,9 +481,9 @@ class ClassificationHead(nn.Module):
 
 
 class SimCLRClassifier(nn.Module):
-    def __init__(self, input_channels, z_dim, num_cls, mlp=True):
+    def __init__(self, input_channels, z_dim, num_cls, num_layers, mlp=True):
         super(SimCLRClassifier, self).__init__()
-        self.base_model = Encoder(input_channels, z_dim)
+        self.base_model = Encoder(input_channels, z_dim, num_layers)
         self.classifier = ClassificationHead(z_dim, z_dim, num_cls, mlp)
 
     def forward(self, x):
@@ -576,7 +576,7 @@ class MetaSimCLR1DLearner:
         )
         if self.cfg.mode == "finetune" or self.cfg.mode == "eval_finetune":
             cls_net = SimCLRClassifier(
-                self.cfg.input_channels, self.cfg.z_dim, self.cfg.num_cls, self.cfg.mlp
+                self.cfg.input_channels, self.cfg.z_dim, self.cfg.num_cls, self.cfg.num_layers, self.cfg.mlp
             )
 
         num_params = sum(p.numel() for p in net.parameters())
