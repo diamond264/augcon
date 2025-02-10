@@ -58,17 +58,33 @@ class Adversary_Negatives(nn.Module):
 
 
 class Encoder(nn.Module):
-    def __init__(self, input_channels, z_dim):
+    def __init__(self, input_channels, z_dim, num_layers):
         super(Encoder, self).__init__()
         self.vars = nn.ParameterList()
 
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(0.1)
 
-        self.num_blocks = 3
-        in_dims = [input_channels, 32, 64]
-        out_dims = [32, 64, z_dim]
-        kernel_sizes = [24, 16, 8]
+        self.num_blocks = num_layers
+        if self.num_blocks == 3:
+            in_dims = [input_channels, 32, 64]
+            out_dims = [32, 64, z_dim]
+            kernel_sizes = [24, 16, 8]
+
+        elif self.num_blocks == 4:
+            in_dims = [input_channels, 32, 64, 128]
+            out_dims = [32, 64, 128, z_dim]
+            kernel_sizes = [24, 16, 12, 8]
+
+        elif self.num_blocks == 5:
+            in_dims = [input_channels, 32, 64, 128, 256]
+            out_dims = [32, 64, 128, 256, z_dim]
+            kernel_sizes = [24, 16, 12, 8, 6]
+
+        elif self.num_blocks == 6:
+            in_dims = [input_channels, 32, 64, 128, 256, 512]
+            out_dims = [32, 64, 128, 256, 512, z_dim]
+            kernel_sizes = [24, 16, 12, 8, 6, 4]
 
         for i in range(self.num_blocks):
             conv = nn.Conv1d(in_dims[i], out_dims[i], kernel_size=kernel_sizes[i])
@@ -168,13 +184,13 @@ class SimCLRNet(nn.Module):
     https://arxiv.org/abs/1911.05722
     """
 
-    def __init__(self, input_channels=3, z_dim=96, out_dim=50, T=0.1, mlp=True):
+    def __init__(self, input_channels=3, z_dim=96, out_dim=50, T=0.1, num_layers=3, mlp=True):
         super(SimCLRNet, self).__init__()
         self.T = T
 
         # create the encoders
         # num_classes is the output fc dimension
-        self.encoder = Encoder(input_channels, z_dim)
+        self.encoder = Encoder(input_channels, z_dim, num_layers)
 
         self.mlp = mlp
         if mlp:  # hack: brute-force replacement
@@ -556,12 +572,16 @@ class MetaSimCLR1DLearner:
     ):
         # Model initialization
         net = SimCLRNet(
-            self.cfg.input_channels, self.cfg.z_dim, self.cfg.out_dim, self.cfg.T, True
+            self.cfg.input_channels, self.cfg.z_dim, self.cfg.out_dim, self.cfg.T, self.cfg.num_layers, True
         )
         if self.cfg.mode == "finetune" or self.cfg.mode == "eval_finetune":
             cls_net = SimCLRClassifier(
                 self.cfg.input_channels, self.cfg.z_dim, self.cfg.num_cls, self.cfg.mlp
             )
+
+        num_params = sum(p.numel() for p in net.parameters())
+        print(f"Number of parameters : {num_params}")
+        # exit()
 
         # DDP setting
         if world_size > 1:
@@ -701,7 +721,7 @@ class MetaSimCLR1DLearner:
                 else:
                     new_state = state
 
-                msg = net.load_state_dict(new_state, strict=True)
+                msg = net.load_state_dict(new_state, strict=False)
                 self.log(rank, logs, f"Missing keys: {msg.missing_keys}")
             else:
                 self.log(rank, logs, f"No checkpoint found at '{self.cfg.pretrained}'")
