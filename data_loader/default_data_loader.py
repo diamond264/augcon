@@ -1,5 +1,6 @@
 import torch
 import pickle
+import random
 from data_loader.CPCDataset import CPCDataset
 from data_loader.SimCLRDataset import SimCLRDataset
 from data_loader.TPNDataset import TPNDataset
@@ -60,7 +61,7 @@ class DefaultDataLoader:
     def add_noise_on_domain_label(self):
         # Extract unique domain values
         unique_domains = sorted({domain.item() for _, _, domain in self.train_dataset})
-        domain_map = {d: unique_domains[(i + 1) % len(unique_domains)] for i, d in enumerate(unique_domains)}
+        domain_map = {d: [x for x in unique_domains if x != d] for d in unique_domains}
         num_samples = int(len(self.train_dataset) * self.cfg.noisy_level)
 
         # Convert dataset to a list of tuples for modification
@@ -72,7 +73,7 @@ class DefaultDataLoader:
             domain = domain.item()  # Convert tensor to int
 
             # Shift domain
-            domain = domain_map[domain]
+            domain = random.choice(domain_map[domain])
             domain = torch.tensor(domain)  # Convert back to tensor
 
             # Update dataset
