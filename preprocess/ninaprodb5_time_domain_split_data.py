@@ -307,6 +307,7 @@ class ProcessNinaproDB5:
                 label = ex_2_label[idx + int(self.seq_len / 2)][0]
                 if label == 0:
                     idx += self.OVERLAPPING_WIN_LEN
+                    continue
                 feature = feature.T
                 features.append(feature)
                 class_labels.append(label - 1)

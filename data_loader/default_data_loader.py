@@ -22,10 +22,11 @@ class DefaultDataLoader:
             self.val_dataset = pickle.load(f)
 
     def get_datasets(self):
-        if self.cfg.dataset_name == "wesad" or self.cfg.dataset_name == "ninaprodb5" or self.cfg.dataset_name == "opportunity":
-            reduce_augs = True
-        else:
-            reduce_augs = False
+        # if self.cfg.dataset_name == "wesad" or self.cfg.dataset_name == "ninaprodb5" or self.cfg.dataset_name == "opportunity":
+        #     reduce_augs = True
+        # else:
+        #     reduce_augs = False
+        reduce_augs = True
         if self.cfg.pretext == "tpn" or self.cfg.pretext == "metatpn":
             train_dataset = TPNDataset(self.train_dataset, reduce_augs=reduce_augs)
             val_dataset = TPNDataset(self.val_dataset, reduce_augs=reduce_augs)
