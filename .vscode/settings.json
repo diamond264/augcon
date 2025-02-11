@@ -1,5 +1,0 @@
-{
-    "pylint.args": [
-        "--generated-members=torch.*, numpy.*, F.*"
-      ]
-}

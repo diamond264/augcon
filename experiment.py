@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import psutil
+import yaml
 import time
-from util.args import parse_args
-from util.config import Config
+import argparse
 
 from data_loader.default_data_loader import DefaultDataLoader
 
@@ -10,6 +10,31 @@ from data_loader.default_data_loader import DefaultDataLoader
 from core.MetaCPC import MetaCPCLearner
 from core.MetaSimCLR1D import MetaSimCLR1DLearner
 from core.MetaTPN import MetaTPNLearner
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--config", type=str, required=True, help="Path to YAML config file"
+    )
+    args = parser.parse_args()
+    return args
+
+
+class Config:
+    def __init__(self, yaml_path):
+        with open(yaml_path, "r") as f:
+            config_dict = yaml.load(f, Loader=yaml.FullLoader)
+
+        for key, value in config_dict.items():
+            self.set_config(key, value)
+
+    def set_config(self, key, value):
+        if isinstance(value, dict):
+            for k, v in value.items():
+                getattr(self, key).set_config(k, v)
+        else:
+            setattr(self, key, value)
 
 
 class Experiment:
