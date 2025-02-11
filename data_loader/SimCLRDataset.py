@@ -2,7 +2,13 @@ import torch
 import random
 from torch.utils.data import Dataset
 
-from data_loader.transforms import *
+from data_loader.transforms import (
+    noise_transform_vectorized,
+    scaling_transform_vectorized,
+    negate_transform_vectorized,
+    time_flip_transform_vectorized,
+    time_warp_transform_vectorized,
+)
 
 
 class SimCLRDataset(Dataset):
@@ -25,26 +31,13 @@ class SimCLRDataset(Dataset):
 
     def augment_features(self, features):
         new_features = features.numpy()
-        if self.reduce_augs:
-            augmentations = [
-                noise_transform_vectorized,
-                scaling_transform_vectorized,
-                negate_transform_vectorized,
-                time_flip_transform_vectorized,
-                # time_segment_permutation_transform_vectorized,
-                time_warp_transform_vectorized,
-            ]
-        else:
-            augmentations = [
-                noise_transform_vectorized,
-                scaling_transform_vectorized,
-                rotation_transform_vectorized,
-                negate_transform_vectorized,
-                time_flip_transform_vectorized,
-                channel_shuffle_transform_vectorized,
-                time_segment_permutation_transform_vectorized,
-                time_warp_transform_vectorized,
-            ]
+        augmentations = [
+            noise_transform_vectorized,
+            scaling_transform_vectorized,
+            negate_transform_vectorized,
+            time_flip_transform_vectorized,
+            time_warp_transform_vectorized,
+        ]
         random.shuffle(augmentations)
 
         for aug in augmentations:
