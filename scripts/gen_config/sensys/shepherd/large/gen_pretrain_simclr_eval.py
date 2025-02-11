@@ -1,10 +1,10 @@
 import os
 from glob import glob
 
-PRETEXT = "metasimclr"
+PRETEXT = "simclr"
 PRETRAIN_CRITERION = "crossentropy"
 PRETRAIN_HPS = {
-    "ichar": {"lr": 0.001, "wd": 0.0, "tlr": 0.001},
+    "ichar": {"lr": 0.001, "wd": 0.0001, "tlr": -1},
 }
 
 DATASETS = ["ichar"]
@@ -42,7 +42,7 @@ def gen_pretrain_config():
 
                 pretrain_path = f"{data_path}{domain}/pretrain"
                 num_cls = NUM_CLS[dataset]
-                epochs = 5000
+                epochs = 100
                 lr, wd, tlr = param["lr"], param["wd"], param["tlr"]
                 pretrain_ckpt_path = f"{MODEL_PATH}/{dataset}/{PRETEXT}/pretrain/num_layer{num_layers}/{domain}"
                 pretrain_config = get_config(
@@ -55,12 +55,11 @@ def gen_pretrain_config():
                     num_cls,
                     PRETRAIN_CRITERION,
                     epochs,
-                    -1,
+                    1024,
                     lr,
                     wd,
                     tlr,
                     pretrain_ckpt_path,
-                    None,
                     None,
                     0.1,
                     0,
@@ -74,7 +73,7 @@ def gen_pretrain_config():
 
                 for seed in [0, 1, 2, 3, 4]:
                     for shot in [1, 2, 5, 10, 20]:
-                        for freeze in [True]:
+                        for freeze in [True, False]:
                             setting = "linear" if freeze else "endtoend"
                             finetune_config_path = f"{CONFIG_PATH}/{dataset}/{PRETEXT}/finetune/num_layer{num_layers}/{shot}shot/{setting}/seed{seed}/gpu{gpu}_{domain}.yaml"
                             print(f"Generating {finetune_config_path}")
@@ -84,10 +83,7 @@ def gen_pretrain_config():
                             )
                             finetune_ckpt_path = f"{MODEL_PATH}/{dataset}/{PRETEXT}/finetune/num_layer{num_layers}/{shot}shot/{setting}/seed{seed}/{domain}"
                             pretrained_path = (
-                                f"{pretrain_ckpt_path}/checkpoint_4999.pth.tar"
-                            )
-                            pretrained_membank_path = (
-                                f"{pretrain_ckpt_path}/membank_4999.pth.tar"
+                                f"{pretrain_ckpt_path}/checkpoint_0099.pth.tar"
                             )
                             ft_lr = 0.005 if freeze else 0.001
                             bs = 4 if shot != 1 else 1
@@ -107,7 +103,6 @@ def gen_pretrain_config():
                                 tlr,
                                 finetune_ckpt_path,
                                 pretrained_path,
-                                pretrained_membank_path,
                                 freeze,
                                 seed,
                                 0,
@@ -140,8 +135,7 @@ def get_config(
     tlr,
     ckpt_path,
     pretrained,
-    pretrained_membank,
-    mlr,
+    freeze,
     seed,
     noisy_level,
     num_layers
@@ -171,9 +165,10 @@ wd: {wd}
 
 resume: ''
 pretrained: {pretrained}
+pretrained_membank: no_file
 ckpt_dir: {ckpt_path}
 log_freq: 100
-save_freq: {1000 if mode == 'pretrain' else 10}
+save_freq: {10 if mode == 'pretrain' else 10}
 
 task_per_domain: true
 num_task: 8
@@ -183,15 +178,14 @@ task_lr: {tlr}
 reg_lambda: 0
 log_meta_train: false
 
-pretrained_membank: {pretrained_membank}
 bank_size: 1024
-membank_lr: {mlr}
+membank_lr: 0
 membank_optimizer: adam
 membank_wd: 0.0
 membank_m: 0.9
 task_membank_lr: 1
 
-pretext: {PRETEXT}
+pretext: {PRETEXT if mode == 'pretrain' else 'meta' + PRETEXT}
 
 out_dim: 50
 T: 0.1
@@ -199,11 +193,8 @@ z_dim: 96
 mlp: {'true' if mode == 'pretrain' else 'false'}
 
 neg_per_domain: false
-freeze: true
-domain_adaptation: true
-adapt_w_neg: {'true' if mode == 'pretrain' else 'true'}
-out_cls_neg_sampling: false
-task_steps: 10
+freeze: {'true' if freeze else 'false'}
+domain_adaptation: false
 no_vars: true
 visualization: false
 

@@ -14,20 +14,47 @@ from torch.utils.data import DataLoader, Dataset, DistributedSampler
 
 
 class Encoder(nn.Module):
-    def __init__(self, input_channels, z_dim):
+    def __init__(self, input_channels, z_dim, num_layers):
         super(Encoder, self).__init__()
+        self.num_layers = num_layers
 
-        self.conv1 = nn.Conv1d(input_channels, 32, kernel_size=24)
-        self.relu1 = nn.ReLU()
-        self.dropout1 = nn.Dropout(0.1)
+        if num_layers == 3:
+            self.conv1 = nn.Conv1d(input_channels, 32, kernel_size=24)
+            self.relu1 = nn.ReLU()
+            self.dropout1 = nn.Dropout(0.1)
 
-        self.conv2 = nn.Conv1d(32, 64, kernel_size=16)
-        self.relu2 = nn.ReLU()
-        self.dropout2 = nn.Dropout(0.1)
+            self.conv2 = nn.Conv1d(32, 64, kernel_size=16)
+            self.relu2 = nn.ReLU()
+            self.dropout2 = nn.Dropout(0.1)
 
-        self.conv3 = nn.Conv1d(64, z_dim, kernel_size=8)
-        self.relu3 = nn.ReLU()
-        self.dropout3 = nn.Dropout(0.1)
+            self.conv3 = nn.Conv1d(64, z_dim, kernel_size=8)
+            self.relu3 = nn.ReLU()
+            self.dropout3 = nn.Dropout(0.1)
+
+        elif num_layers == 6:
+            self.conv1 = nn.Conv1d(input_channels, 32, kernel_size=24)
+            self.relu1 = nn.ReLU()
+            self.dropout1 = nn.Dropout(0.1)
+
+            self.conv2 = nn.Conv1d(32, 64, kernel_size=16)
+            self.relu2 = nn.ReLU()
+            self.dropout2 = nn.Dropout(0.1)
+
+            self.conv3 = nn.Conv1d(64, 128, kernel_size=12)
+            self.relu3 = nn.ReLU()
+            self.dropout3 = nn.Dropout(0.1)
+
+            self.conv4 = nn.Conv1d(128, 256, kernel_size=8)
+            self.relu4 = nn.ReLU()
+            self.dropout4 = nn.Dropout(0.1)
+
+            self.conv5 = nn.Conv1d(256, 512, kernel_size=6)
+            self.relu5 = nn.ReLU()
+            self.dropout5 = nn.Dropout(0.1)
+
+            self.conv6 = nn.Conv1d(512, z_dim, kernel_size=4)
+            self.relu6 = nn.ReLU()
+            self.dropout6 = nn.Dropout(0.1)
 
         self.global_max_pooling = nn.AdaptiveMaxPool1d(1)
 
@@ -43,6 +70,19 @@ class Encoder(nn.Module):
         x = self.conv3(x)
         x = self.relu3(x)
         x = self.dropout3(x)
+
+        if self.num_layers == 6:
+            x = self.conv4(x)
+            x = self.relu4(x)
+            x = self.dropout4(x)
+
+            x = self.conv5(x)
+            x = self.relu5(x)
+            x = self.dropout5(x)
+
+            x = self.conv6(x)
+            x = self.relu6(x)
+            x = self.dropout6(x)
 
         x = self.global_max_pooling(x)
         x = x.squeeze(-1)
@@ -75,13 +115,13 @@ class SimCLRNet(nn.Module):
     https://arxiv.org/abs/1911.05722
     """
 
-    def __init__(self, input_channels=3, z_dim=96, out_dim=50, T=0.1, mlp=True):
+    def __init__(self, input_channels=3, z_dim=96, out_dim=50, T=0.1, num_layers=3, mlp=True):
         super(SimCLRNet, self).__init__()
         self.T = T
 
         # create the encoders
         # num_classes is the output fc dimension
-        self.encoder = Encoder(input_channels, z_dim)
+        self.encoder = Encoder(input_channels, z_dim, num_layers)
 
         if mlp:  # hack: brute-force replacement
             self.encoder = Classifier(self.encoder, in_dim=z_dim, out_dim=out_dim)
@@ -145,9 +185,9 @@ class ClassificationHead(nn.Module):
 
 
 class SimCLRClassifier(nn.Module):
-    def __init__(self, input_channels, z_dim, num_cls, mlp=True):
+    def __init__(self, input_channels, z_dim, num_cls, num_layers, mlp=True):
         super(SimCLRClassifier, self).__init__()
-        self.base_model = Encoder(input_channels, z_dim)
+        self.base_model = Encoder(input_channels, z_dim, num_layers)
         self.classifier = ClassificationHead(z_dim, z_dim, num_cls, mlp)
 
     def forward(self, x):
@@ -189,11 +229,12 @@ class SimCLR1DLearner:
                 self.cfg.z_dim,
                 self.cfg.out_dim,
                 self.cfg.T,
+                self.cfg.num_layers,
                 self.cfg.mlp,
             )
         elif self.cfg.mode == "finetune" or self.cfg.mode == "eval_finetune":
             net = SimCLRClassifier(
-                self.cfg.input_channels, self.cfg.z_dim, self.cfg.num_cls, self.cfg.mlp
+                self.cfg.input_channels, self.cfg.z_dim, self.cfg.num_cls, self.cfg.num_layers, self.cfg.mlp
             )
 
         # DDP setting
