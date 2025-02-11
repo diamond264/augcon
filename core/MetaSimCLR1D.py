@@ -15,6 +15,12 @@ from torch.utils.data import DataLoader, DistributedSampler
 
 # from torch.utils.tensorboard import SummaryWriter
 
+import time
+import pynvml
+
+pynvml.nvmlInit()
+gpu_handle = pynvml.nvmlDeviceGetHandleByIndex(7)
+
 
 class Adversary_Negatives(nn.Module):
     def __init__(self, bank_size, dim):
@@ -543,7 +549,6 @@ class MetaSimCLR1DLearner:
     def log(self, rank, logs, log_txt):
         if rank == 0:
             logs.append(log_txt)
-            print(log_txt)
 
     def main_worker(
         self,
@@ -870,6 +875,7 @@ class MetaSimCLR1DLearner:
                     test_sampler.set_epoch(epoch)
 
                 if self.cfg.mode == "pretrain":
+                    start_time = time.time()
                     supports = []
                     queries = []
                     pos_supports = []
@@ -898,6 +904,7 @@ class MetaSimCLR1DLearner:
                         queries = queries + multi_cond_queries
                         pos_supports = pos_supports + multi_cond_pos_supports
                         pos_queries = pos_queries + multi_cond_pos_queries
+                    print(f"Task generation time: {time.time() - start_time}")
 
                     self.pretrain(
                         rank,
@@ -914,6 +921,8 @@ class MetaSimCLR1DLearner:
                         self.cfg.epochs,
                         logs,
                     )
+                    epoch_time = time.time() - start_time
+                    print(f"Epoch time: {epoch_time}")
 
                     # if len(val_dataset) > 0:
                     #     loss_ep = self.validate_pretrain(rank, net, val_loader, criterion, logs)
@@ -957,27 +966,6 @@ class MetaSimCLR1DLearner:
 
                     # if len(val_dataset) > 0:
                     #     self.validate_finetune(rank, net, val_loader, criterion, logs)
-
-                if rank == 0 and (epoch + 1) % self.cfg.save_freq == 0:
-                    ckpt_dir = self.cfg.ckpt_dir
-                    ckpt_filename = "checkpoint_{:04d}.pth.tar".format(epoch)
-                    ckpt_filename = os.path.join(ckpt_dir, ckpt_filename)
-                    state_dict = net.state_dict()
-                    membank_filename = "membank_{:04d}.pth.tar".format(epoch)
-                    membank_filename = os.path.join(ckpt_dir, membank_filename)
-                    membank_state_dict = memory_bank.state_dict()
-                    if world_size > 1:
-                        for k, v in list(state_dict.items()):
-                            if "module." in k:
-                                state_dict[k.replace("module.", "")] = v
-                                del state_dict[k]
-                    self.save_checkpoint(ckpt_filename, epoch, state_dict, optimizer)
-                    self.save_checkpoint(
-                        membank_filename, epoch, membank_state_dict, membank_optimizer
-                    )
-
-            if self.cfg.mode == "finetune":
-                self.validate_finetune(rank, net, test_loader, criterion, logs)
 
     def split_per_domain(self, dataset):
         indices_per_domain = defaultdict(list)
@@ -1191,23 +1179,15 @@ class MetaSimCLR1DLearner:
                 q_losses_enc.append(q_loss_enc)
                 q_losses_mem.append(q_loss_mem)
 
-                if task_idx % self.cfg.log_freq == 0:
-                    acc = self.accuracy(q_logits_enc, q_targets_enc, topk=(1, 5))
-                    log = f"Epoch [{epoch+1}/{num_epochs}]  \t({task_idx}/{len(supports)}) "
-                    log += f"Loss: {q_loss_enc.item():.4f}, Acc(1): {acc[0].item():.2f}, Acc(5): {acc[1].item():.2f}"
-                    self.log(rank, logs, log)
-
             else:
                 q_logits, q_targets = net(query, pos_query, fast_weights)
                 q_loss = criterion(q_logits, q_targets)
                 q_losses.append(q_loss)
 
-                if task_idx % self.cfg.log_freq == 0:
-                    acc = self.accuracy(q_logits, q_targets, topk=(1, 5))
-                    log = f"Epoch [{epoch+1}/{num_epochs}]  \t({task_idx}/{len(supports)}) "
-                    log += f"Loss: {q_loss.item():.4f}, Acc(1): {acc[0].item():.2f}, Acc(5): {acc[1].item():.2f}"
-                    self.log(rank, logs, log)
-
+        gpu_utilization = pynvml.nvmlDeviceGetUtilizationRates(gpu_handle).gpu
+        gpu_memory = pynvml.nvmlDeviceGetMemoryInfo(gpu_handle)
+        print("GPU Utilization: ", gpu_utilization)
+        print("GPU Memory: ", gpu_memory.used / 1024**2)
         if self.cfg.adapt_w_neg:
             q_losses_enc = torch.stack(q_losses_enc, dim=0)
             q_losses_mem = torch.stack(q_losses_mem, dim=0)
@@ -1246,6 +1226,10 @@ class MetaSimCLR1DLearner:
             loss.backward()
             optimizer.step()
             # self.log(rank, logs, f"Epoch [{epoch+1}/{num_epochs}] {loss.item():.4f}")
+        gpu_utilization = pynvml.nvmlDeviceGetUtilizationRates(gpu_handle).gpu
+        gpu_memory = pynvml.nvmlDeviceGetMemoryInfo(gpu_handle)
+        print("GPU Utilization: ", gpu_utilization)
+        print("GPU Memory: ", gpu_memory.used / 1024**2)
 
     def meta_train(
         self,
@@ -1437,7 +1421,6 @@ class MetaSimCLR1DLearner:
                     log = f"Epoch [{epoch+1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) "
                     log += f"\tLoss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}"
                     logs.append(log)
-                    print(log)
 
             optimizer.zero_grad()
             loss.backward()
@@ -1473,7 +1456,6 @@ class MetaSimCLR1DLearner:
                 log = f"[Finetune] Validation Loss: {total_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}"
                 log += f", F1: {f1.item():.2f}, Recall: {recall.item():.2f}, Precision: {precision.item():.2f}"
                 logs.append(log)
-                print(log)
 
     def visualize(self, rank, net, val_loader, criterion, logs, writer, tag):
         net.eval()

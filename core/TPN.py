@@ -13,6 +13,12 @@ from collections import defaultdict
 from torch.utils.data import DataLoader, Dataset, DistributedSampler
 from torch.optim.lr_scheduler import StepLR
 
+import time
+import pynvml
+
+pynvml.nvmlInit()
+gpu_handle = pynvml.nvmlDeviceGetHandleByIndex(7)
+
 
 class Encoder(nn.Module):
     def __init__(self, input_channels, z_dim=96):
@@ -203,31 +209,12 @@ class TPNLearner:
                 num_workers=self.cfg.num_workers,
                 drop_last=False,
             )
-            test_loader = DataLoader(
-                test_dataset,
-                batch_size=self.cfg.batch_size,  # //world_size,
-                shuffle=False,
-                sampler=test_sampler,
-                collate_fn=collate_fn,
-                num_workers=self.cfg.num_workers,
-                drop_last=False,
-            )
-            if len(val_dataset) > 0:
-                val_loader = DataLoader(
-                    val_dataset,
-                    batch_size=self.cfg.batch_size,  # //world_size,
-                    shuffle=False,
-                    sampler=val_sampler,
-                    collate_fn=collate_fn,
-                    num_workers=self.cfg.num_workers,
-                    drop_last=False,
-                )
             if rank == 0:
                 log = "DDP is used for training - training {} instances for each worker".format(
                     len(list(train_sampler))
                 )
                 logs.append(log)
-                print(log)
+
         else:
             torch.cuda.set_device(rank)
             net.cuda()
@@ -242,29 +229,11 @@ class TPNLearner:
                 num_workers=self.cfg.num_workers,
                 drop_last=False,
             )
-            test_loader = DataLoader(
-                test_dataset,
-                batch_size=self.cfg.batch_size,
-                shuffle=True,
-                collate_fn=collate_fn,
-                num_workers=self.cfg.num_workers,
-                drop_last=False,
-            )
-            if len(val_dataset) > 0:
-                val_loader = DataLoader(
-                    val_dataset,
-                    batch_size=self.cfg.batch_size,
-                    shuffle=True,
-                    collate_fn=collate_fn,
-                    num_workers=self.cfg.num_workers,
-                    drop_last=False,
-                )
             if rank == 0:
                 log = "Single GPU is used for training - training {} instances for each worker".format(
                     len(train_dataset)
                 )
                 logs.append(log)
-                print(log)
 
         # self.all_domains = self.split_per_domain(train_dataset)
 
@@ -280,11 +249,9 @@ class TPNLearner:
                         self.cfg.pretrained
                     )
                     logs.append(log)
-                    print(log)
+
                 loc = "cuda:{}".format(rank)
                 state = torch.load(self.cfg.pretrained, map_location=loc)["state_dict"]
-                print(state.keys())
-                print(net.state_dict().keys())
 
                 for k, v in list(state.items()):
                     if k.startswith("encoder."):
@@ -299,19 +266,18 @@ class TPNLearner:
                 if rank == 0:
                     log = "Missing keys: {}".format(msg.missing_keys)
                     logs.append(log)
-                    print(log)
+
             else:
                 if rank == 0:
                     log = "No checkpoint found at '{}'".format(self.cfg.pretrained)
                     logs.append(log)
-                    print(log)
 
             # Freezing the encoder
             if self.cfg.freeze:
                 if rank == 0:
                     log = "Freezing the encoder"
                     logs.append(log)
-                    print(log)
+
                 for name, param in net.named_parameters():
                     if not "classifier" in name:
                         param.requires_grad = False
@@ -340,7 +306,7 @@ class TPNLearner:
             if rank == 0:
                 log = "Loading state_dict from checkpoint - {}".format(self.cfg.resume)
                 logs.append(log)
-                print(log)
+
             loc = "cuda:{}".format(rank)
             state = torch.load(self.cfg.resume, map_location=loc)
 
@@ -355,12 +321,6 @@ class TPNLearner:
             net.load_state_dict(state["state_dict"])
             optimizer.load_state_dict(state["optimizer"])
             self.cfg.start_epoch = state["epoch"]
-
-        # Handling the modes (train or eval)
-        if self.cfg.mode == "eval_pretrain":
-            self.validate_pretrain(rank, net, test_loader, criterion, logs)
-        elif self.cfg.mode == "eval_finetune":
-            self.validate_finetune(rank, net, test_loader, criterion, logs)
         else:
             loss_best = 0
             for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
@@ -381,10 +341,6 @@ class TPNLearner:
                         self.cfg.epochs,
                         logs,
                     )
-                    if len(val_dataset) > 0:
-                        loss_ep = self.validate_pretrain(
-                            rank, net, val_loader, criterion, logs
-                        )
 
                 elif self.cfg.mode == "finetune":
                     self.finetune(
@@ -413,9 +369,6 @@ class TPNLearner:
                                 del state_dict[k]
                     self.save_checkpoint(ckpt_filename, epoch, state_dict, optimizer)
 
-            if self.cfg.mode == "finetune":
-                self.validate_finetune(rank, net, test_loader, criterion, logs)
-
     def split_per_domain(self, dataset):
         indices_per_domain = defaultdict(list)
         for i, d in enumerate(dataset):
@@ -425,6 +378,7 @@ class TPNLearner:
     def pretrain(
         self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs
     ):
+        start_time = time.time()
         net.train()
 
         for batch_idx, data in enumerate(train_loader):
@@ -465,12 +419,21 @@ class TPNLearner:
                 )
                 log += f"Loss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}"  # , Acc(5): {acc5.item():.2f}'
                 logs.append(log)
-                print(log)
-
+            gpu_utilization = pynvml.nvmlDeviceGetUtilizationRates(gpu_handle).gpu
+            gpu_memory = pynvml.nvmlDeviceGetMemoryInfo(gpu_handle)
+            print("GPU Utilization: ", gpu_utilization)
+            print("GPU Memory: ", gpu_memory.used / 1024**2)
             # compute gradient and do SGD step
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+            gpu_utilization = pynvml.nvmlDeviceGetUtilizationRates(gpu_handle).gpu
+            gpu_memory = pynvml.nvmlDeviceGetMemoryInfo(gpu_handle)
+            print("GPU Utilization: ", gpu_utilization)
+            print("GPU Memory: ", gpu_memory.used / 1024**2)
+
+        epoch_time = time.time() - start_time
+        print(f"Epoch time: {epoch_time}")
 
     def validate_pretrain(self, rank, net, val_loader, criterion, logs):
         net.eval()
@@ -520,7 +483,6 @@ class TPNLearner:
             if rank == 0:
                 log = f"[Pretrain] Validation Loss: {total_loss.item():.4f}"  # , Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
                 logs.append(log)
-                print(log)
 
             return total_loss.item()
 
@@ -542,7 +504,6 @@ class TPNLearner:
                     log = f"Epoch [{epoch+1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) "
                     log += f"\tLoss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}"  # , Acc(5): {acc5.item():.2f}'
                     logs.append(log)
-                    print(log)
 
             optimizer.zero_grad()
             loss.backward()
@@ -577,7 +538,6 @@ class TPNLearner:
                 log = f"[Finetune] Validation Loss: {total_loss.item():.4f}, Acc(1): {acc1.item():.2f}"  # , Acc(5): {acc5.item():.2f}'
                 log += f", F1: {f1.item():.2f}, Recall: {recall.item():.2f}, Precision: {precision.item():.2f}"
                 logs.append(log)
-                print(log)
 
     def save_checkpoint(self, filename, epoch, state_dict, optimizer):
         directory = os.path.dirname(filename)

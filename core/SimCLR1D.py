@@ -8,9 +8,15 @@ import torchvision.models as models
 import torch.multiprocessing as mp
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from torch.optim.lr_scheduler import StepLR
+from torch.utils.data import DataLoader, Dataset, DistributedSampler
 
 # from datautils.SimCLR_dataset import subject_collate
-from torch.utils.data import DataLoader, Dataset, DistributedSampler
+
+import time
+import pynvml
+
+pynvml.nvmlInit()
+gpu_handle = pynvml.nvmlDeviceGetHandleByIndex(7)
 
 
 class Encoder(nn.Module):
@@ -196,147 +202,25 @@ class SimCLR1DLearner:
                 self.cfg.input_channels, self.cfg.z_dim, self.cfg.num_cls, self.cfg.mlp
             )
 
-        # DDP setting
-        if world_size > 1:
-            dist.init_process_group(
-                backend="nccl",
-                init_method=self.cfg.dist_url,
-                world_size=world_size,
-                rank=rank,
-            )
-            torch.cuda.set_device(rank)
-            net.cuda()
-            net = nn.parallel.DistributedDataParallel(
-                net, device_ids=[rank], find_unused_parameters=True
-            )
+        torch.cuda.set_device(rank)
+        net.cuda()
 
-            train_sampler = DistributedSampler(train_dataset)
-            if len(val_dataset) > 0:
-                val_sampler = DistributedSampler(val_dataset)
-            test_sampler = DistributedSampler(test_dataset)
-
-            # collate_fn = subject_collate if self.cfg.mode == 'pretrain' else None
-            collate_fn = None
-            train_loader = DataLoader(
-                train_dataset,
-                batch_size=self.cfg.batch_size,  # //world_size,
-                shuffle=False,
-                sampler=train_sampler,
-                collate_fn=collate_fn,
-                num_workers=self.cfg.num_workers,
-                drop_last=False,
-            )
-            test_loader = DataLoader(
-                test_dataset,
-                batch_size=self.cfg.batch_size,  # //world_size,
-                shuffle=False,
-                sampler=test_sampler,
-                collate_fn=collate_fn,
-                num_workers=self.cfg.num_workers,
-                drop_last=False,
-            )
-            if len(val_dataset) > 0:
-                val_loader = DataLoader(
-                    val_dataset,
-                    batch_size=self.cfg.batch_size // world_size,
-                    shuffle=False,
-                    sampler=val_sampler,
-                    collate_fn=collate_fn,
-                    num_workers=self.cfg.num_workers,
-                    drop_last=False,
-                )
-            if rank == 0:
-                log = "DDP is used for training - training {} instances for each worker".format(
-                    len(list(train_sampler))
-                )
-                logs.append(log)
-                print(log)
-        else:
-            torch.cuda.set_device(rank)
-            net.cuda()
-
-            # collate_fn = subject_collate if self.cfg.mode == 'pretrain' else None
-            collate_fn = None
-            train_loader = DataLoader(
-                train_dataset,
-                batch_size=self.cfg.batch_size,
-                shuffle=True,
-                collate_fn=collate_fn,
-                num_workers=self.cfg.num_workers,
-                drop_last=False,
-            )
-            test_loader = DataLoader(
-                test_dataset,
-                batch_size=self.cfg.batch_size,
-                shuffle=True,
-                collate_fn=collate_fn,
-                num_workers=self.cfg.num_workers,
-                drop_last=False,
-            )
-            if len(val_dataset) > 0:
-                val_loader = DataLoader(
-                    val_dataset,
-                    batch_size=self.cfg.batch_size,
-                    shuffle=True,
-                    collate_fn=collate_fn,
-                    num_workers=self.cfg.num_workers,
-                    drop_last=False,
-                )
-            if rank == 0:
-                log = "Single GPU is used for training - training {} instances for each worker".format(
-                    len(train_dataset)
-                )
-                logs.append(log)
-                print(log)
+        # collate_fn = subject_collate if self.cfg.mode == 'pretrain' else None
+        collate_fn = None
+        train_loader = DataLoader(
+            train_dataset,
+            batch_size=self.cfg.batch_size,
+            shuffle=True,
+            collate_fn=collate_fn,
+            num_workers=self.cfg.num_workers,
+            drop_last=False,
+        )
 
         self.all_domains = self.split_per_domain(train_dataset)
 
         # Define criterion
         if self.cfg.criterion == "crossentropy":
             criterion = nn.CrossEntropyLoss().cuda()
-
-        # For finetuning, load pretrained model
-        if self.cfg.mode == "finetune":
-            if os.path.isfile(self.cfg.pretrained):
-                if rank == 0:
-                    log = "Loading pretrained model from checkpoint - {}".format(
-                        self.cfg.pretrained
-                    )
-                    logs.append(log)
-                    print(log)
-                loc = "cuda:{}".format(rank)
-                state = torch.load(self.cfg.pretrained, map_location=loc)["state_dict"]
-
-                for k, v in list(state.items()):
-                    if k.startswith("encoder."):
-                        k = k[len("encoder.") :]
-                    if world_size > 1:
-                        k = "module." + k
-                    if k in net.state_dict().keys():
-                        state[k] = v
-
-                msg = net.load_state_dict(state, strict=False)
-                if rank == 0:
-                    log = "Missing keys: {}".format(msg.missing_keys)
-                    logs.append(log)
-                    print(log)
-            else:
-                if rank == 0:
-                    log = "No checkpoint found at '{}'".format(self.cfg.pretrained)
-                    logs.append(log)
-                    print(log)
-
-            # Freezing the encoder
-            if self.cfg.freeze:
-                if rank == 0:
-                    log = "Freezing the encoder"
-                    logs.append(log)
-                    print(log)
-                for name, param in net.named_parameters():
-                    if not "classifier" in name:
-                        param.requires_grad = False
-                    else:
-                        param.requires_grad = True
 
         parameters = list(filter(lambda p: p.requires_grad, net.parameters()))
         if self.cfg.optimizer == "sgd":
@@ -360,87 +244,26 @@ class SimCLR1DLearner:
                 optimizer, T_max=self.cfg.epochs, eta_min=0, last_epoch=-1
             )
 
-        # Load checkpoint if exists
-        if os.path.isfile(self.cfg.resume):
-            if rank == 0:
-                log = "Loading state_dict from checkpoint - {}".format(self.cfg.resume)
-                logs.append(log)
-                print(log)
-            loc = "cuda:{}".format(rank)
-            state = torch.load(self.cfg.resume, map_location=loc)
+        loss_best = 0
+        for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
+            if world_size > 1:
+                train_sampler.set_epoch(epoch)
+                if len(val_dataset) > 0:
+                    val_sampler.set_epoch(epoch)
+                test_sampler.set_epoch(epoch)
 
-            for k, v in list(state["state_dict"].items()):
-                if world_size > 1:
-                    new_k = "module." + k
-                if new_k in net.state_dict().keys():
-                    state["state_dict"][new_k] = v
-                if k not in net.state_dict().keys():
-                    state["state_dict"].pop(k, None)
-
-            net.load_state_dict(state["state_dict"])
-            optimizer.load_state_dict(state["optimizer"])
-            self.cfg.start_epoch = state["epoch"]
-
-        # Handling the modes (train or eval)
-        if self.cfg.mode == "eval_pretrain":
-            self.validate_pretrain(rank, net, test_loader, criterion, logs)
-        elif self.cfg.mode == "eval_finetune":
-            self.validate_finetune(rank, net, test_loader, criterion, logs)
-        else:
-            loss_best = 0
-            for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
-                if world_size > 1:
-                    train_sampler.set_epoch(epoch)
-                    if len(val_dataset) > 0:
-                        val_sampler.set_epoch(epoch)
-                    test_sampler.set_epoch(epoch)
-
-                if self.cfg.mode == "pretrain":
-                    self.pretrain(
-                        rank,
-                        net,
-                        train_loader,
-                        criterion,
-                        optimizer,
-                        scheduler,
-                        epoch,
-                        self.cfg.epochs,
-                        logs,
-                    )
-                    if len(val_dataset) > 0:
-                        loss_ep = self.validate_pretrain(
-                            rank, net, val_loader, criterion, logs
-                        )
-
-                elif self.cfg.mode == "finetune":
-                    self.finetune(
-                        rank,
-                        net,
-                        train_loader,
-                        criterion,
-                        optimizer,
-                        epoch,
-                        self.cfg.epochs,
-                        logs,
-                    )
-                    scheduler.step()
-                    # if len(val_dataset) > 0:
-                    #     self.validate_finetune(rank, net, val_loader, criterion, logs)
-
-                if rank == 0 and (epoch + 1) % self.cfg.save_freq == 0:
-                    ckpt_dir = self.cfg.ckpt_dir
-                    ckpt_filename = "checkpoint_{:04d}.pth.tar".format(epoch)
-                    ckpt_filename = os.path.join(ckpt_dir, ckpt_filename)
-                    state_dict = net.state_dict()
-                    if world_size > 1:
-                        for k, v in list(state_dict.items()):
-                            if "module." in k:
-                                state_dict[k.replace("module.", "")] = v
-                                del state_dict[k]
-                    self.save_checkpoint(ckpt_filename, epoch, state_dict, optimizer)
-
-            if self.cfg.mode == "finetune":
-                self.validate_finetune(rank, net, test_loader, criterion, logs)
+            if self.cfg.mode == "pretrain":
+                self.pretrain(
+                    rank,
+                    net,
+                    train_loader,
+                    criterion,
+                    optimizer,
+                    scheduler,
+                    epoch,
+                    self.cfg.epochs,
+                    logs,
+                )
 
     def split_per_domain(self, dataset):
         domains = []
@@ -462,6 +285,7 @@ class SimCLR1DLearner:
         num_epochs,
         logs,
     ):
+        start_time = time.time()
         net.train()
 
         for batch_idx, data in enumerate(train_loader):
@@ -496,13 +320,20 @@ class SimCLR1DLearner:
                 )
                 log += f"Loss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}"  # , Acc(5): {acc5.item():.2f}'
                 logs.append(log)
-                print(log)
 
             # compute gradient and do SGD step
+            gpu_utilization = pynvml.nvmlDeviceGetUtilizationRates(gpu_handle).gpu
+            print("GPU Utilization: ", gpu_utilization)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             scheduler.step()
+            gpu_utilization = pynvml.nvmlDeviceGetUtilizationRates(gpu_handle).gpu
+            gpu_memory = pynvml.nvmlDeviceGetMemoryInfo(gpu_handle)
+            print("GPU Utilization: ", gpu_utilization)
+            print("GPU Memory: ", gpu_memory.used / 1024**2)
+        epoch_time = time.time() - start_time
+        print(f"Epoch time: {epoch_time}")
 
     def validate_pretrain(self, rank, net, val_loader, criterion, logs):
         net.eval()
@@ -546,7 +377,6 @@ class SimCLR1DLearner:
             if rank == 0:
                 log = f"[Pretrain] Validation Loss: {total_loss.item():.4f}"  # , Acc(1): {acc1.item():.2f}, Acc(5): {acc5.item():.2f}'
                 logs.append(log)
-                print(log)
 
             return total_loss.item()
 
@@ -568,7 +398,6 @@ class SimCLR1DLearner:
                     log = f"Epoch [{epoch+1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) "
                     log += f"\tLoss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}"  # , Acc(5): {acc5.item():.2f}'
                     logs.append(log)
-                    print(log)
 
             optimizer.zero_grad()
             loss.backward()
@@ -603,7 +432,6 @@ class SimCLR1DLearner:
                 log = f"[Finetune] Validation Loss: {total_loss.item():.4f}, Acc(1): {acc1.item():.2f}"  # , Acc(5): {acc5.item():.2f}'
                 log += f", F1: {f1.item():.2f}, Recall: {recall.item():.2f}, Precision: {precision.item():.2f}"
                 logs.append(log)
-                print(log)
 
     def save_checkpoint(self, filename, epoch, state_dict, optimizer):
         directory = os.path.dirname(filename)

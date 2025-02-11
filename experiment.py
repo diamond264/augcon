@@ -65,20 +65,7 @@ class Experiment:
         self.logger.info(f"GPUs {self.gpu} will be used")
 
     def configure_random_seed(self):
-        cudnn.benchmark = True
-        if not self.cfg.seed is None:
-            random.seed(self.cfg.seed)
-            torch.manual_seed(self.cfg.seed)
-            np.random.seed(self.cfg.seed)
-            cudnn.benchmark = False
-            cudnn.deterministic = True
-            torch.cuda.manual_seed_all(self.cfg.seed)
-
-            self.logger.warning("You have chosen to seed training. ")
-            self.logger.warning("This will turn on the CUDNN deterministic setting, ")
-            self.logger.warning("which can slow down your training considerably! ")
-            self.logger.warning("You may see unexpected behavior when restarting ")
-            self.logger.warning("from checkpoints.")
+        pass
 
     def run(self):
         # Model creation
@@ -109,20 +96,11 @@ class Experiment:
         else:
             self.logger.warning("Pretext task not supported")
 
-        # Loading dataset
-        if self.cfg.mode == "finetune":
-            episodes = self.cfg.episodes
-        else:
-            episodes = 1
-        for episode in range(episodes):
-            self.logger.info(f"================= Episode {episode} =================")
-            default_data_loader = DefaultDataLoader(self.cfg, self.logger)
-            train_dataset, val_dataset, test_dataset = (
-                default_data_loader.get_datasets()
-            )
+        default_data_loader = DefaultDataLoader(self.cfg, self.logger)
+        train_dataset, val_dataset, test_dataset = default_data_loader.get_datasets()
 
-            # Start training
-            learner.run(train_dataset, val_dataset, test_dataset)  # , neg_dataset)
+        # Start training
+        learner.run(train_dataset, val_dataset, test_dataset)  # , neg_dataset)
 
 
 if __name__ == "__main__":

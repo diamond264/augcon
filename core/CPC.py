@@ -13,6 +13,12 @@ from torch.utils.data import DataLoader
 from torch.utils.data import DistributedSampler
 from torch.optim.lr_scheduler import StepLR
 
+import time
+import pynvml
+
+pynvml.nvmlInit()
+gpu_handle = pynvml.nvmlDeviceGetHandleByIndex(7)
+
 # reference:
 # https://github.com/facebookresearch/fairseq/blob/176cd934982212a4f75e0669ee81b834ee71dbb0/fairseq/models/wav2vec/wav2vec.py#L431
 
@@ -568,6 +574,7 @@ class CPCLearner:
     def pretrain(
         self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs
     ):
+        start_time = time.time()
         net.train()
 
         for batch_idx, data in enumerate(train_loader):
@@ -601,10 +608,20 @@ class CPCLearner:
                     logs.append(log)
                     print(log)
 
+            gpu_utilization = pynvml.nvmlDeviceGetUtilizationRates(gpu_handle).gpu
+            gpu_memory = pynvml.nvmlDeviceGetMemoryInfo(gpu_handle)
+            print("GPU Utilization: ", gpu_utilization)
+            print("GPU Memory: ", gpu_memory.used / 1024**2)
             # compute gradient and do SGD step
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+            gpu_utilization = pynvml.nvmlDeviceGetUtilizationRates(gpu_handle).gpu
+            gpu_memory = pynvml.nvmlDeviceGetMemoryInfo(gpu_handle)
+            print("GPU Utilization: ", gpu_utilization)
+            print("GPU Memory: ", gpu_memory.used / 1024**2)
+        epoch_time = time.time() - start_time
+        print(f"Epoch time: {epoch_time}")
 
     def validate_pretrain(self, rank, net, val_loader, criterion, logs):
         net.eval()

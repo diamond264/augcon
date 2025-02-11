@@ -17,6 +17,13 @@ from collections import defaultdict
 from torch.utils.tensorboard import SummaryWriter
 
 
+import time
+import pynvml
+
+pynvml.nvmlInit()
+gpu_handle = pynvml.nvmlDeviceGetHandleByIndex(7)
+
+
 # reference:
 # https://github.com/facebookresearch/fairseq/blob/176cd934982212a4f75e0669ee81b834ee71dbb0/fairseq/models/wav2vec/wav2vec.py#L431
 class Encoder(nn.Module):
@@ -519,7 +526,7 @@ class MetaCPCLearner:
                     len(list(train_sampler))
                 )
                 logs.append(log)
-                print(log)
+
         else:
             torch.cuda.set_device(rank)
             net.cuda()
@@ -554,7 +561,6 @@ class MetaCPCLearner:
                     len(train_dataset)
                 )
                 logs.append(log)
-                print(log)
 
         # Define criterion
         if self.cfg.criterion == "crossentropy":
@@ -581,7 +587,7 @@ class MetaCPCLearner:
                         self.cfg.resume
                     )
                     logs.append(log)
-                    print(log)
+
                 loc = "cuda:{}".format(rank)
                 state = torch.load(self.cfg.resume, map_location=loc)
                 for k, v in list(state["state_dict"].items()):
@@ -601,6 +607,7 @@ class MetaCPCLearner:
                 if world_size > 1:
                     train_sampler.set_epoch(epoch)
 
+                start_time = time.time()
                 supports = []
                 queries = []
                 if self.cfg.task_per_domain:
@@ -618,6 +625,7 @@ class MetaCPCLearner:
                     )
                     supports = supports + multi_cond_supports
                     queries = queries + multi_cond_queries
+                print(f"Task generation time: {time.time() - start_time}")
 
                 self.pretrain(
                     rank,
@@ -630,6 +638,8 @@ class MetaCPCLearner:
                     self.cfg.epochs,
                     logs,
                 )
+                epoch_time = time.time() - start_time
+                print(f"Epoch time: {epoch_time}")
 
                 if rank == 0 and (epoch + 1) % self.cfg.save_freq == 0:
                     ckpt_dir = self.cfg.ckpt_dir
@@ -672,7 +682,7 @@ class MetaCPCLearner:
                             self.cfg.pretrained
                         )
                         logs.append(log)
-                        print(log)
+
                     loc = "cuda:{}".format(rank)
                     state = torch.load(self.cfg.pretrained, map_location=loc)[
                         "state_dict"
@@ -695,14 +705,13 @@ class MetaCPCLearner:
                     if rank == 0:
                         log = "Missing keys: {}".format(msg.missing_keys)
                         logs.append(log)
-                        print(log)
 
                 # Meta-train the pretrained model for domain adaptation
                 if self.cfg.domain_adaptation:
                     if rank == 0:
                         log = "Perform domain adaptation step"
                         logs.append(log)
-                        print(log)
+
                     if world_size > 1:
                         train_sampler.set_epoch(0)
                     # net.train()
@@ -719,7 +728,6 @@ class MetaCPCLearner:
                 if rank == 0:
                     log = "Loading encoder parameters to the classifier"
                     logs.append(log)
-                    print(log)
 
                 enc_dict = {}
                 for idx, k in enumerate(list(cls_net.state_dict().keys())):
@@ -730,14 +738,14 @@ class MetaCPCLearner:
                 if rank == 0:
                     log = "Missing keys: {}".format(msg.missing_keys)
                     logs.append(log)
-                    print(log)
+
             else:
                 if rank == 0:
                     log = "Loading state_dict from checkpoint - {}".format(
                         self.cfg.resume
                     )
                     logs.append(log)
-                    print(log)
+
                 loc = "cuda:{}".format(rank)
                 state = torch.load(self.cfg.resume, map_location=loc)
                 for k, v in list(state["state_dict"].items()):
@@ -811,7 +819,7 @@ class MetaCPCLearner:
                         dataset, indices[task_size : 2 * task_size]
                     )
                     query = [e[0] for e in query]
-                    print(query)
+
                     query = torch.stack(query, dim=0)
                     supports.append(support)
                     queries.append(query)
@@ -893,7 +901,6 @@ class MetaCPCLearner:
         log = f"Epoch [{epoch+1}/{num_epochs}]"
         if rank == 0:
             logs.append(log)
-            print(log)
 
         q_losses = []
         for task_idx in range(len(supports)):
@@ -919,8 +926,11 @@ class MetaCPCLearner:
                 log += f"Loss: {q_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(3): {acc3.item():.2f}"
                 if rank == 0:
                     logs.append(log)
-                    print(log)
 
+        gpu_utilization = pynvml.nvmlDeviceGetUtilizationRates(gpu_handle).gpu
+        gpu_memory = pynvml.nvmlDeviceGetMemoryInfo(gpu_handle)
+        print("GPU Utilization: ", gpu_utilization)
+        print("GPU Memory: ", gpu_memory.used / 1024**2)
         q_losses = torch.stack(q_losses, dim=0)
         loss = torch.sum(q_losses)
         # reg_term = torch.sum((q_losses - torch.mean(q_losses))**2)
@@ -929,6 +939,10 @@ class MetaCPCLearner:
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        gpu_utilization = pynvml.nvmlDeviceGetUtilizationRates(gpu_handle).gpu
+        gpu_memory = pynvml.nvmlDeviceGetMemoryInfo(gpu_handle)
+        print("GPU Utilization: ", gpu_utilization)
+        print("GPU Memory: ", gpu_memory.used / 1024**2)
 
     def finetune(
         self, rank, net, train_loader, criterion, optimizer, epoch, num_epochs, logs
@@ -949,7 +963,6 @@ class MetaCPCLearner:
                     log = f"Epoch [{epoch+1}/{num_epochs}]-({batch_idx}/{len(train_loader)}) "
                     log += f"Loss: {loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(3): {acc3.item():.2f}"
                     logs.append(log)
-                    print(log)
 
             optimizer.zero_grad()
             loss.backward()
@@ -969,7 +982,6 @@ class MetaCPCLearner:
                 acc1, acc3 = self.accuracy(s_logits, s_targets, topk=(1, 3))
                 log = f"\tmeta-train [{i}/{self.cfg.task_steps}] Loss: {s_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(3): {acc3.item():.2f}"
                 logs.append(log)
-                print(log)
 
         return fast_weights
 
@@ -999,7 +1011,6 @@ class MetaCPCLearner:
             log = f"\tValidation Loss: {total_loss.item():.4f}, Acc(1): {acc1.item():.2f}, Acc(3): {acc3.item():.2f}"
             log += f", F1: {f1.item():.2f}, Recall: {recall.item():.2f}, Precision: {precision.item():.2f}"
             logs.append(log)
-            print(log)
 
     def visualize(self, rank, net, val_loader, criterion, logs, writer, tag):
         net.eval()

@@ -16,6 +16,12 @@ from torch.utils.data import DataLoader, Dataset, DistributedSampler
 
 from torch.utils.tensorboard import SummaryWriter
 
+import time
+import pynvml
+
+pynvml.nvmlInit()
+gpu_handle = pynvml.nvmlDeviceGetHandleByIndex(7)
+
 
 class Encoder(nn.Module):
     def __init__(self, input_channels, z_dim):
@@ -358,21 +364,6 @@ class MetaTPNLearner:
                     num_workers=self.cfg.num_workers,
                     drop_last=False,
                 )
-                if len(val_dataset) > 0:
-                    val_loader = DataLoader(
-                        val_dataset,
-                        batch_size=self.cfg.batch_size,
-                        shuffle=True,
-                        num_workers=self.cfg.num_workers,
-                        drop_last=False,
-                    )
-                test_loader = DataLoader(
-                    test_dataset,
-                    batch_size=self.cfg.batch_size,
-                    shuffle=True,
-                    num_workers=self.cfg.num_workers,
-                    drop_last=False,
-                )
             meta_train_dataset = train_dataset
             if rank == 0:
                 log = "Single GPU is used for training - training {} instances for each worker".format(
@@ -423,6 +414,7 @@ class MetaTPNLearner:
             indices_per_domain = self.split_per_domain(meta_train_dataset)
 
             for epoch in range(self.cfg.start_epoch, self.cfg.epochs):
+                start_time = time.time()
                 if world_size > 1:
                     train_sampler.set_epoch(epoch)
 
@@ -454,6 +446,7 @@ class MetaTPNLearner:
                     queries = queries + multi_cond_queries
                     target_supports = target_supports + target_multi_cond_supports
                     target_queries = target_queries + target_multi_cond_queries
+                print(f"Task generation time: {time.time() - start_time}")
 
                 self.pretrain(
                     rank,
@@ -468,6 +461,8 @@ class MetaTPNLearner:
                     self.cfg.epochs,
                     logs,
                 )
+                epoch_time = time.time() - start_time
+                print(f"Epoch time: {epoch_time}")
 
                 if rank == 0 and (epoch + 1) % self.cfg.save_freq == 0:
                     ckpt_dir = self.cfg.ckpt_dir
@@ -857,6 +852,10 @@ class MetaTPNLearner:
                     logs.append(log)
                     print(log)
 
+        gpu_utilization = pynvml.nvmlDeviceGetUtilizationRates(gpu_handle).gpu
+        gpu_memory = pynvml.nvmlDeviceGetMemoryInfo(gpu_handle)
+        print("GPU Utilization: ", gpu_utilization)
+        print("GPU Memory: ", gpu_memory.used / 1024**2)
         q_losses = torch.stack(q_losses, dim=0)
         loss = torch.sum(q_losses)
         # reg_term = torch.sum((q_losses - torch.mean(q_losses))**2)
@@ -865,6 +864,10 @@ class MetaTPNLearner:
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        gpu_utilization = pynvml.nvmlDeviceGetUtilizationRates(gpu_handle).gpu
+        gpu_memory = pynvml.nvmlDeviceGetMemoryInfo(gpu_handle)
+        print("GPU Utilization: ", gpu_utilization)
+        print("GPU Memory: ", gpu_memory.used / 1024**2)
 
     def meta_train(
         self,
