@@ -2,7 +2,6 @@ import torch
 from torch.utils.data import Dataset
 
 import numpy as np
-import pandas as pd
 from data_loader.transforms import *
 
 NOISE_POS = 0
