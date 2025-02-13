@@ -237,6 +237,9 @@ class SimCLR1DLearner:
                 self.cfg.input_channels, self.cfg.z_dim, self.cfg.num_cls, self.cfg.num_layers, self.cfg.mlp
             )
 
+        num_params = sum(p.numel() for p in net.parameters())
+        print(f"Number of parameters : {num_params}")
+
         # DDP setting
         if world_size > 1:
             dist.init_process_group(
