@@ -1,0 +1,226 @@
+Idle CPU Usage: 97.8%
+Idle RAM Usage: 31558.54 MB
+Idle CPU Usage: 96.9%
+Idle RAM Usage: 31533.08 MB
+Idle CPU Usage: 97.9%
+Idle RAM Usage: 31617.32 MB
+Idle CPU Usage: 98.4%
+Idle RAM Usage: 31623.97 MB
+Idle CPU Usage: 99.3%
+Idle RAM Usage: 31532.96 MB
+Idle CPU Usage: 98.5%
+Idle RAM Usage: 31495.01 MB
+Idle CPU Usage: 98.6%
+Idle RAM Usage: 31749.25 MB
+Idle CPU Usage: 97.3%
+Idle RAM Usage: 31902.75 MB
+Idle CPU Usage: 98.2%
+Idle RAM Usage: 31735.28 MB
+Idle CPU Usage: 98.8%
+Idle RAM Usage: 31677.63 MB
+Executing MetaSimCLR
+Domain Adaptation [0/10]
+Domain Adaptation CPU Usage: 96.7%
+Domain Adaptation RAM Usage: 31632.24 MB
+Domain Adaptation [1/10]
+Domain Adaptation CPU Usage: 100.0%
+Domain Adaptation RAM Usage: 31674.53 MB
+Domain Adaptation [2/10]
+Domain Adaptation CPU Usage: 100.0%
+Domain Adaptation RAM Usage: 31655.69 MB
+Domain Adaptation [3/10]
+Domain Adaptation CPU Usage: 100.0%
+Domain Adaptation RAM Usage: 31640.33 MB
+Domain Adaptation [4/10]
+Domain Adaptation CPU Usage: 93.7%
+Domain Adaptation RAM Usage: 31625.88 MB
+Domain Adaptation [5/10]
+Domain Adaptation CPU Usage: 99.1%
+Domain Adaptation RAM Usage: 31700.83 MB
+Domain Adaptation [6/10]
+Domain Adaptation CPU Usage: 99.4%
+Domain Adaptation RAM Usage: 31775.92 MB
+Domain Adaptation [7/10]
+Domain Adaptation CPU Usage: 100.0%
+Domain Adaptation RAM Usage: 31818.24 MB
+Domain Adaptation [8/10]
+Domain Adaptation CPU Usage: 100.0%
+Domain Adaptation RAM Usage: 31831.92 MB
+Domain Adaptation [9/10]
+Domain Adaptation CPU Usage: 98.6%
+Domain Adaptation RAM Usage: 31854.17 MB
+Domain Adaptation Time: 1.1303579807281494
+Finetune [1/20]
+Finetune CPU Usage: 96.2%
+Finetune RAM Usage: 31983.64 MB
+Finetune [2/20]
+Finetune CPU Usage: 97.0%
+Finetune RAM Usage: 31874.97 MB
+Finetune [3/20]
+Finetune CPU Usage: 97.9%
+Finetune RAM Usage: 31798.42 MB
+Finetune [4/20]
+Finetune CPU Usage: 97.3%
+Finetune RAM Usage: 31766.29 MB
+Finetune [5/20]
+Finetune CPU Usage: 97.7%
+Finetune RAM Usage: 31859.11 MB
+Finetune [6/20]
+Finetune CPU Usage: 97.4%
+Finetune RAM Usage: 31991.36 MB
+Finetune [7/20]
+Finetune CPU Usage: 98.4%
+Finetune RAM Usage: 31781.57 MB
+Finetune [8/20]
+Finetune CPU Usage: 97.1%
+Finetune RAM Usage: 31875.82 MB
+Finetune [9/20]
+Finetune CPU Usage: 97.6%
+Finetune RAM Usage: 31825.35 MB
+Finetune [10/20]
+Finetune CPU Usage: 98.0%
+Finetune RAM Usage: 31908.50 MB
+Finetune [11/20]
+Finetune CPU Usage: 96.8%
+Finetune RAM Usage: 31974.02 MB
+Finetune [12/20]
+Finetune CPU Usage: 95.0%
+Finetune RAM Usage: 32024.38 MB
+Finetune [13/20]
+Finetune CPU Usage: 97.1%
+Finetune RAM Usage: 31971.72 MB
+Finetune [14/20]
+Finetune CPU Usage: 87.7%
+Finetune RAM Usage: 32030.76 MB
+Finetune [15/20]
+Finetune CPU Usage: 92.2%
+Finetune RAM Usage: 32004.10 MB
+Finetune [16/20]
+Finetune CPU Usage: 96.3%
+Finetune RAM Usage: 32149.01 MB
+Finetune [17/20]
+Finetune CPU Usage: 95.0%
+Finetune RAM Usage: 32126.10 MB
+Finetune [18/20]
+Finetune CPU Usage: 89.6%
+Finetune RAM Usage: 31933.55 MB
+Finetune [19/20]
+Finetune CPU Usage: 96.5%
+Finetune RAM Usage: 31914.18 MB
+Finetune [20/20]
+Finetune CPU Usage: 93.8%
+Finetune RAM Usage: 31823.33 MB
+Finetune Time: 8.927679061889648
+Idle CPU Usage: 96.9%
+Idle RAM Usage: 32364.75 MB
+Idle CPU Usage: 95.4%
+Idle RAM Usage: 32645.55 MB
+Idle CPU Usage: 97.9%
+Idle RAM Usage: 32552.88 MB
+Idle CPU Usage: 98.8%
+Idle RAM Usage: 32545.42 MB
+Idle CPU Usage: 98.2%
+Idle RAM Usage: 32354.30 MB
+Idle CPU Usage: 98.9%
+Idle RAM Usage: 32188.82 MB
+Idle CPU Usage: 98.0%
+Idle RAM Usage: 32089.62 MB
+Idle CPU Usage: 98.7%
+Idle RAM Usage: 32195.08 MB
+Idle CPU Usage: 98.3%
+Idle RAM Usage: 32256.70 MB
+Idle CPU Usage: 94.6%
+Idle RAM Usage: 32255.55 MB
+Executing MetaSimCLR
+Domain Adaptation [0/10]
+Domain Adaptation CPU Usage: 97.9%
+Domain Adaptation RAM Usage: 32355.18 MB
+Domain Adaptation [1/10]
+Domain Adaptation CPU Usage: 100.0%
+Domain Adaptation RAM Usage: 32395.70 MB
+Domain Adaptation [2/10]
+Domain Adaptation CPU Usage: 100.0%
+Domain Adaptation RAM Usage: 32377.33 MB
+Domain Adaptation [3/10]
+Domain Adaptation CPU Usage: 100.0%
+Domain Adaptation RAM Usage: 32364.68 MB
+Domain Adaptation [4/10]
+Domain Adaptation CPU Usage: 100.0%
+Domain Adaptation RAM Usage: 32369.78 MB
+Domain Adaptation [5/10]
+Domain Adaptation CPU Usage: 100.0%
+Domain Adaptation RAM Usage: 32392.93 MB
+Domain Adaptation [6/10]
+Domain Adaptation CPU Usage: 100.0%
+Domain Adaptation RAM Usage: 32396.43 MB
+Domain Adaptation [7/10]
+Domain Adaptation CPU Usage: 100.0%
+Domain Adaptation RAM Usage: 32444.67 MB
+Domain Adaptation [8/10]
+Domain Adaptation CPU Usage: 100.0%
+Domain Adaptation RAM Usage: 32316.73 MB
+Domain Adaptation [9/10]
+Domain Adaptation CPU Usage: 100.0%
+Domain Adaptation RAM Usage: 32356.34 MB
+Domain Adaptation Time: 1.6143720149993896
+Finetune [1/20]
+Finetune CPU Usage: 97.1%
+Finetune RAM Usage: 32474.75 MB
+Finetune [2/20]
+Finetune CPU Usage: 98.3%
+Finetune RAM Usage: 32760.71 MB
+Finetune [3/20]
+Finetune CPU Usage: 95.0%
+Finetune RAM Usage: 32610.35 MB
+Finetune [4/20]
+Finetune CPU Usage: 98.5%
+Finetune RAM Usage: 32758.05 MB
+Finetune [5/20]
+Finetune CPU Usage: 99.0%
+Finetune RAM Usage: 32800.06 MB
+Finetune [6/20]
+Finetune CPU Usage: 96.6%
+Finetune RAM Usage: 32775.91 MB
+Finetune [7/20]
+Finetune CPU Usage: 98.8%
+Finetune RAM Usage: 32876.19 MB
+Finetune [8/20]
+Finetune CPU Usage: 97.8%
+Finetune RAM Usage: 32757.57 MB
+Finetune [9/20]
+Finetune CPU Usage: 97.5%
+Finetune RAM Usage: 32780.21 MB
+Finetune [10/20]
+Finetune CPU Usage: 98.4%
+Finetune RAM Usage: 32632.97 MB
+Finetune [11/20]
+Finetune CPU Usage: 98.9%
+Finetune RAM Usage: 32521.47 MB
+Finetune [12/20]
+Finetune CPU Usage: 97.7%
+Finetune RAM Usage: 32629.54 MB
+Finetune [13/20]
+Finetune CPU Usage: 97.0%
+Finetune RAM Usage: 32518.54 MB
+Finetune [14/20]
+Finetune CPU Usage: 98.5%
+Finetune RAM Usage: 32449.50 MB
+Finetune [15/20]
+Finetune CPU Usage: 97.0%
+Finetune RAM Usage: 32505.79 MB
+Finetune [16/20]
+Finetune CPU Usage: 96.7%
+Finetune RAM Usage: 32384.39 MB
+Finetune [17/20]
+Finetune CPU Usage: 92.5%
+Finetune RAM Usage: 32379.14 MB
+Finetune [18/20]
+Finetune CPU Usage: 98.2%
+Finetune RAM Usage: 32283.89 MB
+Finetune [19/20]
+Finetune CPU Usage: 97.6%
+Finetune RAM Usage: 32327.32 MB
+Finetune [20/20]
+Finetune CPU Usage: 97.1%
+Finetune RAM Usage: 32302.79 MB
+Finetune Time: 12.42829966545105
