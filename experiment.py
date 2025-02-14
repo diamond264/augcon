@@ -1,5 +1,8 @@
 #!/usr/bin/env python
-import psutil
+# import psutil
+from resource_metrics.procps import procps_all
+
+
 import yaml
 import time
 import argparse
@@ -60,8 +63,11 @@ class Experiment:
 if __name__ == "__main__":
     for i in range(10):
         prefix = "Idle"
-        cpu_usage = psutil.cpu_percent()  # CPU usage in %
-        ram_usage = psutil.virtual_memory().used / 1e6  # RAM usage in MB
+        # cpu_usage = psutil.cpu_percent()  # CPU usage in %
+        # ram_usage = psutil.virtual_memory().used / 1e6  # RAM usage in MB
+
+        cpu_usage, ram_usage = procps_all()
+
         print(f"{prefix} CPU Usage: {cpu_usage}%")
         print(f"{prefix} RAM Usage: {ram_usage:.2f} MB")
         time.sleep(0.5)

@@ -522,8 +522,11 @@ class MetaCPCLearner:
             optimizer.step()
 
         prefix = "Finetune"
-        cpu_usage = psutil.cpu_percent()  # CPU usage in %
-        ram_usage = psutil.virtual_memory().used / 1e6  # RAM usage in MB
+        # cpu_usage = psutil.cpu_percent()  # CPU usage in %
+        # ram_usage = psutil.virtual_memory().used / 1e6  # RAM usage in MB
+
+        cpu_usage, ram_usage = procps_all()
+
         print(f"{prefix} [{epoch+1}/{num_epochs}]")
         print(f"{prefix} CPU Usage: {cpu_usage}%")
         print(f"{prefix} RAM Usage: {ram_usage:.2f} MB")
@@ -539,8 +542,11 @@ class MetaCPCLearner:
             )
 
             prefix = "Domain Adaptation"
-            cpu_usage = psutil.cpu_percent()  # CPU usage in %
-            ram_usage = psutil.virtual_memory().used / 1e6  # RAM usage in MB
+            # cpu_usage = psutil.cpu_percent()  # CPU usage in %
+            # ram_usage = psutil.virtual_memory().used / 1e6  # RAM usage in MB
+
+            cpu_usage, ram_usage = procps_all()
+            
             print(f"{prefix} [{i}/{self.cfg.task_steps}]")
             print(f"{prefix} CPU Usage: {cpu_usage}%")
             print(f"{prefix} RAM Usage: {ram_usage:.2f} MB")

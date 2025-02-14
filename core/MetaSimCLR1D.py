@@ -1,6 +1,8 @@
 import copy
 import time
-import psutil
+# import psutil
+from resource_metrics.procps import procps_all
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -570,8 +572,11 @@ class MetaSimCLR1DLearner:
                     )
 
             prefix = "Domain Adaptation"
-            cpu_usage = psutil.cpu_percent()  # CPU usage in %
-            ram_usage = psutil.virtual_memory().used / 1e6  # RAM usage in MB
+            # cpu_usage = psutil.cpu_percent()  # CPU usage in %
+            # ram_usage = psutil.virtual_memory().used / 1e6  # RAM usage in MB
+
+            cpu_usage, ram_usage = procps_all()
+
             print(f"{prefix} [{i}/{self.cfg.task_steps}]")
             print(f"{prefix} CPU Usage: {cpu_usage}%")
             print(f"{prefix} RAM Usage: {ram_usage:.2f} MB")
@@ -593,8 +598,12 @@ class MetaSimCLR1DLearner:
             optimizer.step()
 
         prefix = "Finetune"
-        cpu_usage = psutil.cpu_percent()  # CPU usage in %
-        ram_usage = psutil.virtual_memory().used / 1e6  # RAM usage in MB
+
+        # cpu_usage = psutil.cpu_percent()  # CPU usage in %
+        # ram_usage = psutil.virtual_memory().used / 1e6  # RAM usage in MB
+
+        cpu_usage, ram_usage = procps_all()
+
         print(f"{prefix} [{epoch+1}/{num_epochs}]")
         print(f"{prefix} CPU Usage: {cpu_usage}%")
         print(f"{prefix} RAM Usage: {ram_usage:.2f} MB")
