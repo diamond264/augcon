@@ -4,7 +4,7 @@ from data_loader.SimCLRDataset import SimCLRDataset
 from data_loader.TPNDataset import TPNDataset
 
 
-class DefaultDataLoader:
+class DefaultDataLoader: # data loader uses load_dataset method 
     def __init__(self, cfg):
         self.cfg = cfg
         self.test_dataset = self.load_dataset()
