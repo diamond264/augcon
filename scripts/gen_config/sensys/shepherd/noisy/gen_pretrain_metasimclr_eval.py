@@ -4,25 +4,22 @@ from glob import glob
 PRETEXT = "metasimclr"
 PRETRAIN_CRITERION = "crossentropy"
 PRETRAIN_HPS = {
-    "ichar": {"lr": 0.001, "wd": 0.0, "tlr": 0.001},
+    "ichar": {"lr": 0.0005, "wd": 0.0, "tlr": 0.001},
 }
 
 DATASETS = ["ichar"]
-DATA_PATH = {
-    "ichar": "/mnt/sting/hjyoon/projects/cross/ICHAR/augcon/"
-}
+DATA_PATH = {"ichar": "/mnt/sting/hjyoon/projects/cross/ICHAR/augcon/"}
 
-NUM_CLS = {
-    "ichar": 9
-}
+NUM_CLS = {"ichar": 9}
 
 INPUT_CHANNELS = {
     "ichar": 3,
 }
 
-CONFIG_PATH = "/mnt/sting/hjyoon/projects/aaa/configs/sensys/shepherd/noisy"
-MODEL_PATH = "/mnt/sting/hjyoon/projects/aaa/models/sensys/shepherd/noisy"
+CONFIG_PATH = "/mnt/sting/hjyoon/projects/aaa/configs/sensys/shepherd/noisy_lr0005"
+MODEL_PATH = "/mnt/sting/hjyoon/projects/aaa/models/sensys/shepherd/noisy_lr0005"
 NOISY_LEVEL = [0.2, 0.5, 0.8]
+
 
 def gen_pretrain_config():
     for dataset in DATASETS:
@@ -34,9 +31,7 @@ def gen_pretrain_config():
         for domain in domains:
             for noisy_level in NOISY_LEVEL:
                 port = 8367 + gpu
-                pretrain_config_path = (
-                    f"{CONFIG_PATH}/{dataset}/{PRETEXT}/pretrain/noisy_level{noisy_level}/gpu{gpu}_{domain}.yaml"
-                )
+                pretrain_config_path = f"{CONFIG_PATH}/{dataset}/{PRETEXT}/pretrain/noisy_level{noisy_level}/gpu{gpu}_{domain}.yaml"
                 print(f"Generating {pretrain_config_path}")
 
                 pretrain_path = f"{data_path}{domain}/pretrain"
@@ -65,7 +60,7 @@ def gen_pretrain_config():
                     0.1,
                     0,
                     noisy_level,
-                    num_layers
+                    num_layers,
                 )
 
                 os.makedirs(os.path.dirname(pretrain_config_path), exist_ok=True)
@@ -73,7 +68,7 @@ def gen_pretrain_config():
                     f.write(pretrain_config)
 
                 for seed in [0, 1, 2, 3, 4]:
-                    for shot in [1, 2, 5, 10, 20]:
+                    for shot in [1, 2, 5, 10]:
                         for freeze in [True]:
                             setting = "linear" if freeze else "endtoend"
                             finetune_config_path = f"{CONFIG_PATH}/{dataset}/{PRETEXT}/finetune/noisy{noisy_level}/{shot}shot/{setting}/seed{seed}/gpu{gpu}_{domain}.yaml"
@@ -111,7 +106,7 @@ def gen_pretrain_config():
                                 freeze,
                                 seed,
                                 0,
-                                num_layers
+                                num_layers,
                             )
 
                             os.makedirs(
@@ -144,7 +139,7 @@ def get_config(
     mlr,
     seed,
     noisy_level,
-    num_layers
+    num_layers,
 ):
     config = f"""mode: {mode}
 seed: {seed}
