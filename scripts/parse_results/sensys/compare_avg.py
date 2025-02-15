@@ -20,9 +20,14 @@ def run(path, settings=["linear", "endtoend"]):
                 if len(f1scores) == 0:
                     continue
                 avg_f1score = sum(f1scores) / len(f1scores)
+                std = sum([(f1score - avg_f1score) ** 2 for f1score in f1scores]) / len(
+                    f1scores
+                )
                 shot = shot_path.split("/")[-1]
                 setting = setting_path.split("/")[-1]
-                print(f"[{setting}-shot{shot}] Average F1 score: {avg_f1score}")
+                print(
+                    f"[{setting}-shot{shot}] Average F1 score: {avg_f1score}, std: {std}"
+                )
 
 
 if __name__ == "__main__":
