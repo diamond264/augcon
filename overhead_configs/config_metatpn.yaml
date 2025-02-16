@@ -3,28 +3,19 @@ seed: 0
 gpu: [0]
 num_workers: 1
 dist_url: tcp://localhost:8367
-episodes: 1
-
 dataset_name: ichar
-test_dataset_path: /mnt/sting/hjyoon/projects/cross/ICHAR/augcon/target_domain_PH0007-jskim/finetune/10shot/target/train.pkl
+test_dataset_path: overhead_samples/ichar_10shot_ph0007.pkl
 input_channels: 3
 num_cls: 9
-
 optimizer: adam
 criterion: crossentropy
 start_epoch: 0
 epochs: 20
-
 batch_size: 4
 lr: 0.005
 wd: 0.0
-
 resume: ''
-pretrained: /mnt/sting/hjyoon/projects/aaa/models/imwut/main_eval/ichar/metatpn/pretrain/target_domain_PH0007-jskim/checkpoint_4999.pth.tar
-ckpt_dir: /mnt/sting/hjyoon/projects/aaa/models/imwut/main_eval/ichar/metatpn/finetune/10shot/linear/seed0/target_domain_PH0007-jskim
-log_freq: 100
-save_freq: 10
-
+pretrained: ''
 task_per_domain: true
 num_task: 8
 multi_cond_num_task: 4
@@ -32,12 +23,10 @@ task_size: 128
 task_lr: 0.01
 reg_lambda: 0
 log_meta_train: false
-
 pretext: metatpn
 out_dim: 2
 z_dim: 96
 mlp: false
-
 neg_per_domain: false
 freeze: true
 domain_adaptation: true
