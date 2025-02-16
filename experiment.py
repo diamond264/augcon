@@ -62,6 +62,7 @@ if __name__ == "__main__":
         prefix = "Idle"
         cpu_usage = psutil.cpu_percent()  # CPU usage in %
         ram_usage = psutil.virtual_memory().used / 1e6  # RAM usage in MB
+        ram_usage += psutil.swap_memory().used / 1e6  # Swap usage in MB
         print(f"{prefix} CPU Usage: {cpu_usage}%")
         print(f"{prefix} RAM Usage: {ram_usage:.2f} MB")
         time.sleep(0.5)
