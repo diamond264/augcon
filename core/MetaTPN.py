@@ -1,12 +1,34 @@
 import torch
 import time
 # import psutil
-from resource_metrics.procps import procps_all
 
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.multiprocessing as mp
 from torch.utils.data import DataLoader
+
+import subprocess
+
+def procps_all():
+
+    cmd = "ps -e -o pid,%cpu,%mem --no-headers"
+    output = subprocess.check_output(cmd, shell=True, text=True).strip()
+    if not output:
+        return {}
+    
+    processes = {}
+    for line in output.splitlines():
+        line = line.strip()
+        cols = line.split()
+        pid = int(cols[0])
+        cpu = float(cols[1])
+        mem = float(cols[2])
+        processes[pid] = (cpu, mem)
+
+    total_cpu = sum(cpu for cpu, _ in processes.values())
+    total_mem = sum(mem for _, mem in processes.values())
+    
+    return total_cpu, total_mem
 
 
 class Encoder(nn.Module):
