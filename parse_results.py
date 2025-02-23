@@ -8,6 +8,8 @@ def parse_results():
         lines = []
         with open(file) as f:
             lines = f.readlines()
+        if len(file.split("/")[-1].split("_")) < 2:
+            continue
         device = file.split("/")[-1].split("_")[0]
         method = file.split("/")[-1].split("_")[1]
         if device == "test":  # Skip test files
